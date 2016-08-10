@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "Line count"
+sudo cat > /tmp/free.out && \
+wc -l < /tmp/free.out 
