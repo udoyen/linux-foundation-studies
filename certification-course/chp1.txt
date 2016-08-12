@@ -2000,4 +2000,126 @@ AppArmor:
 		- Is considered filesystem-neutral(no Security labels required)
 	- AppArmor supplements the traditional UNIX Discreationary Access Control (DAC) model by providing Mandatory Access Control(MAC)
 	- in AppArmor: violations of the profile are logged and can be turned into a profile based on the programs typical behaviour.
+
+<-------------------------------------------------------------------------------------------------------------------->
+
+							Chapter 20. processes
+
+ - A process is an embodiment of a running application which may or may not consist of mutiple threads
+ - processes have both attributes and well-delineated permissions.
+ - they must in one of s number of enumerated states, most common being 'running' or 'sleeping'
+ - important to know when a process is running in the 'user mode' or 'kernel mode' with elevated privileges for the latter.
+ - a number of different ways exist to create 'child' processes and to set and modify their priorities.
+
+Objectives:
+	- describe a process and the resources associated with it
+	- distinguish between processes, programs and threads
+	- understand process attributes, permissions and states
+	- know the difference between running in user and kernel modes
+	- describe 'daemon' processes
+	- understand how new processes are forked (created)
+	- use nice and renice to set and modify priorities
+
+Processes, Programs and Threads:
+	- Process:
+		-- this is an executing program and associated resources, including environment, open files, signal handlers
+		-- the same program may be executing more than once simultaneously and thus be responsible for multiple processes
+		-- basic structure
+
+					Program
+						|
+						|----> starts process
+						|
+						V
+					 process --> process ID (group ID)
+						|
+						V
+	|------------------------------------------------------| --> thread ID (process ID)
+	|		|		|		|		|		|		|	   |
+thread	 thread	  thread  thread  thread  thread  thread  thread
+
+
+The init Process:
+	- this is the first user process on the system with a process ID = 1
+	- remains till shutdown and is the last process to terminate at shutdown
+	- ancestral parent of all other user processes
+Processes:
+	- is an instance of a program in execution
+	- may be in a running state, or sleep state
+	- each process has:
+		-- pid (Process ID),
+		-- ppid (Parent Process ID),
+		-- pgi (Process Group ID)
+	- any process from the kernel has a '[]' around their names when '$ ps' is run
+	- when a parent process dies before a child, the ppid is set to 1 (init), ot to 2 in newer systems using 'systemd'
+	- when child process terminates normally or abnormally before its parents which has not waited for it and examined its exit code is 
+		known as a 'zombie (or defunct)' process
+	- the parent 'init' process checks on its adopted child processes and lets those who have terminated die gracefully
+	- Process are controlled 'scheduling', which is preemptive and is only done by the kernel
+	- largest PID has been limited to a 16-bit number, or 32768
+	- pid_max can be altered in the /proc/sys/kernel/pid_max
+Process Attributes:
+	- these includes:
+		-- the program being executed
+		-- context (state)
+		-- permissions
+		-- associated resources
+	- context switching: is done by the kernel
+
+Controlling Processes with ulimit:
+	- ulimit is a built in bash command that display or resets a number of resources limits associated	
+		with processes running under a shell.
+	- run $ ulimit -a
+Controlling Processes with ulimit(cont.)
+	- the 'ulimit -a' values can be changed to:
+		-- restrict (limit to a value), or
+		-- expand (increase the current limit or value)
+	- Kinds of limit include:
+		-- Hard: max value can't be exceeded, set only by root user
+		-- soft: the current limiting value which a user can modify but can't exceed hard limit
+	- syntax:
+		-- $ ulimit [options] [limit]
+			--- as in: ulimit -n 1600
+		-- permanently changing this values to affect all currently logged in shells one must modify /etc/security/limits.conf, then reboot 
+
+Process Permission and setuid:
+	- process permissions are based on process ownership or user who invoked it.
+	- two types of programs exixts:
+		-- setuid programs, programs marked with an s execute bit. These run with a different ownership from the current invoker
+		-- non-setuid programs, that run based on the real user id
+More on Process States:
+	- Running:
+		-- is either running or sitting in run queues
+	- Sleeping:
+		-- waiting on a request (usually I/O) that was made
+	- Stopped:
+		-- suspended process, using ctrl-Z or debugger
+	- Zombie:
+		-- enters the state when it terminates and no other process (usually parent) has inquired about it state.
+		-- here all resources are released except its exit state and its entry in the process table
+		-- it is adopted by the init (PID=1) or kthreadd (PID=2) when its parent process dies.
+Execution Modes:
+	- any one process can be in either:
+		-- user mode
+		-- system mode
+	- modes are enforced at hardware level not software level
+User Mode:
+	- all process are started in the use mode by default
+	- all processes are isolaled in their own environment called process resource isolation
+	- system mode processes run in user mode unless they are jumping  into a system called
+Kernel Mode:
+	- here CPU has access to all hardware on the system.
+Daemons:
+	- this is a background process whose sole purpose is to provide some specific service to users of the system
+	- basics of daemons:
+		-- daemons can be quite s=efficient because they are only called when needed
+		-- many daemons are started at boot time
+		-- daemons names usually end with d
+		-- some examples are: httpd, udevd
+		-- daemons may respond to external events (udevd), or elapsed time (crond)
+		-- daemons generally have no controlling terminal and no standard input/output devices
+		-- daemons sometimes provide better security control
+	-  
+
+
 	
