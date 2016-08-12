@@ -2185,6 +2185,7 @@ Finding Shared Libraries:
 	- ldconfig: 
 		-- usually run at boot time but ccan be run anytime and uses the /etc/ld.so.conf
 		-- shared libs should only be stored in system directories
+		
 
 
 

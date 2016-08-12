@@ -1,1 +1,6 @@
 Ubuntu-14-04.tar.gz
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
