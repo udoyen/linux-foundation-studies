@@ -371,7 +371,7 @@ Directory       In FHS?         Purpose
 /boot		Yes		Files neede to boot - kernel, initrd ot initramfs, images, boot configuration files and bootloader programs.
 /dev		Yes		Device nodes, used to interact with hardware devices.
 /etc		Yes		System wide configuration files.
-/home		Yes		User home directoies including personal settings, files, etc.
+/home		Yes		User home directories including personal settings, files, etc.
 /lib		Yes		Libraries required bt executable binaries in .bin and /sbin.
 /lib64		No		64-bit libraries requires by executable binaries in /binand /sbin, for systems which can run both 32-bit and 64-bit programs.
 /media		Yes		Mount points for removable media such as CDs, DVDs, USB sticks etc.
@@ -2084,7 +2084,7 @@ Controlling Processes with ulimit(cont.)
 
 Process Permission and setuid:
 	- process permissions are based on process ownership or user who invoked it.
-	- two types of programs exixts:
+	- two types of programs exists:
 		-- setuid programs, programs marked with an s execute bit. These run with a different ownership from the current invoker
 		-- non-setuid programs, that run based on the real user id
 More on Process States:
@@ -2119,7 +2119,73 @@ Daemons:
 		-- daemons may respond to external events (udevd), or elapsed time (crond)
 		-- daemons generally have no controlling terminal and no standard input/output devices
 		-- daemons sometimes provide better security control
-	-  
+Kernel-Created Processes:
+	- the kernel directly creates two kinds of processes:
+		-- internal kernel processes:
+			--- take care of maintanance work
+			--- theses often run as long as the system runs
+		-- external user processes:
+			--- run in user space like normal applications but where started by the kernel
+			--- they are few and short lived
+		-- to see these:
+			--- $ ps -elf
+Process Creating and Forking:
+	- steps:								   thread 2
+						    CLIENT REQUEST	  /
+							  Child Process --
+							   /              \
+							  /                thread 1
+			WEBSERVER		 /
+		-- Parent Process --->
+							 \
+							  \               thread 1
+							   \              /
+							  Child Process --
+							CLIENT REQUEST    \
+											  thread 2
+				
+Creating Processes in a Command Shell:
+	- steps:
+		-- user executes a command at the command shell:
+			---> a new process is created (forked)
+			---> a wait call puts the parent to sleep.
+			---> the command is loaded onto the child's process space vis the exec system call.
+			---> the command conpletes executing, and the child process dies vis the exit system call
+			---> the parent shell is re-awakended by the death of the child process and proceeds to issue a new shell command.
+			-->> with '&' the parent shell shell skips the wait request and is free to issue a new command immediately
+			-->> exceptions are the 'echo' and 'kill' which are built into the shell and no program files are loaded for them to run.
+Using nice to Set Priorities:
+	- process priorities are controlled using the nice and renice commands.
+	- scale (least nice, highest priority)-20 to +19(most nice, lowest priority)
+	- syntax:
+		-- nice -n 5 command [ARGS]
+		-- nice -5 command [ARGS]
+modofieddifying the Nice Value:
+	- only the superuser can run nice or renice
+	- editing the /etc/security/limit.conf
+		-- renice +3 13848
+		-- man renice for more info
+Static and Shared Libraries:
+	- programs are built using libraries of code.
+	- Static:
+		-- the code for the libraries functions are inserted into the program at compile time and 
+			does not change thereafter even if the library is updated
+	- Shared:
+		-- code is loaded at run time and if updated the program will use the new library.
+		-- advantages:
+			-- shared by applications
+			-- better memory useage
+			-- smaller more manageable executable sizes
+			-- called DLL (Dynamic Link Library)
+Shared Library Versions:
+	- name convention: sharedlib.so.N --> where N = version number
+Finding Shared Libraries:
+	- ldd: used to accertain what shared libraries an executable requires.
+	- $ ldd /usr/bin/vi
+	- ldconfig: 
+		-- usually run at boot time but ccan be run anytime and uses the /etc/ld.so.conf
+		-- shared libs should only be stored in system directories
+
 
 
 	
