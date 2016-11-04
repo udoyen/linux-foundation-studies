@@ -193,7 +193,7 @@ The 'init' run steps:
 	                   |					[start LVM, mount fs, etc.]      |
 	                   |							 |
 	    <Reads from for scripts to be run>                                   |
-	    									 |
+	    									 		 |
 	    					<makes system to go to rc.d/rc[0-6].d and run all scrips there>
 
 
@@ -212,8 +212,7 @@ Note: Ubuntu uses update-rc.d inplace of chkconfig
 		'chkconfig --list [service names]
 
 		- Turn on a certain service next time the system boots
-		'sudo chconfig somme_service on'
-
+		'sudo chconfig somme_service o
 		- Do not turn on a service next time the system boots
 		'chkconfig some_service off
 
@@ -399,7 +398,7 @@ Directory       In FHS?         Purpose
 /bin
 ---------------------
 	contains executable binaries needed buy both admin and unprivileged users.
-	may not contain subdirectories
+	may not contain cubdirectories
 
 ---------------------
 /boot
@@ -481,7 +480,7 @@ Directory       In FHS?         Purpose
 ----------------
 /sys
 ----------------
-	mount point for sysfs pseudo-filesystem, where information resides only in memory
+	mount point for sysfs pseudo-filesystem, where infromation resides only in memory
 	sysfs is used both to gather information about the system, and modify its behaviour while running.
 
 
@@ -611,7 +610,7 @@ Kernel Command Line:
 		- in the kernel source Documentation/kernel-parameters.txt
 		- Online, at http://kernel.org/doc/Documentation/kernel-parameters.txt
 		- On the as kernel-doc or linux-doc
-		- By typing 'man bootparam'
+		- By typing 'man dootparam'
 
 	parameters may be typed as an argument or in the form param=value, where value can be a 'string, integer, array of integers
 	etc.
@@ -649,7 +648,7 @@ Objectives:
 
 	Advatages of kernel modules include:
 		- it facilitates development
-		- kernel reboots are not required
+		- kernel reboots are nor required
 		-
 
 
@@ -660,7 +659,7 @@ Objectives:
 		- modprobe -- load or unload modules, using a pre-built module database with dependency information
 		- depmod -- rebuild the module dependency database; needed by modprobe and modinfo
 		- modinfo -- display information about a module.
-	Syntax for loading and unloading modules
+	Syntax for load and unloading modules
 		sudo /sbin/rmmod module_name
 		sudo /sbin/insmod <pathto>/module_name
 
@@ -750,13 +749,13 @@ Objectives:
 
 
 	The 'major' and 'minor' numbers identify the driver associated with the device.
-	In most cases (but not all) device nodes of the same type (block or character) with the same major number use the same driver.
+	I most cases (but not all) device nodes of the same type (block or character) with the same major number use the same driver.
 	Minor numbers are used only by the device driver to differentiate between the different devices it may control.
 	mknod() and stat() : return information about 'major' and 'minor' numbers.
 
 	udev:
 	-----
-	POSIX -- PORTABLE OPERATING SYSTEM INTERFACE
+	POSIX -- Portable Operating System Interface
 	udev -- user device
 	Handles the dynamical generation of device nodes. It replaced devfs and hotplug
 	udev Components:
@@ -950,7 +949,7 @@ Objectives:
           Note: each entry in the partition table 16 bytes long
           	- gives the following information:
           		- Active bit.
-          		- Beginning address in cylinder/head/sectors (CHS) format (ignored by Linux)
+          		- Beginning address in cylinder/head/sectors (CHS) fromat (ignored by Linux)
           		- Partition type code, indicating: xfs, LVM, ntf, ext4, swap, etc.
           		- Ending address in CHS(also ignored by Linux).
           		- Start sector, counting linearly from 0.
@@ -1047,7 +1046,7 @@ Using fdisk:
 
 
 	Why use encryption:
-	    Configuration and using block device level encryption provides one of the strongest protections agianst harm
+	    Configuration and using block device level encryption provides aone of the strongest protections agianst harm
 	    caused by loss or compromise of data contained in hard drives and other media.
 
 	    Note: Encryption can not be carried out on an already existing partition in place without a data copying operation.
@@ -1074,7 +1073,7 @@ Using fdisk:
 		cryptset --help
     Using an Encrypted Partition:
     	if the LVM partition '/dev/VG/MYSECRETE already exists the following steps will setup encryption
-	--> 1. Make it available to LUKS
+	--> 1. Make it vailable to LUKS
 	    2. format it
 	    3. mount it
 	    4. use it
@@ -1121,7 +1120,7 @@ Objectives:
 	- grasp why journaling filesystem represent significant advances.
 	- discuss the use of special filesystems in Lunux.
 
-Local filesystems generally reside within a disk partition which can be a physical partition on a disk, or a logical partition controlled by a LOGICAL VOLUME MANAGER (LVM).
+Local filesystems generally reside within a disk partition which can be a physical partition on a disk, or a logical partition controlled by a Logical Volume Manager (LVM).
 Filesystems can also be of a network nature and their true physical embodiment completely hidden to the local system across the network.
 
 VFS:
@@ -1161,7 +1160,7 @@ Special Filesystems:
 	devpts			/dev/pts		Used by Unix98 pseudo-termionals.
 	usbfs			/proc/bus/usb		Used ny USB sub-system for dynamical devices.
 	sysfs			/sys (or elsewhere)	Used as a device tree.
-	debugfs			/sys/kernel/debug (or	Used for simple debugging file access.
+	debugfs			/sys/kernel/debug (or	Used for simple debugging filr access.
 				elsewhere)
 
 
@@ -1280,7 +1279,7 @@ Special Filesystems:
             |---------|----------|-----------------|
           child A   child B    child C          child D --> [extra memory sector since a portion of PARENT has changed]
 
-          - when memory pressure is high 'less active memory regions are swapped out to disk' and only recalled when needed.
+          - when memory pressure is high 'less active memory regions are swapped out to disk' and only recalled when nedded.
 
     - In most cases the recommend swap size is the RAM
     - to see what ure system is currently using for swap areas: $ cat /proc/swaps
@@ -1439,7 +1438,7 @@ Special Filesystems:
     1024(boot sector)        Superblock             Grp Descriptors  Data block bitmap    inode bitmap   inode Table  data blocks
                                   |                                                                                       |
                                   |                                                                                       |
-                                  |                                                                                 pre-allocated to files to improve speed
+                                  |                                                                                 pre-allocated to files to inprove speed
                                   |
                                   |
                                   |
@@ -1454,7 +1453,7 @@ Special Filesystems:
 
   dumpefs:
     - scan filesystem information
-    $ sudo dumpe2fs /dev/sda2
+    $ sudo dumpefs /dev/sda2
 
   tune2fs:
     -- used to change filesystem parameters
@@ -1483,796 +1482,710 @@ Special Filesystems:
   Ext4 Filesystem Enhancements:
     - is backwards-compatible with ext3 and ext2
     - increases the maximum fielsystem size to 1 EB (from 16 TB), and the maximum file to 16 TB (from 2 TB).
-    - INCREASE WITHOUT LIMIT THE MAXIMUM NUMBER OF SUBDIRECTORIES, WHICH WAS LIMITED TO 32K IN EXT3
-    - SPLITS LARGE FILES INTO THR LARGEST POSSIBLE EXTENTS INSTEAD OF USING INDIRECT BLOCK MAPPING.
-    - USES MULTIBLOCK ALLOCATION
-    - PRE-ALLOCATE DISK SPACE FOR A FILE
-    - USES ALLOCATE-ON-FLUSH
-    - USES FAST FSCK
-    - USES CHECKSUMS FOR THE JOURNAL WHICH IMPROVES RELIABILITY
-    - USES IMPROVED TIMESTAMPS WHICH IS MEASURED IN NANOSECONDS
-    - INCLUDES SNAPSHOT SUPPORT.
+    - increase without limit the maximum number of subdirectories, which was limited to 32k in ext3
+    - splits large files into thr largest possible extents instead of using indirect block mapping.
+    - uses multiblock allocation
+    - pre-allocate disk space for a file
+    - uses allocate-on-flush
+    - uses fast fsck
+    - uses checksums for the journal which improves reliability
+    - uses improved timestamps which is measured in nanoseconds
+    - includes snapshot support.
 
 
 <--------------------------------------------------------------------------------------------------------------------------------->
 
-                    CHAPTER 15. THE XFS AND BTRFS FILESYSTEMS.
+                    Chapter 15. The XFS and btrfs Filesystems.
 
-  THESE ARE IMPORTANT CHALLENGERS TO THE EXT4 FILESYSTEM.
+  these are important challengers to the ext4 filesystem.
 
-  OBJECTIVES:
-    - DESCRIBE THE XFS FILESYSTEM
-    - MAINTAIN THE XFS FILESYSTEM
-    - DESCRIBE THE BTRFS FILESYSTEM
+  Objectives:
+    - describe the XFS filesystem
+    - maintain the XFS filesystem
+    - describe the btrfs filesystem
 
-  XFS FILESYSTEM:
-    ORIGINALLY MADE BY SGI FOR IRIX OS
-    - ADVATAGES INCLUDE:
-      -- HANDLE:
-          --- UP TO 16EB(EXABYTES) FOR THE TOTAL FILESYSTEM
-          --- UP TO 8EB(EXABYTES) FOR AN INDIVIDUAL FILE
-      -- HIGH PERFORMANCE:
-          --- EMPLOYING DMA(DIRECT MEMORY ACCESS) I/O
-          --- GUARANTEEING AN I/O RATE
-          --- ADJUSTING STRIPE SIZE TO MATCH UNDERLYING RAID OR LVM DEVICES
-      -- CAN JOURNAL QUOTA INFORMATION, BUT LEADS TO DECREASE IN RECOVERY TIME WHEN A QUOTA-ENABLED FILESYSTEM IS UNCLEANLY UNMOUNTED
-      -- SUPPORTS EXTENDED ATTRIBUTES
+  XFS Filesystem:
+    originally made by SGI for IRIX OS
+    - advatages include:
+      -- handle:
+          --- up to 16EB(exabytes) for the total filesystem
+          --- up to 8EB(exabytes) for an individual file
+      -- high performance:
+          --- employing DMA(Direct Memory Access) I/O
+          --- guaranteeing an I/O rate
+          --- adjusting stripe size to match underlying RAID or LVM devices
+      -- can journal quota information, but leads to decrease in recovery time when a quota-enabled filesystem is uncleanly unmounted
+      -- supports extended attributes
 
-  XFS FILESYSTEM MAINTENANCE:
-    - ADVANTAGE:
-      -- MOST MAINTENANCE TASKS CAN BE DONE ON-LINE WHILE THE FILESYSTEM IS FULLY MOUNTED, THESE INCLUDE:
-          --- DEFRAGMENTING
-          --- ENLARGING
-          --- DUMPING/RESTORING
-      -- BACKUP AND RESTORE CAN BE DONE WITH THE NATIVE XFS UTILITIES:
-        --- XFSDUMP
-        --- XFSRESTORE
+  XFS Filesystem Maintenance:
+    - advantage:
+      -- most maintenance tasks can be done on-line while the filesystem is fully mounted, these include:
+          --- defragmenting
+          --- enlarging
+          --- dumping/restoring
+      -- backup and restore can be done with the native XFS utilities:
+        --- xfsdump
+        --- xfsrestore
 
-  THE BTRFS FILESYSTEM:
-    B-TREE FILE SYSTEM:
-      - ADVANTAGES:
-          -- ADDRESSES THE LACK OF:-
-              --- POOLING,
-              --- SNAPSHOTS,
-              --- CHECKSUMS, AND
-              --- INTEGRAL MULTI-DEVICE SPANNING
+  The btrfs Filesystem:
+    B-tree file system:
+      - advantages:
+          -- addresses the lack of:-
+              --- pooling,
+              --- snapshots,
+              --- checksums, and
+              --- integral multi-device spanning
 
   <------------------------------------------------------------------------------------------------------------------->
 
-                          CHAPTER 16. LOGICAL VOLUME MANAGEMENT(LVM)
+                          Chapter 16. Logical Volume Management(LVM)
 
-  - PERMITS HAVING ONE LOGICAL FILESYSTEM SPAN MUTIPLE PHYSICAL VOLUMES AND PARTITIONS WHILE APPEARING AS A SIMPLE PARTITION FOR NORMAL USE.
-  - MAKES SHRINKING AND EXPANDING EASY
+  - permits having one logical filesystem span mutiple physical volumes and partitions while appearing as a simple partition for normal use.
+  - makes shrinking and expanding easy
 
-  OBJECTIVES:
-    - EXPLAIN THE CONCEPTS BEHIND LVM
-    - CREATE LOGICAL VOLUMES
-    - DISPLAY LOGICAL VOLUMES
-    - RESIZE LOGOCAL VOLUMES
-    - USE LVM SNAPSHOTS
+  Objectives:
+    - explain the concepts behind LVM
+    - create logical volumes
+    - display logical volumes
+    - resize logocal volumes
+    - use LVM snapshots
 
   LVM:
-    - BREAKS UP ONE VIRTUAL PARTITION INTO MULTIPLE CHUNKS, EACH OF WHICH CAN BE ON DIFFERENT PARTITIONS AND/OR DISKS.
-    - TYPICAL LVM STRUCTURE OR LAYOUT
-    - STRIPING (SPLITTING OF DATA TO MORE THAN ONE DISK)
+    - breaks up one virtual partition into multiple chunks, each of which can be on different partitions and/or disks.
+    - Typical LVM structure or layout
+    - striping (splitting of data to more than one disk)
 
   |-----------------------------------------------------------------------------------------------------------|
   |                                                         LVM                                               |
   |                       ------------------------------------------------------------------------------|     |
-  |         FILE SYSTEMS  |          /HOME(EXT3)              ||                /DATA(XFS)              |     |
+  |         File Systems  |          /home(ext3)              ||                /data(xfs)              |     |
   |                       |-----------------------------------------------------------------------------|     |
-  |  LOGICAL VOLUMES(LV)  | /DEV/PRIMARY_VG/HOME_|V           ||      /DEV/PRIMARY_VG/DATA_|V           |     |
+  |  Logical Volumes(LV)  | /dev/primary_vg/home_|v           ||      /dev/primary_vg/data_|v           |     |
   |                       |-----------------------------------------------------------------------------|     |
-  |   VOLUME GROUPS(VG)   |                           PRIMARY_VG                                        |     |
+  |   Volume Groups(VG)   |                           primary_vg                                        |     |
   |                       |-----------------------------------------------------------------------------|     |
-  |   PHYSICAL VOLUMES    | /DEV/SDB1   ||   /DEV/SDB2        ||     /DEV/SDC1     ||   /DEV/SDC2       |     |
+  |   Physical Volumes    | /dev/sdb1   ||   /dev/sdb2        ||     /dev/sdc1     ||   /dev/sdc2       |     |
   |                       |-----------------------------------------------------------------------------|     |
   |-----------------------------------------------------------------------------------------------------------|
 
-     PARTITIONS           |---------------||-------------|              |----------------||-------------------|
-                          | /DEV/SDB1     || /DEV/SDB2   |              |  /DEV/SDC1     ||   /DEV/SDC2       |
+     Partitions           |---------------||-------------|              |----------------||-------------------|
+                          | /dev/sdb1     || /dev/sdb2   |              |  /dev/sdc1     ||   /dev/sdc2       |
                           |---------------||-------------|              |----------------||-------------------|
                           |------------------------------|              |-------------------------------------|
-    PHYSICAL DRIVES       |             /DEV/SDB         |              |                /DEV/SDC             |
+    Physical Drives       |             /dev/sdb         |              |                /dev/sdc             |
                           |------------------------------|              |-------------------------------------|
 
 
 
-  LVM AND RAID:
-    - LVM CAN BE BUILT ON RAID
+  LVM and RAID:
+    - LVM can be built on RAID
 
-  VOLUMES AND VOLUME GROUP:
-    - COMMANDS:
-      -- VGCREATE: CREATE VOLUME GROUP
-      -- VGEXTEND
-      -- VGREDUCE
-      -- PVCREATE: CONVERT A PARTITION TO A PHYSICAL VOLUME
-      -- PVDISPLAY: SHOWS THE PHYSICAL VOLUME
-      -- PVMOVE: MOVES THE DATA FROM ONE PHYSICAL VOLUME GROUP TO OTHERS
-      -- PVREMOVE
+  Volumes and Volume Group:
+    - commands:
+      -- vgcreate: create volume group
+      -- vgextend
+      -- vgreduce
+      -- pvcreate: convert a partition to a physical volume
+      -- pvdisplay: shows the physical volume
+      -- pvmove: moves the data from one physical volume group to others
+      -- pvremove
 
-  LOGICAL VOLUMES UTILITIES:
-    - $ LS -LF /SBIN/LV* --> DOESN'T WORK ON UBUNTU TRUSTY
+  Logical Volumes Utilities:
+    - $ ls -lF /sbin/lv* --> doesn't work on ubuntu Trusty
 
-  CREATING LOGICAL VOLUMES:
-    - COMMANDS:
-      -- LVCREATE --> ALLOCATES LOGICAL VOLUMES FROM WITHIN VOLUME GROUPS
-      -- LVDISPLAY --> REPORTS ON AVAILABLE LOGOICAL VOLUMES
-    - FILESYSTEMS ARE PLACED IN LOGICAL VOLUMES AND ARE FORMATTED WITH MKFS AS USUAL
-    - STEPS:
-       -- CREATE PARTITIONS ON DISK DRIVES (TYPE 8E IN FDSIK)
-       -- CREATE PHYSICAL VOLUMES FROM THE PARTITIONS                  --> $ SUDO PVCREATE /DEV/SDC1
-       -- CREATE THE VOLUMES GROUP                                     --> $ SUDO VGCREATE -S 16M VG /DEV/SDB1
-       -- ALLOCATE LOGICAL VOLUMES FROM THE VOLUME GROUP               --> $ SUDO LVCREATE -L 50G -N MYLVM VG
-       -- FORMAT THE LOGICAL VOLUMES                                   --> $ SUDO MKFS -T EXT4 /DEV/VG/MYLVM
-       -- MOUNT THE LOGICAL VOLUMES (ALSO UPDATE /ETC/FSTAB AS NEEDED) --> $ MKDIR /MYLVM, THEN --> $ SUDO MOUNT /DEV/VG/MYLVM /MYLVM, THEN --> /DEV/VG/MYLVM /MYLVM EXT4 DEFAULTS 0 0 ( TO THE /ETC/FSTAB)
+  Creating Logical Volumes:
+    - commands:
+      -- lvcreate --> allocates logical volumes from within volume groups
+      -- lvdisplay --> reports on available logoical volumes
+    - filesystems are placed in logical volumes and are formatted with mkfs as usual
+    - steps:
+       -- create partitions on disk drives (type 8e in fdsik)
+       -- create physical volumes from the partitions                  --> $ sudo pvcreate /dev/sdc1
+       -- create the volumes group                                     --> $ sudo vgcreate -s 16M vg /dev/sdb1
+       -- allocate logical volumes from the volume group               --> $ sudo lvcreate -L 50G -n mylvm vg
+       -- format the logical volumes                                   --> $ sudo mkfs -t ext4 /dev/vg/mylvm
+       -- mount the logical volumes (also update /etc/fstab as needed) --> $ mkdir /mylvm, then --> $ sudo mount /dev/vg/mylvm /mylvm, then --> /dev/vg/mylvm /mylvm ext4 defaults 0 0 ( to the /etc/fstab)
 
-  DISPLAYING LOGICAL VOLUMES:
-    - SUDO PVDISPLAY OR SUDO PVDISPLAY /DEV/SDA5
-    - SUDO VGDISPLAY OR SUDO VGDISPLAY /DEV/VG0
-    - SUDO LVDISPLAY OR SUDO LVDISPLAY /DEV/VG0/LVM1
+  Displaying Logical Volumes:
+    - sudo pvdisplay or sudo pvdisplay /dev/sda5
+    - sudo vgdisplay or sudo vgdisplay /dev/vg0
+    - sudo lvdisplay or sudo lvdisplay /dev/vg0/lvm1
 
-  RESIZING LOGICAL VOLUMES:
-    -- WITH FS:
-        -- SHRINK --> 1. SHRINK FS 2. SHRINK VOLUME
-        -- EXPAND --> 1. EXPAND VOLUME, 2. EXPAND FS
-    -- UTILITY: RESIZEFS
-  EXAMPLES OF RESIZING:
-        SUDO LVEXTEND -L +500M /DEV/VG/MYLVM
-        SUDO RESIZEFS /DEV/VG/MYLVM
+  Reszining Logical Volumes:
+    -- with fs:
+        -- shrink --> 1. shrink fs 2. shrink volume
+        -- expand --> 1. expand volume, 2. expand fs
+    -- utility: resizefs
+  Examples of Resizing:
+        sudo lvextend -L +500M /dev/vg/mylvm
+        sudo resizefs /dev/vg/mylvm
 
-    - SHRINK:
-        SUDO UMOUNT /MYLVM
-        SUDO FSCK -F /DEV/VG/MYLVM
-        SUDO RESIZEFS /DEV/VG/MYLVM 200M
-        SUDO LVREDUCE -L 200M /DEV/VG/MYLVM
-        SUDO MOUNT /DEV/VG/MYLVM
+    - shrink:
+        sudo umount /mylvm
+        sudo fsck -f /dev/vg/mylvm
+        sudo resizefs /dev/vg/mylvm 200M
+        sudo lvreduce -L 200M /dev/vg/mylvm
+        sudo mount /dev/vg/mylvm
 
-    - NEW VERSIONS OF LVM UTILITY:
-      -- SUDO
-      -- SUDO LVEXTEND -R -L +100M /DEV/VG/MYLVM
-      -- SUDO LVREDUCE -R -L -100M /DEV/VG/MYLVM
+    - New versions of lvm utility:
+      -- sudo
+      -- sudo lvextend -r -L +100M /dev/vg/mylvm
+      -- sudo lvreduce -r -L -100M /dev/vg/mylvm
 
-    - VOLUME GROUP:
-      -- SUDO PVMOVE /DEV/SDC1
-      -- SUDO VGREDUCE VG /DEV/SDC1
+    - volume group:
+      -- sudo pvmove /dev/sdc1
+      -- sudo vgreduce vg /dev/sdc1
 
 
-  LVM SNAPSHOTS:
-    - CREATES AN EXACT COPY OF AN EXISTING LOGICAL VOLUME
-    - USEFUL FOR:
-      -- BACKUPS, APPLICATION TESTING, AND DEPLOYING VMS
-    - CREATING SNAPSHOTS:
-      -- SUDO LVCREATE -L 128 -S -N MYSNAP /DEV/VG/MYLVM
-      --- MAKE A MOUNT POINT AND MOUNT THE SNAPSHOT:
-          ---- MKDIR /MYSNAP
-          ---- MOUNT -O RO /DEV/VG/MYSNAP /MYSNAP
-      --- TO USE AND REMOVE SNAPSHOT:
-          ---- SUDO UMOUNT /MYSNAP
-          ---- SUDO LVREMOVE /DEV/VG/MYSNAP
+  LVM Snapshots:
+    - creates an exact copy of an existing logical volume
+    - useful for:
+      -- backups, application testing, and deploying VMs
+    - creating snapshots:
+      -- sudo lvcreate -l 128 -s -n mysnap /dev/vg/mylvm
+      --- make a mount point and mount the snapshot:
+          ---- mkdir /mysnap
+          ---- mount -o ro /dev/vg/mysnap /mysnap
+      --- to use and remove snapshot:
+          ---- sudo umount /mysnap
+          ---- sudo lvremove /dev/vg/mysnap
 
 
 <--------------------------------------------------------------------------------------------------------------------------->
 
-									CHAPTER 17. RAID
+									Chapter 17. RAID
 
-- THE USE OF RAID SPREADS I/O ACTIVITY OVER MULTIPLE PHYSICAL DISKS, RATHER THAN JUST ONE.
-- ITS PURPOSE IS TO ENHANCE DATA INTEGRITY AND RECOVERABILITY IN CASE OF FAILURE, AS WELL AS TO BOOST PERFORMANCE WHEN USED WITH MODERN
-	STORAGE DEVICES.
-- RAID HAS DIFFERENT LEVELS WITH VARY IN THEIR RELATIVE STRENGTHS IN SAFETY, PERFORMANCE, COMPLEXITY AND COST.
+- The use of RAID spreads I/O activity over multiple physical disks, rather than just one.
+- Its purpose is to enhance data integrity and recoverability in case of failure, as well as to boost performance when used with modern
+	storage devices.
+- RAID has different levels with vary in their relative strengths in safety, performance, complexity and cost.
 
-OBJECTIVES:
-	- EXPLAIN THE CONCEPT OF RAID.
-	- SUMMARIZE RAID LEVELS.
-	- CONFIGURE A RAID DEVICE USING THE ESSENTIAL STEPS PROVIDED.
-	- MONITOR RAID DEVICES IN MULTIPLE WAYS.
-	- USE HOT SPARES.
+Objectives:
+	- explain the concept of RAID.
+	- summarize RAID levels.
+	- configure a RAID device using the essential steps provided.
+	- monitor RAID devices in multiple ways.
+	- use hot spares.
 
 RAID:
-	- MEANING REDUNTANT ARRAY OF INDEPENDENT DISK
-	- RAID CAN BE IMPLEMENTED IN 'SOFTWARE' OR IN 'HARDWARE'
-	- SIMPLE IMPLEMENTATION:-
+	- Meaning Reduntant Array of Independent Disk
+	- RAID can be implemented in 'software' or in 'hardware'
+	- simple implementation:-
 
-			512GB HARD DRIVES ---> RAID SOFTWARE IMPLEMENTATION ---> 1TB DISK
+			512GB hard drives ---> RAID software implementation ---> 1TB disk
 
-	- DISADVANTAGE OF RAID HARDWARE:
-		-- IF DISK CONTROLLER FAILS, IT MUST BE REPLACED BY A COMPATIBLE CONTROLLER UNLIKE SOFTWARE IMPLEMENTATION
-			WHICH CAN ALLOW THE DISK TO WORK WITH ANY CONTROLLER.
-	- THE ESSENTIAL FEATURES OF RAID ARE:
-		-- MIRRORING: WRITING THE SAME DATA TO MORE THAN ONE DISK.
-		-- STRIPING: SPLITTING OF DATA TO MORE THAN ONE DISK.
-		-- PARITY: EXTRA DATA IS STORED TO ALLOW PROBLEM DETECTION AND REPAIR, YIELDING FAULT TOLERANCE.
-		-- THUS USE OF RAID CAN IMPROVE BOTH PERFORMANCE AND RELIABILITY.
-	- RAID DEVICES ARE TYPICALLY CREATED BY COMBINING PARTITIONS FROM SEVERAL DISKS TOGETHER
-	- MDADM IS USED TO CREATE AND MANAGE RAID DEVICES, '/DEV/MDX' IS EQUIVALENT TO '/DEV/SDA1'
-RAID LEVELS:
-	- MANY LEVELS EXISTS BASED ON THE SPECIFICATION OF INCREASING COMPLEXITY AND USE, THESE ARE:
-		-- RAID 0: USES ONLY STRIPING. 
-			--- ADVANTAGES:
-				---- DATA SPREAD ACROSS MULTIPLE DISKS
-				---- IMPROVED PERFORMANCE
-			--- DISADVANTAGES:
-				---- NO REDUNDANCY
-				---- NO STABILITY
-				---- NO RECOVERY CAPABILITIES
-		-- RAID 1: USES ONLY MIRRORING
-			--- ADVANTAGES:
-				---- GOOD FOR RECOVERY AS EACH DISK HAS A DUPLICATE
-		-- RAID 5: USES ROTATING PARITY STRIP;
-			--- ADVANTAGE:
-				---- DISK FAILURE ONLY CAUSES DROP IN PERFORMANCE, NO LOSS OF DATA
-				--NOTE: THEY MUST BE AT LEAST 3 DISKS
-		-- RAID 6: HAS STRIPED DISKS WITH DUAL PARITY, 
-			--- CAN HANDLE LOSS OF TWO DISKS
-			--- REQUIRES AT LEAST 4 DISKS
-			--- REPLACES RAID 5 DUE TO ITS STRESS ON HARDWARE
-		-- RAID 10: IS A MIRRORED AND STRIPED DATA SET.
-			--- AT LEAST 4 DRIVES ARE NEEDED.
-		NOTE: ADDING MORE DISKS IMPROVES PERFORMANCE.
-SOFTWARE RAID CONFIGURATION:
-	- STEPS FOR SETUP INCLUDES:
-		-- CREATE PARTITIONS ON EACH DISK (TYPE FD IN FDISK)
-		-- CREATE RAID DEVICE WITH MDADM
-		-- FORMAT RAID DEVICE
-		-- ADD DEVICE TO /ETC/FSTAB
-		-- MOUNT RAID DEVICE
-		-- CAPTURE RAID DETAILS TO ENSURE PERSISTENCE
-	- THE COMMAND: SUDO MDADM -S --> USED TO STOP RAID
-	- EXAMPLE:
-		- CREATE TWO PARTITIONS OF TYPE FD ON DISKS /DEV/SDB, /DEV/SDC
-			-- SUDO FDISK /DEV/SDB, SUDO FDISK /DEV/SDC
-		- SET UP THE ARRAY
-			-- SUDO MDADM --CREATE /DEV/MD0 --LEVEL=1 --RAID-DISKS=2 /DEV/SDBX /DEV/SDCX
-		- FORMAT IT
-			-- SUDO MKFS.EXT4 /DEV/MD0
-		- ADD TO CONFIGURATION
-			-- SUDO BASH -C "MDADM --DETAIL --SCAN >> /ETC/MDADM.CONF"
-		- MOUNT IT
-			-- SUDO MKDIR /MYRAID
-			-- SUDO MOUNT /DEV/MD0 /MYRAID
-			-- ADD /DEV/MD0 /MYRAID EXT4 DEFAULTS 0 2
-		- EXAMINE /PROC/MDSTAT TO SEE THE RAID STATUS AS IN:
-			-- CAT /PROC/MDSTAT
-		- TO STOP 
-			-- SUDO MDADM -S /DEV/MD0
+	- Disadvantage of RAID hardware:
+		-- if disk controller fails, it must be replaced by a compatible controller unlike software implementation
+			which can allow the disk to work with any controller.
+	- The essential features of RAID are:
+		-- mirroring: writing the same data to more than one disk.
+		-- striping: splitting of data to more than one disk.
+		-- parity: extra data is stored to allow problem detection and repair, yielding fault tolerance.
+		-- Thus use of RAID can improve both performance and reliability.
+	- RAID devices are typically created by combining partitions from several disks together
+	- mdadm is used to create and manage RAID devices, '/dev/mdX' is equivalent to '/dev/sda1'
+RAID Levels:
+	- many levels exists based on the specification of increasing complexity and use, these are:
+		-- RAID 0: uses only striping. 
+			--- advantages:
+				---- data spread across multiple disks
+				---- improved performance
+			--- disadvantages:
+				---- no redundancy
+				---- no stability
+				---- no recovery capabilities
+		-- RAID 1: uses only mirroring
+			--- advantages:
+				---- good for recovery as each disk has a duplicate
+		-- RAID 5: uses rotating parity strip;
+			--- advantage:
+				---- disk failure only causes drop in performance, no loss of data
+				--Note: they must be at least 3 disks
+		-- RAID 6: has striped disks with dual parity, 
+			--- can handle loss of two disks
+			--- requires at least 4 disks
+			--- replaces RAID 5 due to its stress on hardware
+		-- RAID 10: is a mirrored and striped data set.
+			--- at least 4 drives are needed.
+		Note: adding more disks improves performance.
+Software RAID Configuration:
+	- Steps for setup includes:
+		-- create partitions on each disk (type fd in fdisk)
+		-- create RAID device with mdadm
+		-- format RAID device
+		-- add device to /etc/fstab
+		-- mount RAID device
+		-- capture RAID details to ensure persistence
+	- The command: sudo mdadm -S --> used to stop RAID
+	- Example:
+		- create two partitions of type fd on disks /dev/sdb, /dev/sdc
+			-- sudo fdisk /dev/sdb, sudo fdisk /dev/sdc
+		- set up the array
+			-- sudo mdadm --create /dev/md0 --level=1 --raid-disks=2 /dev/sdbX /dev/sdcX
+		- format it
+			-- sudo mkfs.ext4 /dev/md0
+		- add to configuration
+			-- sudo bash -c "mdadm --detail --scan >> /etc/mdadm.conf"
+		- mount it
+			-- sudo mkdir /myraid
+			-- sudo mount /dev/md0 /myraid
+			-- add /dev/md0 /myraid ext4 defaults 0 2
+		- examine /proc/mdstat to see the RAID status as in:
+			-- cat /proc/mdstat
+		- to stop 
+			-- sudo mdadm -S /dev/md0
 
-MONITORING RAIDS:
-	- WAYS INCLUDE:
-		-- SUDO MDADM --DETAIL /DEV/MD0
-		-- CAT /PROC/MDSTAT
-		-- YOU CAN ALSO USE: MDMONITOR, REQUIRES THE CONFIGURATION OF /ETC/MDADM.CONF
-		-- STATUS OF RAID DEVICE /DEV/MDX:
-			--- SUDO MDADM --DETAIL /DEV/MDX
-		-- SHOW STATUS OF ALL RAID DEVICES ON THE SYSTEM
-			-- CAT /PROC/MDSTAT
-		-- MONITOR RAID VIA EMAIL:
-			--- MAILADDR EDDIE@HASKEL.COM
-			--- STARTING EMAIL SERVICE WITH:
-				---- SUDO SERVICE MDMONITOR START
-				---- SUDO CHKCONFIG <MDMONITOR | MDADM> ON 
+Monitoring RAIDs:
+	- ways include:
+		-- sudo mdadm --detail /dev/md0
+		-- cat /proc/mdstat
+		-- you can also use: mdmonitor, requires the configuration of /etc/mdadm.conf
+		-- status of RAID device /dev/mdX:
+			--- sudo mdadm --detail /dev/mdX
+		-- show status of all RAID devices on the system
+			-- cat /proc/mdstat
+		-- Monitor RAID via email:
+			--- MAILADDR eddie@haskel.com
+			--- starting email service with:
+				---- sudo service mdmonitor start
+				---- sudo chkconfig <mdmonitor | mdadm> on 
 
-RAID HOT SPARES:
-	- USED TO FIX REDUNDANCIES
-	- CREATE HOT SPARES FOR RAID
-		-- SUDO MDADM --CREATE /DEV/MD0 -L 5 -N3 -X 1 /DEV/SDA8 /DEV/SDA9 /DEV/SDA10 /DEV/SDA11
-		-- SWITCH '-X 1' TELLS RAID TO USE ONE HOT SPARES
-		-- TESTING THE REDUNDANCY AND HOT SPARE OF YOUR ARRAY
-			--- SUDO MDADM --FAIL /DEV/MD0 /DEV/SDB2
-		-- RESTORING TESTED DRIVE:
-			--- SUDO MDADM --REMOVE /DEV/MD0 /DEV/SDB2
-			--- SUDO MDADM --ADD /DEV/MD0 /DEV/SDE2
+RAID Hot Spares:
+	- used to fix redundancies
+	- create hot spares for RAID
+		-- sudo mdadm --create /dev/md0 -l 5 -n3 -x 1 /dev/sda8 /dev/sda9 /dev/sda10 /dev/sda11
+		-- switch '-x 1' tells RAID to use one hot spares
+		-- testing the redundancy and hot spare of your array
+			--- sudo mdadm --fail /dev/md0 /dev/sdb2
+		-- restoring tested drive:
+			--- sudo mdadm --remove /dev/md0 /dev/sdb2
+			--- sudo mdadm --add /dev/md0 /dev/sde2
 
 <---------------------------------------------------------------------------------------------------->
 
-						CHAPTER 18. LOCAL SYSTEM SECURITY
+						Chapter 18. Local System Security
 
-OBJECTIVES:
-	- ASSESSING SYSTEM SECURITY RISKS
-	- FASHION AND IMPLEMENT SOUND COMPUTER SECURITY POLICIES AND PROCEDURES
-	- EFFICIENTLY PROTECT BIOS AND THE BOOT LOADER WITH PASSWORDS
-	- USE APPROPRAITE MOUNT OPTIONS, SETUID AND SETGID TO ENHANCE SECURITY
-LOCAL SYSTEM SECURITY:
-	- CAN BE DEFINED IN TERMS OF:
-		-- THE SYSTEMS ABILITY TO REGURALARLY DO WHAT IT IS SUPPOSED TO DO
-		-- INTEGRITY AND CORRECTNESS OF SYSTEM
-		-- ENSURING THAT THE AYATEM IS ONLY AVAILABLE TO THOSE AUTHORIZED TO USE IT
+Objectives:
+	- assessing system security risks
+	- fashion and implement sound computer security policies and procedures
+	- efficiently protect BIOS and the boot loader with passwords
+	- use appropraite mount options, setuid and setgid to enhance security
+Local System Security:
+	- can be defined in terms of:
+		-- the systems ability to reguralarly do what it is supposed to do
+		-- integrity and correctness of system
+		-- ensuring that the ayatem is only available to those authorized to use it
 
-	- AREAS FOR SECURITY INCLUDE:
-		-- PHYSICAL
-		-- LOCAL
-		-- REMOTE, AND PERSONAL
-CREATING A SECURITY POLICY:
-	- BASIC STRUCTURE OF COMPUTER SECURITY:
-		-- BE SIMPLE AND EASY TO UNDERSTAND
-		-- GET CONSTANTLY UPDATED
-		-- BE IN THE FORM OF A WRITTEN DOCUMENTATION
-		-- DESCRIBE BOTH POLICIES AND PROCEDURES
-		-- SPECIFY ENFORCEMANT ACTIONS
-		-- SPECIFY ACTIONS TO TAKE IN REESPONSE TO A SECURITY BREACH
-	- BASIC STRUCTURE OF SECURITY POLICIES:
-		-- SHOULD BE GENERIC SO ITS EASY TO FOLLOW
-		-- MUST SAFE THE DATA THAT NEEDS PROTECTIONS
-		-- DENY ACCESS TO REQUIRED SERVICES AND PROTECT USER POLICY
-	- POLICIES SHOULD BE UPDATED ON A REGULAR BASIS
-WHAT TO INCLUDE IN THE POLICY:
-	- METHODS OF PROTECTING INFORMATION FROM BEING READ OR COPIED BY UNAUTHORIZED PERSONEL
-	- PROTECTION OF INFORMATION FROM BEING ALTERED OR DELETED WITHOUT THE PERMISSION OF THE OWNERSHIP
-	- ALL SERVICES SHOULD BE PROTECTED SO THEY ARE AVAILABLE AND NOT DEGRADED IN ANY MANNER WITHOUT AUTHORIZATION
-	- ASPECTS INCLUDE:
-		-- CONFIDENTIALITY
-		-- DATA INTEGRITY
-		-- AVAILABILITY
-		-- CONSISTENCY
-		-- CONTROL
-		-- AUDIT
-WHAT RISKS TO ASSESS:
-	- QUESTIONS ARE:
-		-- WHAT DO I WANT TO PROTECT?
-		-- WHAT AM I PROTECTING IT AGAINST?
-		-- HOW MUCH TIME, PERSONNEL, AND MONEY IS NEEDED TO PROVIDE ADEQUATE PROTECTION?
-CHOOSING A SECURITY PHILOSOPHY:
-	- BASIC PHILOSOPHIES:
-		-- ANYTHING NOT EXPRESSLY PERMITTED IS DENIED
-		-- ANYTHING NOT EXPRESSLY FORBIDDEN IS PERMITTED
-SOME GENERAL SECURITY GUIDLINES:
-	- GENERAL GUIDELINES:
-		-- HUMAN FACTOR IS THE WEAKEST LINK:
-			--- EDUCATE YOUR USERS AND KEEP THEM HAPPY
-		-- NO COMPUTER ENVIRONMENT IS INVULNERABLE
-		-- PARANOIA IS A GOOD THING:
-			--- BE SUSPICIOUS, VIGILANT, PERSEVERE WHEN SECURING A COMPUTER.
-UPDATES AND SECURITY:
-	- ALWAYS APLY UPDATES AND UPGRADES
-HARDWARE ACCESSIBILITY AND VULNERABILITY:
-	- PHYSICAL ACCESS TO SERVERS AND WORKSTATIONS SHOULD MONITORED
-HARDWARE ACCESS GUIDELINES:
-	- STEPS INCLUDE:
-		-- LOCKING DOWN WORKSTATIONS AND SERVERS
-		-- PROTECTING YOUR NETWORK LINKS AGAINST ACCESS BY PEOPLE YOU DO NOT TRUSTED
-		-- PROTECTING YOUR KEYBOARDS WHERE PASSWORDS ARE ENTERED TO ENSURE THE KEYBOARDS CANNOT BE TAMPERED WITH
-		-- PASSWORD PROTECTING BIOS TO PREVENT BOOTING FROM LIVE OR RESCUE CD/DVD OR USB KEY
+	- areas fo security include:
+		-- physical
+		-- local
+		-- remote, and personal
+Creating a security policy:
+	- basic structure of computer security:
+		-- be simple and easy to understand
+		-- get constantly updated
+		-- be in the form of a written documentation
+		-- describe both policies and procedures
+		-- specify enforcemant actions
+		-- specify actions to take in reesponse to a security breach
+	- basic structure of security policies:
+		-- should be generic so its to follow
+		-- must safe the data that needs protections
+		-- deny access to required services and protect user policy
+	- policies should be updated on a regular basis
+What to Include in the Policy:
+	- methods of protecting information from being read or copied by unauthorized personel
+	- protection of information from being altered or deleted without the permission of the ownership
+	- all services should be protected so they are available and not degraded in any manner without authorization
+	- aspects include:
+		-- confidentiality
+		-- data integrity
+		-- availability
+		-- consistency
+		-- control
+		-- audit
+What Risks to Assess:
+	- Questions are:
+		-- what do I want to protect?
+		-- what am I protecting it against?
+		-- how much time, personnel, and money is needed to provide adequate protection?
+Choosing a Security Philosophy:
+	- basic philosophies:
+		-- anything not expressly permitted is denied
+		-- anything not expressly forbidden is permitted
+Some General Security Guidlines:
+	- general guidelines:
+		-- human factor is the weakest link:
+			--- educate your users and keep them happy
+		-- no computer environment is invulnerable
+		-- paranoia is a good thing:
+			--- be suspicious, vigilant, persevere when securing a computer.
+Updates and Security:
+	- always aply updates and upgrades
+Hardware Accessibility and Vulnerability:
+	- physical access to servers and workstations should monitored
+Hardware Access Guidelines:
+	- steps include:
+		-- locking down workstations and servers
+		-- protecting your network links against access by people you do not trusted
+		-- protecting your keyboards where passwords are entered to ensure the keyboards cannot be tampered with
+		-- password protecting BIOS to prevent booting from live or rescue CD/DVD or USB key
 
-PROTECTION OF BIOS:
-	- SHOULD BE DONE WITH CARE
+Protection of BIOS:
+	- should be done with care
 
-PROTECTING THE BOOT LOADER WITH PASSWORD:
-	- SHOULD BE SECURED WITH THE BIOS FOR FULL PROTECTION
-	- STEPS INCLUDES:
-		-- GRUB VERSION 1:
-			--- RUN GRUB-MD5-CRYPT
-			--- COPY DISPLAYED HASHED PASSWORD
-			--- EDIT /BOOT/GRUB/GRUB.CONF AND ADD THE LINE BELOW THE TIMEOUT ENTRY:	
-				---- PASSWORD --MD5 $LKL(8R8LKZ.LJGSOORP)I4MMKKKLXZA
-		-- GRUB VERSION 2:
-				--- MORE COMPLICATED TO SET UP
-				--- EDIT SYSTEM CONFIGURATION FILES IN /ETC/GRUB.D 
-				--- RUN UPDATE-GRUB
-FILESYSTEM SECURITY: MOUNT OPTIONS:
-	- NODEV --> DO NOT INTERPRET CHARACTER OR BLOCK SPECIAL DEVICES ON THE SYSTEM
-	- NOSUID --> THE SET-USER-IDENTIFIER OR SET-GROUP-IDENTIFIER BITS DO NOT TAKE EFFECTIVE
-	- NOEXEC --> RESTRIC DIRECT EXECUTION OF ANY BINARIES ON THE MOUNTED FILESYSTEM
-	- RO --> MOUNT THE FILESYSTEM IN READ-ONLY MODE AS IN:
-		-- MOUNT -O RO,NOEXEC,NODEV /DEV/SDA2 /MYMOUNTPT
+Protecting The Boot Loader with Password:
+	- should be secured with the BIOS for full protection
+	- steps includes:
+		-- GRUB version 1:
+			--- run grub-md5-crypt
+			--- copy displayed hashed password
+			--- edit /boot/grub/grub.conf and add the line below the timeout entry:	
+				---- password --md5 $lkl(8r8lkz.ljgsoorp)i4mmkkklxza
+		-- GRUB version 2:
+				--- more complicated to set up
+				--- edit system configuration files in /etc/grub.d 
+				--- run update-grub
+Filesystem Security: mount options:
+	- nodev --> do not interpret character or block special devices on the system
+	- nosuid --> the set-user-identifier or set-group-identifier bits do not take effective
+	- noexec --> restric direct execution of any binaries on the mounted filesystem
+	- ro --> mount the filesystem in read-only mode as in:
+		-- mount -o ro,noexec,nodev /dev/sda2 /mymountpt
 		OR
-		-- /DEV/SDA2 /MYMOUNTPT EXT4 RO,NOEXEC,NODEV 0 0
+		-- /dev/sda2 /mymountpt ext4 ro,noexec,nodev 0 0
 
-SETUID AND SETGID:
-	- USING THIS COMMANDS ONE CAN CHANGE THE DEFAULT BEHAVIOUR OF ANY PROGRAM TO RUN WITH THE PERMISSION OF 
-		THE OWNER RATHER THAN WITH THAT OF THE CURRENT USER OF THE PROGRAM
-SETTING THE SETUID/SETGID BITS:
-	- COMMANDS:
-		-- CHMOD U+S SOMEFILE
-		-- CHMOD G+S SOMEFILE
-		-- CHMOD G+S SOMEDIR --> FILES CREATED IN THIS DIRECTORY ARE GROUP OWNED BY THE GROUP OWNER OF THE DIRECTORY.
+setuid and setgid:
+	- using this commands one can change the default behaviour of any program to run with the permission of 
+		the owner rather than with that of the current user of the program
+Setting the setuid/setgid Bits:
+	- commands:
+		-- chmod u+s somefile
+		-- chmod g+s somefile
+		-- chmod g+s somedir --> files created in this directory are group owned by the group owner of the directory.
 
 
 <------------------------------------------------------------------------------------------------------------------------>
 
-						CHAPTER 19. LINUX SECURITY MODULES
-THE RESPONSIBLITY OF PROTECTING A SYSTEM FALLS ON:
-	- APPLICATION DESIGNERS
-	- LINUX KERNEL DEVELOPERS AND MAINTAINERS
+						Chapter 19. Linux Security Modules
+The responsiblity of protecting a system falls on:
+	- application designers
+	- Linux kernel developers and maintainers
 
-OBJECTIVES:
-	- UNDERSTAND HOW THE LINUX SECURITY MODULES FRAMEWORK WORKS AND HOW IT IS DEPLOYED
-	- LIST THE VARIOUS LSM IMPLEMENTATIONA AVAILABLE
-	- DELINEATE THE MAIN FEATURES OF SELINUX
-	- EXPLAIN THE DIFFERENT MODES AND POLICIES AVAILABLE
-	- GRASP THE IMPORTSANCE OF CONTEXTS AND HOW TO GET AND SET THEM
-	- KNOW HOW TO USE THE IMPORTANT SELINUX UTILITY PROGRAMS
+Objectives:
+	- understand how the Linux Security Modules framework works and how it is deployed
+	- list the various LSM implementationa available
+	- delineate the main features of SELinux
+	- explain the different modes and policies available
+	- grasp the importsance of contexts and how to get and set them
+	- know how to use the important SELinux utility programs
 
-WHAT ARE LINUX SECURITY MODULES?:
-	- USING 'MANDATORY ACCESS CONTROLS' LINUX KERNEL ENSURES A SECURE SYSTEM
-	- PROTOCOL FOR IMPLEMENTATION ARE:
-		-- MINIMIZE CHANGES TO THE KERNEL
-		-- MINIMIZE OVERHEAD ON THE KERNEL
-		-- PERMITS FLEXIBILITY AND CHOICE BETWEEN DIFFERENT IMPLEMENTATIONS. EACH OF WHICH IS PRESENTED AS A SELF-CONTAINED LSM (LINUX SECURITY MODULE)
-		-- BASIC SCENERIO:
-			--- REQUEST TO KERNEL SYSTEM ---> KERNEL INVOKES SECURITY SYSTEM 
+What Are Linux Security Modules?:
+	- using 'mandatory access controls' linux kernel ensures a secure system
+	- protocol for Implementation are:
+		-- minimize changes to the kernel
+		-- minimize overhead on the kernel
+		-- permits flexibility and choice between different Implementations. each of which is presented as a self-contained LSM (Linux Security Module)
+		-- basic scenerio:
+			--- request to kernel system ---> kernel invokes security system 
 														|
 														|
-														|				 YES
+														|				 Yes
 														|				  |
 														V				  V
-									DOES USER HAVE RIGHT TO MAKE REQUEST ---> KERNEL CARRIES OUT REQUEST
+									does user have right to make request ---> kernel carries out request
 														|
-														|<----NO
+														|<----No
 														|
 														V
-											KERNEL DENIES ACCESS TO USER
-LSM CHOICES:
-	- CURRENT LSMS ARE:
-		-- SELINUX -- SECURITY ENHANCED LINUX
-		-- APPARMMOR
-		-- SMACK
+											kernel denies access to user
+LSM Choices:
+	- current LSMs are:
+		-- SELinux
+		-- AppArmmor
+		-- Smack
 		-- TOMOYO
-SELINUX OVERVIEW:
-	- USED TO DETERMINE WHICH PROCESSES CAN ACCESS WHICH:-
-	 -- FILES
-	 -- DIRECTORIES
-	 -- PORTS, AND
-	 -- OTHER ITEMS ON THE SYSTEM
-	- WORKS WITH THESE CONCEPTUAL QUANTITIES:
-		-- CONTEXTS: LABELS TO FILES, PROCESSES, AND PORTS, E.G. USER, ROLE, AND TYPE
-		-- RULES: IN TERMS OF CONTEXTS, PROCESSES, FILES, PORTS, USERS
-		-- POLICIES: SET OF RULES THAT DESCRIBES WHAT SYSTEM-WIDE CONTROL DECISIONS SHOULD BE MADE BY SELINUX
+SELinux Overview:
+	- used to determine which processes can access which:-
+	 -- files
+	 -- directories
+	 -- ports, and
+	 -- other items on the system
+	- works with these conceptual quantities:
+		-- contexts: labels to files, processes, and ports, e.g. user, role, and type
+		-- rules: in terms of contexts, processes, files, ports, users
+		-- policies: set of rules that describes what system-wide control decisions should be made by SELinux
 
-SELINUX MODES:
-	- ENFORCING: ALL SELINUX CODE IS OPERATIVE AND ACCESS IS DENIED ACCORDING TO POLICY. ALL VIOLATIONS ARE AUDITED AND LOGGED.
-	- PERMISSIVE: ENABLES SELINUX CODE BUT ONLY AUDITS AND WARNS ABOUT OPERATIONS THAT WOULD BE DENIED IN ENFORCING MODE.
-	- DISABLED: COMPLETELY DISABLE SELINUX KERNEL AND APPLICATION CODE LEAVING THE SYSTEM WITHOUT ANY OF ITS PROTECTIONS.
-	- MODES ARE SELECTED AND EXPLAINED IN A FILE (USUALLY /ETC/SELINUX/CONFIG) WHOSE LOCATION VARIES BY DISTRIBUTION (IS OFTEN EITHER AT
-		 /ETC/SYSCONFIG/SELINUX OR LINKED FROM THERE)
-	- UTILITIES USED HERE ARE:
-		-- SESTATUS: DISPLAY CURRENT MODE AND POLICY
-		-- GETENFORCE
-		-- SETENFORCE --> $ SUDO SETENFORCE PERMISSIVE
-	- TO COMPLETELY DISABLE MODE USE:
-		-- CONFIGURATION FILE, /ETC/SELINUX/CONFIG AND SET SELINUX=DISABLED
-		-- KERNEL PARAMETER, ADDING SELINUX=0 TO THE KERNEL PARAMETER LIST WHEN BOOTING
+SELinux Modes:
+	- ENFORCING: all SELinux code is operative and access is denied according to policy. All violations are auditedn and logged.
+	- PERMISSIVE: Enables SELinux code but only audits and warns about operations that would be denied in enforcing mode.
+	- DISABLED: completely disable SELinux kernel and application code leaving the system without any of its protections.
+	- modes are selected and explained in a file (usually /etc/selinux/config) whose location varies by distribution (is often either at
+		 /etc/sysconfig/selinux or linked from there)
+	- utilities used here are:
+		-- sestatus: display current mode and policy
+		-- getenforece
+		-- setenforce --> $ sudo setenforce permissive
+	- to completely disable mode use:
+		-- configuration file, /etc/selinux/config and set SELINUX=disabled
+		-- kernel parameter, adding selinux=0 to the kernel parameter list when booting
 
-SELINUX POLICIES:
-	- USUALLY /ETC/SYSCONFIG/SELINUX IS USED TO SET THE SELINUX POLICY.
-	- MULTIPLE POLICIES ARE ALLOWED BUT ONLY ONE CAN BE ACTIVE AT A TIME
-	- EACH POLICY IS INSTALLED UNDER /ETC/SELINUX/[SELINUXTYPE]
-		-- COMMON POLICIES ARE:
-			--- TARGETED: DEFAULT POLICY STATE IN WHICH SELINUX IS MORE RESTRICTED TO TARGETED PROCESSES.
-				USER PROCESSES AND INIT PROCESSES ARE NOT TARGETED
-			--- MINIMUM: HERE ONLY SELECTED PROCESSES ARE TARGETED
-			--- MLS" MULTI-LEVEL SECURITY POLICY IS MUCH MORE RESTRICTIVE. HERE ALL PROCESSES ARE ARE PLACED IN A FINED-GRAINED 
-				SECURITY DOMAINS WITH PARTICULAR POLICIES
+SELinux Policies:
+	- usually /etc/sysconfig/selinux is used to set the SELinux policy.
+	- multiple policies are allowed but only one can be active at a time
+	- each policy is installed under /etc/selinux/[SELINUXTYPE]
+		-- COMMON POLICIES are:
+			--- targeted: default policy state in which SELinux is more restricted to targeted processes.
+				user processes and init processes are not targeted
+			--- minimum: here only selected processes are targeted
+			--- MLS" Multi-Level Security policy is much more restrictive. Here all processes are are placed in a fined-grained 
+				security domains with particular policies
 
-CONTEXT UTILITIES:
-	- SELINUX CONTEXTS ARE:
-		-- USER
-		-- ROLE
-		-- TYPE
-		-- LEVEL
-	- SELINUX AND STANDARD COMMAND LINE TOOLS:
-		-- PS, LS, CP, MV, AND MKDIR
-SELINUX CONTEXT INHERITANCE AND PRESERVATION:
-	- NEWLY CREATED FILES INHERIT THE CONTEXT FROM THEIR PARENT DIRECTORY
-	- MOVING OR COPYING FILES, IT IS THE CONTEXT OF THE SOURCE DIRECTORY THAT MAY BE PRESERVED
-RESTORECON:
-	- RESETS FILE CONTEXTS, BASED ON PARENT DIRECTORY SETTINGS. 
-	- $ RESTORECON -RV /HOME/PETER
-SEMANAGE FCONTEXT:
-	- USED TO MANAGE THE DEFAULT CONTEXT FOR A NEWLY CREATED DIRECTORY
-		-- MKDIR /VIRTUALHOSTS
-		-- LS -Z
-		-- SEMANAGE FCONTEXT -A -T HTTPD_SYS_CONTENT_T /VIRTUALHOSTS
-		-- LS -Z
-		-- EFFECTING THE CHANGE ABOVE:
-			--- RESTORECON -RFV /VIRTUALHOSTS
-			--- LS -Z
-USING SELINUX BOOLEANS:
-	- SELINUX POLICY BEHAVIOUR CAN BE CONFIGURED AT RUNTIME WITHOUT REWRITING THE POLICY.
-	  USING SELINUX BOOLEANS WHICH ARE POLICY PARAMETERS THAT CAN BE ENABLED AND DISABLED.
-	- SUDO SEMANAGE BOOLEN -L (LIST BOOLEANS OF CURRENT POLICY, INCLUDING CURRENT STATE AND SHORT DESCRIPTION)
-GETSEBOOL AND SETSEBOOL:
-	- GETSEBOOL -A --> PRINTS ONLY THE BOOLEAN NAME AND ITS CURRENT STATUS.
-	- SETSEBOOL: CHANGING BOOLEAN STATUS NON-PERSISTENTLY WITH -P IT PERSSISTS
-	- EXAMPLES:
-		-- GETSEBOOL SSH_CHROOT_RW_HOMEDIR
-		-- SUDO SETSEBOOL SSH_CHROOT_RW_HOMEDIR ON
-		-- SUDO REBOOT --> REMOVES THE ABOVE CHANGES
-		-- SUDO SETSEBOOL -P SSH_CHROOT_RW_HOMEDIR ON --> PERSSISTS CHANGES
-TROUBLESHOOTING TOOLS:
-	- EXAMPLE:
-		-- ECHO 'FILE CREATED AT /ROOT' > ROOTFILE
-		-- MV ROOTFILE /VAR/WWW/HTML
-		-- WGET -O - LOCALHOST/ROOTFILE
-			--- ACCESS DENIED
-		-- CHECK ERROR LOG --> $ TAIL /VAR/LOG/MESSGAES
-			-- SEALERT -L DSKJK03-KJFKLJ-KKHH-EUYKJ-3455
-			-- ON RHEL 7 --> GREP HTTPD /VAR/LOG/AUDIT/AUDIT.LOG | AUDIT2ALLOW -M MYPOL
-				--->> AUDIT2ALLOW (GENERATES SELINUX POLICIES) AND AUDIT2WHY (TRANSLATES SELINUX INTO A DESCRIPTION OF WHY THE ACCESS WAS DENIED)
-		-- CORRECTING ACCESS ISSUE --> RESTORECON -RV /VAR/WWW/HTML/
-		-- WGET -Q -O - LOCALHOST/ROOTFILE
-			--->> SUCCESS
-APPARMOR:
-	- IS AN LSM ALTERNATIVE TO SELINUX
-	- USED BY SUSE, UBUNTU AND OTHER DESTROS
-	- APPARMOR:
-		- PROVIDES MANDATORY ACCESS CONTROL (MAC)
-		- ALLOWS ADMINISTRATORS TO ASSOCIATE A SECURITY PROFILE TO A PROGRAM WHICH RESTRICTS ITS CAPABILITIES
-		- IS CONSIDERED BY SOME TO BE EASIER THAN SELINUX
-		- IS CONSIDERED FILESYSTEM-NEUTRAL(NO SECURITY LABELS REQUIRED)
-	- APPARMOR SUPPLEMENTS THE TRADITIONAL UNIX DISCREATIONARY ACCESS CONTROL (DAC) MODEL BY PROVIDING MANDATORY ACCESS CONTROL(MAC)
-	- IN APPARMOR: VIOLATIONS OF THE PROFILE ARE LOGGED AND CAN BE TURNED INTO A PROFILE BASED ON THE PROGRAMS TYPICAL BEHAVIOUR.
+Context Utilities:
+	- SELinux contexts are:
+		-- User
+		-- role
+		-- Type
+		-- Level
+	- SELinux and Standard Command Line Tools:
+		-- ps, ls, cp, mv, and mkdir
+SELinux Context Inheritance and Preservation:
+	- newly created files inherit the context from their parent directory
+	- moving or copying files, it is the context ofthe source directory that may be preserved
+retorecon:
+	- resets file contexts, based on parent directory settings. 
+	- $ restorecon -Rv /home/peter
+semanage fcontext:
+	- used to manage the default context for a newly created directory
+		-- mkdir /virtualHosts
+		-- ls -Z
+		-- semanage fcontext -a -t httpd_sys_content_t /virtualHosts
+		-- ls -Z
+		-- effecting the change above:
+			--- restorecon -RFv /virtualHosts
+			--- ls -Z
+Using SELinux Booleans:
+	- SELinux policy behaviour can be configured at runtime without rewriting the policy.
+	  using SELinux Booleans which are policy parameters that can be enabled and disabled.
+	- sudo semanage boolen -l (list booleans of current policy, including current state and short description)
+getsebool and setsebool:
+	- getsebool -a --> prints only the boolean name and its current status.
+	- setsebool: changing boolean status non-persistently with -P it perssists
+	- Examples:
+		-- getsebool ssh_chroot_rw_homedir
+		-- sudo setsebool ssh_chroot_rw_homedir on
+		-- sudo reboot --> removes the above changes
+		-- sudo setsebool -P ssh_chroot_rw_homedir on --> perssists changes
+Troubleshooting Tools:
+	- example:
+		-- echo 'File created at /rrot' > rootFile
+		-- mv rootFile /var/www/html
+		-- wget -O - localhost/rootFile
+			--- access denied
+		-- check error log --> $ tail /var/log/messgaes
+			-- sealert -l dskjk03-kjfklj-kkhh-euykj-3455
+			-- on RHEL 7 --> grep httpd /var/log/audit/audit.log | audit2allow -M mypol
+				--->> audit2allow (generates SELinux policies) and audit2why (translates SELinux into a description of why the access was denied)
+		-- correcting access issue --> restorecon -Rv /var/www/html/
+		-- wget -q -O - localhost/rootFile
+			--->> success
+AppArmor:
+	- is an LSM alternative to SELinux
+	- used by SUSE, Ubuntu and other destros
+	- AppArmor:
+		- Provides Mandatory Access Control (MAC)
+		- Allows asministrators to associate a security profile to a program which restricts its capabilities
+		- Is considered by some to be easier than SELinux
+		- Is considered filesystem-neutral(no Security labels required)
+	- AppArmor supplements the traditional UNIX Discreationary Access Control (DAC) model by providing Mandatory Access Control(MAC)
+	- in AppArmor: violations of the profile are logged and can be turned into a profile based on the programs typical behaviour.
 
 <-------------------------------------------------------------------------------------------------------------------->
 
-							CHAPTER 20. PROCESSES
+							Chapter 20. processes
 
- - A PROCESS IS AN EMBODIMENT OF A RUNNING APPLICATION WHICH MAY OR MAY NOT CONSIST OF MUTIPLE THREADS
- - PROCESSES HAVE BOTH ATTRIBUTES AND WELL-DELINEATED PERMISSIONS.
- - THEY MUST IN ONE OF A NUMBER OF ENUMERATED STATES, MOST COMMON BEING 'RUNNING' OR 'SLEEPING'
- - IMPORTANT TO KNOW WHEN A PROCESS IS RUNNING IN THE 'USER MODE' OR 'KERNEL MODE' WITH ELEVATED PRIVILEGES FOR THE LATTER.
- - A NUMBER OF DIFFERENT WAYS EXIST TO CREATE 'CHILD' PROCESSES AND TO SET AND MODIFY THEIR PRIORITIES.
+ - A process is an embodiment of a running application which may or may not consist of mutiple threads
+ - processes have both attributes and well-delineated permissions.
+ - they must in one of s number of enumerated states, most common being 'running' or 'sleeping'
+ - important to know when a process is running in the 'user mode' or 'kernel mode' with elevated privileges for the latter.
+ - a number of different ways exist to create 'child' processes and to set and modify their priorities.
 
-OBJECTIVES:
-	- DESCRIBE A PROCESS AND THE RESOURCES ASSOCIATED WITH IT
-	- DISTINGUISH BETWEEN PROCESSES, PROGRAMS AND THREADS
-	- UNDERSTAND PROCESS ATTRIBUTES, PERMISSIONS AND STATES
-	- KNOW THE DIFFERENCE BETWEEN RUNNING IN USER AND KERNEL MODES
-	- DESCRIBE 'DAEMON' PROCESSES
-	- UNDERSTAND HOW NEW PROCESSES ARE FORKED (CREATED)
-	- USE NICE AND RENICE TO SET AND MODIFY PRIORITIES
+Objectives:
+	- describe a process and the resources associated with it
+	- distinguish between processes, programs and threads
+	- understand process attributes, permissions and states
+	- know the difference between running in user and kernel modes
+	- describe 'daemon' processes
+	- understand how new processes are forked (created)
+	- use nice and renice to set and modify priorities
 
-PROCESSES, PROGRAMS AND THREADS:
-	- PROCESS:
-		-- THIS IS AN EXECUTING PROGRAM AND ASSOCIATED RESOURCES, INCLUDING ENVIRONMENT, OPEN FILES, SIGNAL HANDLERS
-		-- THE SAME PROGRAM MAY BE EXECUTING MORE THAN ONCE SIMULTANEOUSLY AND THUS BE RESPONSIBLE FOR MULTIPLE PROCESSES
-		-- BASIC STRUCTURE
+Processes, Programs and Threads:
+	- Process:
+		-- this is an executing program and associated resources, including environment, open files, signal handlers
+		-- the same program may be executing more than once simultaneously and thus be responsible for multiple processes
+		-- basic structure
 
-					PROGRAM
+					Program
 						|
-						|----> STARTS PROCESS
-						|
-						V
-					 PROCESS --> PROCESS ID (GROUP ID)
+						|----> starts process
 						|
 						V
-	|------------------------------------------------------| --> THREAD ID (PROCESS ID)
+					 process --> process ID (group ID)
+						|
+						V
+	|------------------------------------------------------| --> thread ID (process ID)
 	|		|		|		|		|		|		|	   |
-THREAD	 THREAD	  THREAD  THREAD  THREAD  THREAD  THREAD  THREAD
+thread	 thread	  thread  thread  thread  thread  thread  thread
 
 
-THE INIT PROCESS:
-	- THIS IS THE FIRST USER PROCESS ON THE SYSTEM WITH A PROCESS ID = 1
-	- REMAINS TILL SHUTDOWN AND IS THE LAST PROCESS TO TERMINATE AT SHUTDOWN
-	- ANCESTRAL PARENT OF ALL OTHER USER PROCESSES
-PROCESSES:
-	- IS AN INSTANCE OF A PROGRAM IN EXECUTION
-	- MAY BE IN A RUNNING STATE, OR SLEEP STATE
-	- EACH PROCESS HAS:
-		-- PID (PROCESS ID),
-		-- PPID (PARENT PROCESS ID),
-		-- PGI (PROCESS GROUP ID)
-	- ANY PROCESS FROM THE KERNEL HAS A '[]' AROUND THEIR NAMES WHEN '$ PS' IS RUN
-	- WHEN A PARENT PROCESS DIES BEFORE A CHILD, THE PPID IS SET TO 1 (INIT), OR TO 2 IN NEWER SYSTEMS USING 'SYSTEMD'
-	- WHEN CHILD PROCESS TERMINATES NORMALLY OR ABNORMALLY BEFORE ITS PARENTS WHICH HAS NOT WAITED FOR IT AND EXAMINED ITS EXIT CODE IS 
-		KNOWN AS A 'ZOMBIE (OR DEFUNCT)' PROCESS
-	- THE PARENT 'INIT' PROCESS CHECKS ON ITS ADOPTED CHILD PROCESSES AND LETS THOSE WHO HAVE TERMINATED DIE GRACEFULLY
-	- PROCESS ARE CONTROLLED 'SCHEDULING', WHICH IS PREEMPTIVE AND IS ONLY DONE BY THE KERNEL
-	- LARGEST PID HAS BEEN LIMITED TO A 16-BIT NUMBER, OR 32768
-	- PID_MAX CAN BE ALTERED IN THE /PROC/SYS/KERNEL/PID_MAX
-PROCESS ATTRIBUTES:
-	- THESE INCLUDES:
-		-- THE PROGRAM BEING EXECUTED
-		-- CONTEXT (STATE)
-		-- PERMISSIONS
-		-- ASSOCIATED RESOURCES
-	- CONTEXT SWITCHING: IS DONE BY THE KERNEL
+The init Process:
+	- this is the first user process on the system with a process ID = 1
+	- remains till shutdown and is the last process to terminate at shutdown
+	- ancestral parent of all other user processes
+Processes:
+	- is an instance of a program in execution
+	- may be in a running state, or sleep state
+	- each process has:
+		-- pid (Process ID),
+		-- ppid (Parent Process ID),
+		-- pgi (Process Group ID)
+	- any process from the kernel has a '[]' around their names when '$ ps' is run
+	- when a parent process dies before a child, the ppid is set to 1 (init), ot to 2 in newer systems using 'systemd'
+	- when child process terminates normally or abnormally before its parents which has not waited for it and examined its exit code is 
+		known as a 'zombie (or defunct)' process
+	- the parent 'init' process checks on its adopted child processes and lets those who have terminated die gracefully
+	- Process are controlled 'scheduling', which is preemptive and is only done by the kernel
+	- largest PID has been limited to a 16-bit number, or 32768
+	- pid_max can be altered in the /proc/sys/kernel/pid_max
+Process Attributes:
+	- these includes:
+		-- the program being executed
+		-- context (state)
+		-- permissions
+		-- associated resources
+	- context switching: is done by the kernel
 
-CONTROLLING PROCESSES WITH ULIMIT:
-	- ULIMIT IS A BUILT IN BASH COMMAND THAT DISPLAY OR RESETS A NUMBER OF RESOURCES LIMITS ASSOCIATED	
-		WITH PROCESSES RUNNING UNDER A SHELL.
-	- RUN $ ULIMIT -A
-CONTROLLING PROCESSES WITH ULIMIT(CONT.)
-	- THE 'ULIMIT -A' VALUES CAN BE CHANGED TO:
-		-- RESTRICT (LIMIT TO A VALUE), OR
-		-- EXPAND (INCREASE THE CURRENT LIMIT OR VALUE)
-	- KINDS OF LIMIT INCLUDE:
-		-- HARD: MAX VALUE CAN'T BE EXCEEDED, SET ONLY BY ROOT USER
-		-- SOFT: THE CURRENT LIMITING VALUE WHICH A USER CAN MODIFY BUT CAN'T EXCEED HARD LIMIT
-	- SYNTAX:
-		-- $ ULIMIT [OPTIONS] [LIMIT]
-			--- AS IN: ULIMIT -N 1600
-		-- PERMANENTLY CHANGING THIS VALUES TO AFFECT ALL CURRENTLY LOGGED IN SHELLS ONE MUST MODIFY /ETC/SECURITY/LIMITS.CONF, THEN REBOOT 
+Controlling Processes with ulimit:
+	- ulimit is a built in bash command that display or resets a number of resources limits associated	
+		with processes running under a shell.
+	- run $ ulimit -a
+Controlling Processes with ulimit(cont.)
+	- the 'ulimit -a' values can be changed to:
+		-- restrict (limit to a value), or
+		-- expand (increase the current limit or value)
+	- Kinds of limit include:
+		-- Hard: max value can't be exceeded, set only by root user
+		-- soft: the current limiting value which a user can modify but can't exceed hard limit
+	- syntax:
+		-- $ ulimit [options] [limit]
+			--- as in: ulimit -n 1600
+		-- permanently changing this values to affect all currently logged in shells one must modify /etc/security/limits.conf, then reboot 
 
-PROCESS PERMISSION AND SETUID:
-	- PROCESS PERMISSIONS ARE BASED ON PROCESS OWNERSHIP OR USER WHO INVOKED IT.
-	- TWO TYPES OF PROGRAMS EXISTS:
-		-- SETUID PROGRAMS, PROGRAMS MARKED WITH AN S EXECUTE BIT. THESE RUN WITH A DIFFERENT OWNERSHIP FROM THE CURRENT INVOKER
-		-- NON-SETUID PROGRAMS, THAT RUN BASED ON THE REAL USER ID
-MORE ON PROCESS STATES:
-	- RUNNING:
-		-- IS EITHER RUNNING OR SITTING IN RUN QUEUES
-	- SLEEPING:
-		-- WAITING ON A REQUEST (USUALLY I/O) THAT WAS MADE
-	- STOPPED:
-		-- SUSPENDED PROCESS, USING CTRL-Z OR DEBUGGER
-	- ZOMBIE:
-		-- ENTERS THE STATE WHEN IT TERMINATES AND NO OTHER PROCESS (USUALLY PARENT) HAS INQUIRED ABOUT IT STATE.
-		-- HERE ALL RESOURCES ARE RELEASED EXCEPT ITS EXIT STATE AND ITS ENTRY IN THE PROCESS TABLE
-		-- IT IS ADOPTED BY THE INIT (PID=1) OR KTHREADD (PID=2) WHEN ITS PARENT PROCESS DIES.
-EXECUTION MODES:
-	- ANY ONE PROCESS CAN BE IN EITHER:
-		-- USER MODE
-		-- SYSTEM MODE
-	- MODES ARE ENFORCED AT HARDWARE LEVEL NOT SOFTWARE LEVEL
-USER MODE:
-	- ALL PROCESS ARE STARTED IN THE USE MODE BY DEFAULT
-	- ALL PROCESSES ARE ISOLALED IN THEIR OWN ENVIRONMENT CALLED PROCESS RESOURCE ISOLATION
-	- SYSTEM MODE PROCESSES RUN IN USER MODE UNLESS THEY ARE JUMPING  INTO A SYSTEM CALLED
-KERNEL MODE:
-	- HERE CPU HAS ACCESS TO ALL HARDWARE ON THE SYSTEM.
-DAEMONS:
-	- THIS IS A BACKGROUND PROCESS WHOSE SOLE PURPOSE IS TO PROVIDE SOME SPECIFIC SERVICE TO USERS OF THE SYSTEM
-	- BASICS OF DAEMONS:
-		-- DAEMONS CAN BE QUITE S=EFFICIENT BECAUSE THEY ARE ONLY CALLED WHEN NEEDED
-		-- MANY DAEMONS ARE STARTED AT BOOT TIME
-		-- DAEMONS NAMES USUALLY END WITH D
-		-- SOME EXAMPLES ARE: HTTPD, UDEVD
-		-- DAEMONS MAY RESPOND TO EXTERNAL EVENTS (UDEVD), OR ELAPSED TIME (CROND)
-		-- DAEMONS GENERALLY HAVE NO CONTROLLING TERMINAL AND NO STANDARD INPUT/OUTPUT DEVICES
-		-- DAEMONS SOMETIMES PROVIDE BETTER SECURITY CONTROL
-KERNEL-CREATED PROCESSES:
-	- THE KERNEL DIRECTLY CREATES TWO KINDS OF PROCESSES:
-		-- INTERNAL KERNEL PROCESSES:
-			--- TAKE CARE OF MAINTANANCE WORK
-			--- THESES OFTEN RUN AS LONG AS THE SYSTEM RUNS
-		-- EXTERNAL USER PROCESSES:
-			--- RUN IN USER SPACE LIKE NORMAL APPLICATIONS BUT WHERE STARTED BY THE KERNEL
-			--- THEY ARE FEW AND SHORT LIVED
-		-- TO SEE THESE:
-			--- $ PS -ELF
-PROCESS CREATING AND FORKING:
-	- STEPS:								   THREAD 2
+Process Permission and setuid:
+	- process permissions are based on process ownership or user who invoked it.
+	- two types of programs exists:
+		-- setuid programs, programs marked with an s execute bit. These run with a different ownership from the current invoker
+		-- non-setuid programs, that run based on the real user id
+More on Process States:
+	- Running:
+		-- is either running or sitting in run queues
+	- Sleeping:
+		-- waiting on a request (usually I/O) that was made
+	- Stopped:
+		-- suspended process, using ctrl-Z or debugger
+	- Zombie:
+		-- enters the state when it terminates and no other process (usually parent) has inquired about it state.
+		-- here all resources are released except its exit state and its entry in the process table
+		-- it is adopted by the init (PID=1) or kthreadd (PID=2) when its parent process dies.
+Execution Modes:
+	- any one process can be in either:
+		-- user mode
+		-- system mode
+	- modes are enforced at hardware level not software level
+User Mode:
+	- all process are started in the use mode by default
+	- all processes are isolaled in their own environment called process resource isolation
+	- system mode processes run in user mode unless they are jumping  into a system called
+Kernel Mode:
+	- here CPU has access to all hardware on the system.
+Daemons:
+	- this is a background process whose sole purpose is to provide some specific service to users of the system
+	- basics of daemons:
+		-- daemons can be quite s=efficient because they are only called when needed
+		-- many daemons are started at boot time
+		-- daemons names usually end with d
+		-- some examples are: httpd, udevd
+		-- daemons may respond to external events (udevd), or elapsed time (crond)
+		-- daemons generally have no controlling terminal and no standard input/output devices
+		-- daemons sometimes provide better security control
+Kernel-Created Processes:
+	- the kernel directly creates two kinds of processes:
+		-- internal kernel processes:
+			--- take care of maintanance work
+			--- theses often run as long as the system runs
+		-- external user processes:
+			--- run in user space like normal applications but where started by the kernel
+			--- they are few and short lived
+		-- to see these:
+			--- $ ps -elf
+Process Creating and Forking:
+	- steps:								   thread 2
 						    CLIENT REQUEST	  /
-							  CHILD PROCESS --
+							  Child Process --
 							   /              \
-							  /                THREAD 1
-			                WEBSERVER        /
-		                   -- PARENT PROCESS --->
+							  /                thread 1
+			WEBSERVER		 /
+		-- Parent Process --->
 							 \
-							  \               THREAD 1
+							  \               thread 1
 							   \              /
-							  CHILD PROCESS --
+							  Child Process --
 							CLIENT REQUEST    \
-											  THREAD 2
+											  thread 2
 				
-CREATING PROCESSES IN A COMMAND SHELL:
-	- STEPS:
-		-- USER EXECUTES A COMMAND AT THE COMMAND SHELL:
-			---> A NEW PROCESS IS CREATED (FORKED)
-			---> A WAIT CALL PUTS THE PARENT TO SLEEP.
-			---> THE COMMAND IS LOADED ONTO THE CHILD'S PROCESS SPACE VIS THE EXEC SYSTEM CALL.
-			---> THE COMMAND CONPLETES EXECUTING, AND THE CHILD PROCESS DIES VIS THE EXIT SYSTEM CALL
-			---> THE PARENT SHELL IS RE-AWAKENDED BY THE DEATH OF THE CHILD PROCESS AND PROCEEDS TO ISSUE A NEW SHELL COMMAND.
-			-->> WITH '&' THE PARENT SHELL SHELL SKIPS THE WAIT REQUEST AND IS FREE TO ISSUE A NEW COMMAND IMMEDIATELY
-			-->> EXCEPTIONS ARE THE 'ECHO' AND 'KILL' WHICH ARE BUILT INTO THE SHELL AND NO PROGRAM FILES ARE LOADED FOR THEM TO RUN.
-USING NICE TO SET PRIORITIES:
-	- PROCESS PRIORITIES ARE CONTROLLED USING THE NICE AND RENICE COMMANDS.
-	- SCALE (LEAST NICE, HIGHEST PRIORITY)-20 TO +19(MOST NICE, LOWEST PRIORITY)
-	- SYNTAX:
-		-- NICE -N 5 COMMAND [ARGS]
-		-- NICE -5 COMMAND [ARGS]
-MODOFIEDDIFYING THE NICE VALUE:
-	- ONLY THE SUPERUSER CAN RUN NICE OR RENICE
-	- EDITING THE /ETC/SECURITY/LIMIT.CONF
-		-- RENICE +3 13848
-		-- MAN RENICE FOR MORE INFO
-STATIC AND SHARED LIBRARIES:
-	- PROGRAMS ARE BUILT USING LIBRARIES OF CODE.
-	- STATIC:
-		-- THE CODE FOR THE LIBRARIES FUNCTIONS ARE INSERTED INTO THE PROGRAM AT COMPILE TIME AND 
-			DOES NOT CHANGE THEREAFTER EVEN IF THE LIBRARY IS UPDATED
-	- SHARED:
-		-- CODE IS LOADED AT RUN TIME AND IF UPDATED THE PROGRAM WILL USE THE NEW LIBRARY.
-		-- ADVANTAGES:
-			-- SHARED BY APPLICATIONS
-			-- BETTER MEMORY USEAGE
-			-- SMALLER MORE MANAGEABLE EXECUTABLE SIZES
-			-- CALLED DLL (DYNAMIC LINK LIBRARY)
-SHARED LIBRARY VERSIONS:
-	- NAME CONVENTION: SHAREDLIB.SO.N --> WHERE N = VERSION NUMBER
-FINDING SHARED LIBRARIES:
-	- LDD: USED TO ACCERTAIN WHAT SHARED LIBRARIES AN EXECUTABLE REQUIRES.
-	- $ LDD /USR/BIN/VI
-	- LDCONFIG: 
-		-- USUALLY RUN AT BOOT TIME BUT CCAN BE RUN ANYTIME AND USES THE /ETC/LD.SO.CONF
-		-- SHARED LIBS SHOULD ONLY BE STORED IN SYSTEM DIRECTORIES
+Creating Processes in a Command Shell:
+	- steps:
+		-- user executes a command at the command shell:
+			---> a new process is created (forked)
+			---> a wait call puts the parent to sleep.
+			---> the command is loaded onto the child's process space vis the exec system call.
+			---> the command conpletes executing, and the child process dies vis the exit system call
+			---> the parent shell is re-awakended by the death of the child process and proceeds to issue a new shell command.
+			-->> with '&' the parent shell shell skips the wait request and is free to issue a new command immediately
+			-->> exceptions are the 'echo' and 'kill' which are built into the shell and no program files are loaded for them to run.
+Using nice to Set Priorities:
+	- process priorities are controlled using the nice and renice commands.
+	- scale (least nice, highest priority)-20 to +19(most nice, lowest priority)
+	- syntax:
+		-- nice -n 5 command [ARGS]
+		-- nice -5 command [ARGS]
+modofieddifying the Nice Value:
+	- only the superuser can run nice or renice
+	- editing the /etc/security/limit.conf
+		-- renice +3 13848
+		-- man renice for more info
+Static and Shared Libraries:
+	- programs are built using libraries of code.
+	- Static:
+		-- the code for the libraries functions are inserted into the program at compile time and 
+			does not change thereafter even if the library is updated
+	- Shared:
+		-- code is loaded at run time and if updated the program will use the new library.
+		-- advantages:
+			-- shared by applications
+			-- better memory useage
+			-- smaller more manageable executable sizes
+			-- called DLL (Dynamic Link Library)
+Shared Library Versions:
+	- name convention: sharedlib.so.N --> where N = version number
+Finding Shared Libraries:
+	- ldd: used to accertain what shared libraries an executable requires.
+	- $ ldd /usr/bin/vi
+	- ldconfig: 
+		-- usually run at boot time but ccan be run anytime and uses the /etc/ld.so.conf
+		-- shared libs should only be stored in system directories
 		
 
 
 
-<----------------------------------------------------CHAPTER 21-------------------------------------------->
-SIGNALS
-
-WHAT ARE SIGNALS?
-     SENDING SIGNALS TAKES THREE FORMS:
-     	     - KILL, KILLALL, PKILL
-     PATHS TAKEN BY A SIGNAL:
-     	   - FROM KERNEL TO A USER PROCESS AS A RESULT OF PROGRAMMING ERROR.
-	   - FROM USER PROCESS (USING A SYSTEM CALL) TO THE KERNEL WHICH WILL THEN SEBD IT TO A USER PROCESS.
-	   NOTE: SIGNALS CAN ONLY BE SENT BETWEEN PROCESSES OWNED BY SAME USER OR FROM SUPERUSER TO ANY PROCESS
-	   SIGKILL AND SIGSTOP CANNOT BE HANDLED AND WILL ALWAYS TERMINATE THE PROGRAM.
-	   
-     TYPES OF SIGNALS:
-     	   SIGNALS ARE USED TO HANDLE TWO THINGS:-
-	   	   - EXCEPTIONS DETECTED BY HARDWARE
-		   - EXCEPTIONS GENERATED BY THE ENVIRONMENT
-	   $ KILL -L:
-	     SHOWS LIST OF SIGNALS
-             USE: $ KILL 1991, $ KILL -9 1991, $ KILL -SIGKILL 1991
-
- KILLALL AND PKILL:
- 	 KILLALL - KILLS ALL PROCESSES
- 	 	 USE: $ KILLALL BASH, KILLALL -9 BASH, KILLALL -SIGKILL BASH
- 	 PKILL - SENDA A SIGNAL TO A PROCESS USING SELECTION CRITERIA
-	       USES: $ PKILL [-SIGNAL] [OPTIONS] [PATTERN]
-	       	     $ PKILL -U LIBBY FOOBAR
-
-<---------------------------------------CHAPTER 22----------------------------------------------------------->
-
-SYSTEM MONITORING
-
-SYSTEM MONITORING TOOLS INCLUDE: TOP, PS, AND SAR. THESE ACCESS THE PSEUDO-FILE SYSTEM /PROC, AND /SYS
-
-AVAILABLE MONITORING TOOLS:
-	  PROCESS AND LOAD MONITORING UTILITIES:-
-	  	  TOP        PROCESS ACTIVITY, DYNAMICALLY UPDATED
-		  UPTIME     HOW LONG THE SYSTEM IS RUNNING AND THE AVERAGE LOAD
-		  PS 	     DETAILED INFORMATION ABOUT PROCESSES
-		  PSTREE     A TREE OF PROCESSES AND THEIR CONNECTIONS
-		  MPSTAT     MULTIPLE PROCESSOR USAGE
-		  IOSTAT     CPU UTILIZATION AND I/O STATISTICS
-		  SAR	     DISPLAY AND COLLECT INFORMATION ABOUT SYSTEM ACTIVITY
-          numstat    Information about NUMA (Non-Uniform Memory Architecture)
-          strace     Information about all system calls a process makes
-
-      Memory Monitoring Utilities:-
-          free        Brief summary of memory usage
-          vmstat      Detailed virtual memory statistics and block I/O,
-dynamically update
-          pmap        Process memory map
-    
-      I/O Monitoring Utilities:-
-          iostat    same as above
-          sar       same as above
-          vmstat    same as above
-
-
-      Network Monitoring Utilities:-
-          netstat       Detailed networking statistics
-          iptraf        Gather information on network interface
-          tcpdump       Detailed analysis of network packets and traffic
-          wireshare     Detialed network traffic analysis
-/proc Basics:
-    All important processes have a subdirectory in /proc
-    $ ls -F /proc
-    $ ls -lF /proc/16477
-    $ cat /proc/16477/status
-
-/proc/sys:
-    Most tunenable system can be found in this directory
-    steps:
-        $ ls -l /proc/sys/kernel/threads-max
-        $ cat /proc/sys/kernel/threads-max
-
-        sudo bash -c 'echo 100000 > /proc/sys/kernel/threads-max'
-        OR
-        sudo sysctl kernel.threads-max=100000
-
-/sys Basics:
-    Conceptually it is part of the Unified Device Model
-
-sar:
-    Systems Activity Reporter
-    -gathers system activity and performance data and creating reports that
-are readable by humans.
-    
-     
+	
