@@ -1687,7 +1687,7 @@ RAID:
 	- MDADM IS USED TO CREATE AND MANAGE RAID DEVICES, '/DEV/MDX' IS EQUIVALENT TO '/DEV/SDA1'
 RAID LEVELS:
 	- MANY LEVELS EXISTS BASED ON THE SPECIFICATION OF INCREASING COMPLEXITY AND USE, THESE ARE:
-		-- RAID 0: USES ONLY STRIPING. 
+		-- RAID 0: USES ONLY STRIPING.
 			--- ADVANTAGES:
 				---- DATA SPREAD ACROSS MULTIPLE DISKS
 				---- IMPROVED PERFORMANCE
@@ -1702,7 +1702,7 @@ RAID LEVELS:
 			--- ADVANTAGE:
 				---- DISK FAILURE ONLY CAUSES DROP IN PERFORMANCE, NO LOSS OF DATA
 				--NOTE: THEY MUST BE AT LEAST 3 DISKS
-		-- RAID 6: HAS STRIPED DISKS WITH DUAL PARITY, 
+		-- RAID 6: HAS STRIPED DISKS WITH DUAL PARITY,
 			--- CAN HANDLE LOSS OF TWO DISKS
 			--- REQUIRES AT LEAST 4 DISKS
 			--- REPLACES RAID 5 DUE TO ITS STRESS ON HARDWARE
@@ -1733,7 +1733,7 @@ SOFTWARE RAID CONFIGURATION:
 			-- ADD /DEV/MD0 /MYRAID EXT4 DEFAULTS 0 2
 		- EXAMINE /PROC/MDSTAT TO SEE THE RAID STATUS AS IN:
 			-- CAT /PROC/MDSTAT
-		- TO STOP 
+		- TO STOP
 			-- SUDO MDADM -S /DEV/MD0
 
 MONITORING RAIDS:
@@ -1749,7 +1749,7 @@ MONITORING RAIDS:
 			--- MAILADDR EDDIE@HASKEL.COM
 			--- STARTING EMAIL SERVICE WITH:
 				---- SUDO SERVICE MDMONITOR START
-				---- SUDO CHKCONFIG <MDMONITOR | MDADM> ON 
+				---- SUDO CHKCONFIG <MDMONITOR | MDADM> ON
 
 RAID HOT SPARES:
 	- USED TO FIX REDUNDANCIES
@@ -1841,11 +1841,11 @@ PROTECTING THE BOOT LOADER WITH PASSWORD:
 		-- GRUB VERSION 1:
 			--- RUN GRUB-MD5-CRYPT
 			--- COPY DISPLAYED HASHED PASSWORD
-			--- EDIT /BOOT/GRUB/GRUB.CONF AND ADD THE LINE BELOW THE TIMEOUT ENTRY:	
+			--- EDIT /BOOT/GRUB/GRUB.CONF AND ADD THE LINE BELOW THE TIMEOUT ENTRY:
 				---- PASSWORD --MD5 $LKL(8R8LKZ.LJGSOORP)I4MMKKKLXZA
 		-- GRUB VERSION 2:
 				--- MORE COMPLICATED TO SET UP
-				--- EDIT SYSTEM CONFIGURATION FILES IN /ETC/GRUB.D 
+				--- EDIT SYSTEM CONFIGURATION FILES IN /ETC/GRUB.D
 				--- RUN UPDATE-GRUB
 FILESYSTEM SECURITY: MOUNT OPTIONS:
 	- NODEV --> DO NOT INTERPRET CHARACTER OR BLOCK SPECIAL DEVICES ON THE SYSTEM
@@ -1857,7 +1857,7 @@ FILESYSTEM SECURITY: MOUNT OPTIONS:
 		-- /DEV/SDA2 /MYMOUNTPT EXT4 RO,NOEXEC,NODEV 0 0
 
 SETUID AND SETGID:
-	- USING THIS COMMANDS ONE CAN CHANGE THE DEFAULT BEHAVIOUR OF ANY PROGRAM TO RUN WITH THE PERMISSION OF 
+	- USING THIS COMMANDS ONE CAN CHANGE THE DEFAULT BEHAVIOUR OF ANY PROGRAM TO RUN WITH THE PERMISSION OF
 		THE OWNER RATHER THAN WITH THAT OF THE CURRENT USER OF THE PROGRAM
 SETTING THE SETUID/SETGID BITS:
 	- COMMANDS:
@@ -1888,7 +1888,7 @@ WHAT ARE LINUX SECURITY MODULES?:
 		-- MINIMIZE OVERHEAD ON THE KERNEL
 		-- PERMITS FLEXIBILITY AND CHOICE BETWEEN DIFFERENT IMPLEMENTATIONS. EACH OF WHICH IS PRESENTED AS A SELF-CONTAINED LSM (LINUX SECURITY MODULE)
 		-- BASIC SCENERIO:
-			--- REQUEST TO KERNEL SYSTEM ---> KERNEL INVOKES SECURITY SYSTEM 
+			--- REQUEST TO KERNEL SYSTEM ---> KERNEL INVOKES SECURITY SYSTEM
 														|
 														|
 														|				 YES
@@ -1939,7 +1939,7 @@ SELINUX POLICIES:
 			--- TARGETED: DEFAULT POLICY STATE IN WHICH SELINUX IS MORE RESTRICTED TO TARGETED PROCESSES.
 				USER PROCESSES AND INIT PROCESSES ARE NOT TARGETED
 			--- MINIMUM: HERE ONLY SELECTED PROCESSES ARE TARGETED
-			--- MLS" MULTI-LEVEL SECURITY POLICY IS MUCH MORE RESTRICTIVE. HERE ALL PROCESSES ARE ARE PLACED IN A FINED-GRAINED 
+			--- MLS" MULTI-LEVEL SECURITY POLICY IS MUCH MORE RESTRICTIVE. HERE ALL PROCESSES ARE ARE PLACED IN A FINED-GRAINED
 				SECURITY DOMAINS WITH PARTICULAR POLICIES
 
 CONTEXT UTILITIES:
@@ -1954,7 +1954,7 @@ SELINUX CONTEXT INHERITANCE AND PRESERVATION:
 	- NEWLY CREATED FILES INHERIT THE CONTEXT FROM THEIR PARENT DIRECTORY
 	- MOVING OR COPYING FILES, IT IS THE CONTEXT OF THE SOURCE DIRECTORY THAT MAY BE PRESERVED
 RESTORECON:
-	- RESETS FILE CONTEXTS, BASED ON PARENT DIRECTORY SETTINGS. 
+	- RESETS FILE CONTEXTS, BASED ON PARENT DIRECTORY SETTINGS.
 	- $ RESTORECON -RV /HOME/PETER
 SEMANAGE FCONTEXT:
 	- USED TO MANAGE THE DEFAULT CONTEXT FOR A NEWLY CREATED DIRECTORY
@@ -2052,7 +2052,7 @@ PROCESSES:
 		-- PGI (PROCESS GROUP ID)
 	- ANY PROCESS FROM THE KERNEL HAS A '[]' AROUND THEIR NAMES WHEN '$ PS' IS RUN
 	- WHEN A PARENT PROCESS DIES BEFORE A CHILD, THE PPID IS SET TO 1 (INIT), OR TO 2 IN NEWER SYSTEMS USING 'SYSTEMD'
-	- WHEN CHILD PROCESS TERMINATES NORMALLY OR ABNORMALLY BEFORE ITS PARENTS WHICH HAS NOT WAITED FOR IT AND EXAMINED ITS EXIT CODE IS 
+	- WHEN CHILD PROCESS TERMINATES NORMALLY OR ABNORMALLY BEFORE ITS PARENTS WHICH HAS NOT WAITED FOR IT AND EXAMINED ITS EXIT CODE IS
 		KNOWN AS A 'ZOMBIE (OR DEFUNCT)' PROCESS
 	- THE PARENT 'INIT' PROCESS CHECKS ON ITS ADOPTED CHILD PROCESSES AND LETS THOSE WHO HAVE TERMINATED DIE GRACEFULLY
 	- PROCESS ARE CONTROLLED 'SCHEDULING', WHICH IS PREEMPTIVE AND IS ONLY DONE BY THE KERNEL
@@ -2067,7 +2067,7 @@ PROCESS ATTRIBUTES:
 	- CONTEXT SWITCHING: IS DONE BY THE KERNEL
 
 CONTROLLING PROCESSES WITH ULIMIT:
-	- ULIMIT IS A BUILT IN BASH COMMAND THAT DISPLAY OR RESETS A NUMBER OF RESOURCES LIMITS ASSOCIATED	
+	- ULIMIT IS A BUILT IN BASH COMMAND THAT DISPLAY OR RESETS A NUMBER OF RESOURCES LIMITS ASSOCIATED
 		WITH PROCESSES RUNNING UNDER A SHELL.
 	- RUN $ ULIMIT -A
 CONTROLLING PROCESSES WITH ULIMIT(CONT.)
@@ -2080,7 +2080,7 @@ CONTROLLING PROCESSES WITH ULIMIT(CONT.)
 	- SYNTAX:
 		-- $ ULIMIT [OPTIONS] [LIMIT]
 			--- AS IN: ULIMIT -N 1600
-		-- PERMANENTLY CHANGING THIS VALUES TO AFFECT ALL CURRENTLY LOGGED IN SHELLS ONE MUST MODIFY /ETC/SECURITY/LIMITS.CONF, THEN REBOOT 
+		-- PERMANENTLY CHANGING THIS VALUES TO AFFECT ALL CURRENTLY LOGGED IN SHELLS ONE MUST MODIFY /ETC/SECURITY/LIMITS.CONF, THEN REBOOT
 
 PROCESS PERMISSION AND SETUID:
 	- PROCESS PERMISSIONS ARE BASED ON PROCESS OWNERSHIP OR USER WHO INVOKED IT.
@@ -2143,7 +2143,7 @@ PROCESS CREATING AND FORKING:
 							  CHILD PROCESS --
 							CLIENT REQUEST    \
 											  THREAD 2
-				
+
 CREATING PROCESSES IN A COMMAND SHELL:
 	- STEPS:
 		-- USER EXECUTES A COMMAND AT THE COMMAND SHELL:
@@ -2168,7 +2168,7 @@ MODOFIEDDIFYING THE NICE VALUE:
 STATIC AND SHARED LIBRARIES:
 	- PROGRAMS ARE BUILT USING LIBRARIES OF CODE.
 	- STATIC:
-		-- THE CODE FOR THE LIBRARIES FUNCTIONS ARE INSERTED INTO THE PROGRAM AT COMPILE TIME AND 
+		-- THE CODE FOR THE LIBRARIES FUNCTIONS ARE INSERTED INTO THE PROGRAM AT COMPILE TIME AND
 			DOES NOT CHANGE THEREAFTER EVEN IF THE LIBRARY IS UPDATED
 	- SHARED:
 		-- CODE IS LOADED AT RUN TIME AND IF UPDATED THE PROGRAM WILL USE THE NEW LIBRARY.
@@ -2182,10 +2182,10 @@ SHARED LIBRARY VERSIONS:
 FINDING SHARED LIBRARIES:
 	- LDD: USED TO ACCERTAIN WHAT SHARED LIBRARIES AN EXECUTABLE REQUIRES.
 	- $ LDD /USR/BIN/VI
-	- LDCONFIG: 
+	- LDCONFIG:
 		-- USUALLY RUN AT BOOT TIME BUT CCAN BE RUN ANYTIME AND USES THE /ETC/LD.SO.CONF
 		-- SHARED LIBS SHOULD ONLY BE STORED IN SYSTEM DIRECTORIES
-		
+
 
 
 
@@ -2200,7 +2200,7 @@ WHAT ARE SIGNALS?
 	   - FROM USER PROCESS (USING A SYSTEM CALL) TO THE KERNEL WHICH WILL THEN SEBD IT TO A USER PROCESS.
 	   NOTE: SIGNALS CAN ONLY BE SENT BETWEEN PROCESSES OWNED BY SAME USER OR FROM SUPERUSER TO ANY PROCESS
 	   SIGKILL AND SIGSTOP CANNOT BE HANDLED AND WILL ALWAYS TERMINATE THE PROGRAM.
-	   
+
      TYPES OF SIGNALS:
      	   SIGNALS ARE USED TO HANDLE TWO THINGS:-
 	   	   - EXCEPTIONS DETECTED BY HARDWARE
@@ -2239,7 +2239,7 @@ AVAILABLE MONITORING TOOLS:
           vmstat      Detailed virtual memory statistics and block I/O,
 dynamically update
           pmap        Process memory map
-    
+
       I/O Monitoring Utilities:-
           iostat    same as above
           sar       same as above
@@ -2274,7 +2274,7 @@ sar:
     Systems Activity Reporter
     -gathers system activity and performance data and creating reports that
 are readable by humans.
-    
+
 <----------------------------------------------------Chapter 23---------------------------------------------------------->
 
 Process Monitoring
@@ -2296,7 +2296,7 @@ Monitoring:
 		ps - detailed information about processes
 		pstree - tree of processes and their connections
 		mpstat - multiple processor usage
-		
+
 Viewing Processes States with ps:
 	ps get its information from the /proc directory
 	versions include:
@@ -2366,7 +2366,7 @@ Learning Objectives:
 	- use iostat to monitor I/O device activity
 	- use iotop to display a constantly updated table of current i/O usage
 	- ionice to set both the I/O scheduling class and priority for a given process
-	
+
 
 Disk Bottlenecks:
      - could be caused by slow I/O
@@ -2417,6 +2417,127 @@ iotop:
 Using ionice to Set I/O Priorities:
       - let you set both the I/O scheduling class and priority for a given process
       - $ ionice [-c class] [-n priority] [-p pid] [COMMAND [ARGS]]
-      
-	
-	
+
+
+
+<-------------------------------------------------------Chpt 25----------------------------------------------------------->
+
+                                        I/O Scheduling
+
+System performance often depends very heavily on optimizing the I/O scheduling strategy.
+
+Objectives:
+
+  - explain the importance of I/O scheduling and descibe the conflicting requirements that needs to be satisfied
+  - delineate and constrast the options available under linux
+  - understand how the CFQ (Completely Fair Queue) and Deadline algorithms works.
+
+I/O Scheduling:
+
+  VM (Virtual Machine) & VFS (Virtual File System)
+
+                    |
+                    |
+                    V
+        I/O Scheduling Layer --> prioritize and order requests
+                      |
+                      |
+                      V
+                 Block Devices
+
+
+I/O Scheduler Choices:
+
+  - CFQ, DEadline, noop
+
+I/O Scheduling and SSD Devices:
+
+  determining if a device is SSD: $ cat /sys/block/<device>/queue/rotational
+  - this does not require an elevator scheduling scheme.
+
+
+<-------------------------------------------------chpter 26------------------------------------->
+                                  Memory: Monitoring Usage and Tuning
+
+Objectives:
+  - list the primary (inter-related) considerations and tasks invovled in memory tuing
+  - know how to use entries in /proc/sys/vm, and /proc/meminfo
+  - use vmstat to display information about memory, paging and selects which and processes' memory consumption.
+  - understand how the OOM-killer decides when to take action and selects which processes should be exterminated to open some memory.
+
+
+Memory Tuning Considerations:
+
+Memory MOnitoring Tools:
+  Utility         | Purpose                                                     |  Package
+  free            | Brief Summary of memory usage                               | procps
+  vmstat          | Detailed viryual statics and block I/O, dynamically updatad | procps
+  pmap            | Process memory map                                          | procps
+
+/proc/sys/vm:
+
+vmstat:
+  vmstat [options] [delay] [count]
+
+  vmstat 2 4
+  vmstat -a 2 4 => active and inactive devices
+  vmstat -s => memory statistics and certain event counters
+  vmastat -d => disk statistics
+  vmstat -p /dev/sda1 2 4 =>disk statistics on only one partition
+
+/proc/meminfo:
+  cat /proc/meminfo
+
+OOM Killer:
+  Out Of Memory Killer (OOM Killer)
+  This determines which process gets killes or terminated during insufficient memoey:
+    - oom_score
+
+
+<-----------------------------------------------Chapter 27-------------------------------------------->
+                                  Package Management Systems
+
+Objectives:
+  - explain s=why software packages management systems should be used
+  - understand the role of both binary and source packages
+  - list the main available packages management systems
+  - understand who two levels of utilities are needed; one that deals with just bare packages, and one that deals with
+    dependencies among packages
+  - explain how creating your own packages enhances the control you have over exactly what goes in software and how it is installws
+  - understand the role of source control systems and git in particular
+
+
+  Software Packaging Concepts:
+
+
+  Why Use Packages:
+    - automation
+    - scalability
+    - repeatability
+    - security and auditing
+
+  Package Types:
+    - Binary --> platform dependent
+    - Source --> one used for many platforms, produces binary files
+    - Architecture-independent --> run under scripts interpreters, documentation and configuration files
+    - Meta-packages --> groups of associated packages that collectively hold everything needed to install a large subsystem
+
+  Available Package Management Systems:
+    - RPM --> Red Hat Package Manager
+    - dpkg --> debian package
+
+  Packaging Tool Levels and Varieties:
+    - Low level Utility:
+      -- dependencies are not fully handled
+      -- rpm dpkg
+    - High Level Utility:
+      -- dependcies handled
+      -- e.g. rpm, apt-get apt-cache, yum, zypper
+
+  Package Sources:
+    - maintained by the distributors
+
+<--------------------------------------------Chapter 28--------------------------------------->
+                                        RPM
+
+  
