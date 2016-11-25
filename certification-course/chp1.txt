@@ -2529,6 +2529,7 @@ Objectives:
   Packaging Tool Levels and Varieties:
     - Low level Utility:
       -- dependencies are not fully handled
+      -- installation, varification, upgrade, removal
       -- rpm dpkg
     - High Level Utility:
       -- dependcies handled
@@ -2539,5 +2540,209 @@ Objectives:
 
 <--------------------------------------------Chapter 28--------------------------------------->
                                         RPM
+Objectivees:
+  - understand how the RPM system is organized and what major operations the rpm program can accomplish
+  - explain the naming conventions used for both binary and source rpm files.
+  - know how to query, verify, install, uninstall, upgrade and freshen packages.
+  - grasp why new kernels should be installed rather than upgrade
+  - know how to use 'rpm2cpio' to copy package files into a cpio archive, as well as extract the files without installing them
 
-  
+
+RPM:
+  Redhat Package Manager -
+    -- has the following information:
+      > how and where to install
+      > how and where to uninstall
+      > dependencies information - Note: unless a URL is supplied it installs from only local machine using absolute or relative paths
+      > distribution dependent - installing on only target machines or OSs
+
+Advatages of Using RPM:
+> For system admins:
+  - determine what packages (if any) any file on the system is part of
+  - determine what version is installed
+  - install and uninstall without leaving debris behind
+  - determine if a package was installed corectly
+  - distinguish documentation files from package files and determine if to install the fomer
+  - use ftp or HTTP to install packages over the internet
+> For developers:
+  - source packagecan be used to build on more than one OS
+  - more than one architecture can be used to build from one source package
+
+Package FIle Names:
+  - binary naming standard:
+    -- <name>-<version>-<release>.<distro>.<architecture>.rpm
+        sed-4.2.1-10.el6.x86_64.rpm
+    -- <name>-<version>-<release>.<distro>.src.rpm
+        sed-4.2.1-10.el6.x86_64.src.rpm
+
+Database Directory:
+  - default location is '/var/lib/rpm'
+  - '--dbpath' is used to specify a different path
+  - '--rebuilddb' option to rebuild the database indeices
+
+Helper Programs and Modifying Settings:
+  - location '/usr/lib/rpm'
+  - to list helper lib: '$ ls /usr/lib/rpm | wc - l'
+  - you can use a 'rpmrc' to specify default settings for 'rpm'
+  - 'rpm'  search locations include:
+    -- /usr/lib/rpm/rpmrc, /etc/rpmrc, ~/.rpmrc
+  - alternative rpmrc file can be specified using the --rcfile option
+
+Queries:
+  - $ rpm -q bash - version installed
+  - $ rpm -qf /bin/bash - package file came from
+  - $ rpm -ql bas - files installed by this package
+  - $ rpm -qi bash - information about this package
+  - $ rpm -qip foo-1.0.0.1.noarch.rpm - information form package file not data base
+  - $ rpm -qa - list all install packages on this system
+  - $ rpm -qp --requires foo-1.0.0.1.noarch.rpm - list of prerequisites for package
+  - $ rpm -q --whatprovides libc.so.6 - show what installed package provides a particular requisite package
+
+Verifying Packages:
+  - $ rpm -Va
+  - S -- file size differs
+  - M -- file permission or type differs
+  - 5 MD5 checksum differs
+  - D - device major/minor number mismatch
+  - L - symbolic link path mismatch
+  - U - user ownership differs
+  - G - grp ownership differs
+  - T - modification time differs
+  - P - capabilities differs
+
+Installing Packages:
+  - $ sudo rpm -ivh foo.1.0.0.1.noarch.rpm
+  - checks performed at install:
+    -- performs dependencies check
+    -- conflicts check
+    -- runs commands needed before installation
+    -- manages configuration files
+    -- unpacks files from packages
+    -- runs commands needed after installation
+    -- updates the system RPM database
+
+Uninstalling pacakges:
+  - $ sudo rpm -e system-config-lvm [ will fail if package is not there or is required by other packages]
+  - testing for potential failure:
+    -- $ sudo rpm -e --test -vv xz
+
+Upgrading Packages:
+  - $ sudo rpm -Uvh bash-4.2.45-5.el7_0.4.x86_64.rpm
+  - Downgrade:
+    -- sudo rpm -Uvh --oldpackage bash-4.2.45-5.el7_0.4.x86_64.rpm
+
+Freshening Packages:
+  - $ sudo rpm -Fvh *.rpm
+
+Upgrading the Kernel:
+  - Never do a kernel upgrade rather do an install:
+    -- $ sudo rpm -ivh kernel-{version}.{arch}.rpm
+
+Using rpm2cpio:
+  - extracting a package without installing it:
+    -- create cpio:
+      --- $ rpm2cpio foobar.rpm > foobar.cpio
+    -- list files in an rpm:
+      --- $ rpm2cpio foobar.rpm | cpio -t or rpm -qilp foobar.rpm
+    -- extract onto the system:
+      --- $ rpm2cpio bash-4.2.45-5.el7_0.4.x86_64.rpm | cpio -ivd bin/bash
+      --- $ rpm2cpio foobar.rpm | cpio --extract --make-directories
+
+
+<------------------------------------------- Chapter 29 DPKG ---------------------------------------->
+                        Debian Package Manager
+
+Objectives:
+  - uses
+  - naming convention
+  - know what sources packages look like
+  - use querying and verifying operations on packages
+  - install, upgrade, and uninstall Debian packages
+
+DPKG Essentials:
+  - extensions '.deb'
+  - folder: /var/lib/dpkg
+
+Package File Names:
+  - <name>_<version>-<revision_number>_<architecture>.deb
+    -- logrotate_3.8.7-1_amd64.deb
+    -- logrotate_3.8.7-1ubuntu_amd64.deb
+
+Source Packages:
+  - 3 files found there are:
+    -- upstream tarball, ending .tar.gz
+    -- description file, ending .dsc
+    -- contains patches, .debian.tar.gz or .diff.gz
+  - apt-get source logrotate
+  - ls -lR logrotate*
+
+DPKG Queries:
+  - $ dpkg -l - list all packages
+  - $ dpkg -L wget - list files installed in the 'wget'
+  - $ dpkg -p wget - show info about 'wget'
+  - $ dpkg -I wefs_1.21_ds1-8_amd64.deb - show info about package
+  - $ dpkg -c wefs_1.21_ds1-8_amd64.deb - list files in a package file
+  - $ dpkg -S /etc/init/networking.conf - show what packages owns
+  - $ dpkg -s wget - show status of package
+  - $ dpkg -V package - verify
+
+Installing and Upgrading and Uninstalling Packages:
+  - $ sudo dpkg -i foobar.deb
+  - $ sudo dpkg -r package
+  - $ sudo dpkg -p package
+
+
+<---------------------------------------- Chapter 30 ------------------------------------------------->
+                                YUM
+Objectives:
+  - high level program that uses 'rpm' but is able to resolve dependencies suing remote repos
+  - structure:    rpm --> yum --> OS user
+
+What is yum?
+  - $ yum cleam [packages | metadata | expire-date | rpmdb | plugins | all ] - removes yum cached information
+
+Configuring yum to Use Repositories:
+  - $ ls -l /etc/yum.repos.d - shows list of repos configured with 'yum'
+
+Repository Files:
+  - Simple repo:
+    -- [repo-name]
+        name=Description of the repository
+        baseurl=http://somesystem.com/path/to/repo
+        enabled=1
+        gpgcheck=1
+
+    -- toggle repo on or off using:
+      --- --disablerepo=somerepo and --enablerepo=somerepo when using 'yum'
+
+Queries:
+  - $ sudo yum search keyword - information about package
+  - $ sudo yum list "*keyword*" - what is installed and what else is available
+  - $ sudo yum info package
+  - $ sudo yum list [installed | updates | available ]
+  - $ sudo yum grouplist [group1] [group2]
+  - $ sudo yum groupinfo [group1] [group2]
+
+  - $ sudo yum provides "/logrotate.conf" - show packages that conatain file name
+
+Verifying Packages:
+  - package verification requires the installation of the 'yum-plugin-verify'
+  - $ sudo yum verify [package]
+  - $ sudo yum verify-rpm [package]
+  - $ sudo yum verify-all [package]
+
+
+Installing/Removing/Upgrading Packages:
+  - sudo yum install package2 [package2]
+  - sudo yum localinstall package-file
+  - sudo yum groupinstall group-name or sudo yum install @group-name
+  - sudo yum remove package1 [package2]
+  - sudo yum update [package]
+
+Additinal Commands:
+  - sudo yum list "yum-plugin" -- install to use more yum commands
+    - sudo yum repolist
+    - sudo yum shell [text-file]
+  - sudo yum install --downloadonly package for commands below to work
+    - sudo yumdownloader pacakge
+  - sudo yum history

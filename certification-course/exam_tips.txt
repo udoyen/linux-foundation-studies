@@ -1,0 +1,20 @@
+Chapter 1: Learn GNU ‘sed’ Command
+Chapter 2: Learn vi/m as a full Text Editor
+Chapter 3: Archiving Files/Directories and Finding Files
+Chapter 4: Partitioning Storage Devices
+Chapter 5: Setup Network Share (Samba & NFS) Filesystems
+Chapter 6: Assembling Partitions as RAID Devices
+Chapter 7: Manage System Services with SysVinit, Systemd and Upstart
+Chapter 8: Managing Users & Groups and Enabling sudo Access
+Chapter 9: Package Management with Yum, RPM, Apt, Dpkg, Aptitude and Zypper
+Chapter 10: Learning Basic Shell Scripting and Troubleshooting
+Chapter 11: Manage and Create LVM Partitions
+Chapter 12: Linux Help Documentations and Tools
+Chapter 13: Configure and Troubleshoot Grand Unified Bootloader (GRUB)
+Chapter 14: Monitor Linux Processes Resource Usage
+Chapter 15: Set Kernel Runtime Parameters in Linux
+Chapter 16: Set Access Control Lists (ACL’s) and Disk Quotas
+Chapter 17: Setup Cygwin, a Linux-like Commandline Environment
+Chapter 18: Setting Up FTP Server to Allow Anonymous Logins
+Chapter 19: Setup Recursive Caching DNS Server
+Chapter 20: Implementing Mandatory Access Control in Linux
