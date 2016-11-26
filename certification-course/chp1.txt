@@ -2746,3 +2746,72 @@ Additinal Commands:
   - sudo yum install --downloadonly package for commands below to work
     - sudo yumdownloader pacakge
   - sudo yum history
+
+
+<------------------------------------------------------ Chapter 31 --------------------------------------------------------------->
+
+Objectives:
+  - explain what zypper is
+  - discuss the queries zypper can be used for
+  - install. remove and upgrade packages using zypper
+
+What is zypper?
+  - command line tool for installing and managingg packages in SUSE Linux and openSUSE
+  - similar to 'yum' and 'apt-get'
+
+Zypper Queries:
+ *Zypper is similar to 'yum' queries
+  - $ zypper list-upgrades
+  - $ zypper repos - list available repos
+  - $ zypper search <string>
+
+Installing/Removing/Upgrading:
+  - install or update -- $ sudo zypper install package
+  - No confirmation when installing -- $ sudo zypper --non-interactive install <package>
+  - update installed packages -- sudo zypper update
+  - Non-interactive -- $ sudo zypper --non-interactive update
+  - remove a package -- $ sudo zypper remove <package>
+
+Additional zypper Commands:
+  - When zypper commands must be run in a sequence -- $ sudo zypper shell
+
+  - add a repo -- $ sudo zypper addrepo URI alias
+  - remove a repo from the list -- $ sudo zypper removerepo alias
+  - find which package provides a file -- $ sudo zypper waht-provides <file-path>
+
+
+<------------------------------------------------- Chapter 32 ------------------------------------------->
+                                                    APT
+Advanced Packaging Tool -
+  - main utilities are 'apt-cache' and 'apt-get'
+
+Objectives:
+  - explain APT
+  - user apt-cache
+  - install, remove, and upgrade packages using 'apt-get'
+
+What is APT:
+  - advanced packaging tool laid on top of 'debian dpkg'
+
+apt-get:
+  - install, manage and update
+
+Queries Using apt-cache:
+  - $ apt-cache search apache2
+  - $ apt-cache show apache2 -- show basic information
+  - $ apt-cache showpkg apache2 -- show detailed information
+  - $ apt-cache depends apache2 -- show dependent packages
+  - $ apt-file search apache2.conf --search the repo for a file named apache2.conf
+  - $ apt-file list apache -- list all files in the apache2
+  - $ apt-file find <file path> -- used to find which package provides the file specified
+
+Installing/Removing/Upgrading:
+  - available package list on debian -- /etc/apt/aources.list
+  - sudo apt-get update
+  - sudo apt-get install [package]
+  - sudo apt-get remove [package]
+  - sudo apt-get --purge remove [package] -- remove with config file
+  - sudo apt-get upgrade - upgrade all installed packages
+  - sudo apt-get dist-upgrade -- smart upgrade
+  - sudo apt-get autoremove -- remove unneeded packages
+  - sudo apt-get clean -- clean out cached files
