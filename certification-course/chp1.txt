@@ -2815,3 +2815,117 @@ Installing/Removing/Upgrading:
   - sudo apt-get dist-upgrade -- smart upgrade
   - sudo apt-get autoremove -- remove unneeded packages
   - sudo apt-get clean -- clean out cached files
+
+<---------------------------------------------- Chapter 33 ------------------------------------------->
+                                        User Account Management
+
+Objectives:
+  - explain the purpose of individual user accounts and list its main attributes
+  - create, modify, remove, and lock accounts
+  - understand how user passwords are set, encrypted and stored, how to require changes in password over time due to security
+  - explain how restricted shells and restricted accounts work
+  - understand the role of root account and when to use it
+
+User Accounts:
+  - purposes include:
+    -- provide each user with their own individualized private space
+    -- for specific dedicated purposes
+    -- distinguisheing privileges among users
+    -- Note: the 'daemon' account exists to allow processes run as a user other than root
+
+Attributes of User Account:
+  - The seven elements are:
+    -- user name
+    -- user password
+    -- user identification number (UID)
+    -- group identification number (GID)
+    -- comment or GECOS --> information on the user
+    -- Home directory
+    -- Login shell
+
+Creating User Accounts with useradd:
+  - $ sudo useradd koko
+    -- steps:
+        -> next available UID greater than UID_MIN (as specified in /etc/login.defs) is assigned as koko's UID
+        -> group called 'koko' with GUI=UID is also created as koko's default group
+        -> home directory /home/koko is created
+        -> koko's login shell will /bin/bash
+        -> contents of 'etc/skel' is copied to '/home/koko'
+        -> an entry of !! or ! is placed in the password filed of the ''/etc/shadow' file for koko's entry thus requiring the admin to assign a password for account to be useable
+    -- defaults can also be overruled:
+      - $ sudo useradd -s /bin/bash -m -k /ec/skel -c "Bullwinkle J Marxh" bmoose
+
+Modifying and Deleting User Accounts:
+  - $ sudo userdel isable -- all refrences to user in '/etc/passwd', '/etc/shadow' and '/etc/group'
+  - $ sudo userdel -r isabel -- will also remove '/home/isabel' leaving files owned by user on system
+  - Change the xteristices of a user using, '$ sudo usermod' for options see '$ sudo usermod --help'
+
+Locked Accounts:
+  - locked account means user or programs cannot login into system
+  - means of keeping a user out includes:
+    -- $ sudo usermod -L koko --> 'unlock' $ sudo usermod -U
+    -- $ sudo chage -E 2014-09-11 koko -> change expiration date
+    -- edit '/etc/shadow' and add 'any invalid string'
+
+User IDs and /etc/password:
+  - always use 'usermod or vipw' to edit or change values in '/etc/passwd, /etc/group, /etc/shadow'
+
+/etc/shadow:
+  - fields here include:
+    -- username
+    -- password
+    -- lastchange
+    -- mindays -> min days before which password must be changed
+    -- maxdays -> days after when password must be changed
+    -- warn -> before passwrd expires
+    -- grace -> days after passwd expire that account is disabled
+    -- expire -> date account will be disabled
+    -- reserved -> reserved field
+Password Management:
+  - user changing own password -> $ passwd
+  - root changing user password -> $ sudo passwd koko
+
+Chage: Password Aging
+  - used to setup password xteristics
+  - chage [-m mindays] [-M maxdays] [-d lastday] [-I inactive] [-E expiredate] [-W warndays]
+  - user can only use 'chage' to see their aging: $ sudo chage -l coop
+  - forcing user to change password at next login: $ sudo chage -d 0 USERNAME
+
+Restricted shell:
+  - Under Linux this is used to restrict the user: '$ /bin/bash -r'
+     --
+
+Restricted Accounts:
+  - helps to:
+    -- uses the restricted shell
+    -- limits available system programs and user applications
+    -- limits system resources
+    -- limits access times
+    -- limits access locations
+  - to create it:
+    - cd /bin ; sudo ln -s bash rbash
+    - cd /bin ; sudo ln bash rbash
+    - cd /bin ; sudo cp bash rbash
+       -- then use /bin/rbash in the /etc/passwd
+
+The root Account:
+   - Root login is permitted only from the devices listed in '/etc/security'
+
+SSH:
+  - steps to login via ssh:
+    -- whoami
+    -- $ ssh aomesite.com
+    -- as another user:
+      -- $ ssh root@somesite.com or $ ssh -l root somesite.com
+    -- copy files:
+      --> $ scp file.txt somesite.com:/tmp
+      --> $ scp file.txt student@somesite.com/gome/student
+      --> $ scp -r some>dir somesite.com:/tmp/some_dir
+    -- on multiple machines:
+      -- $for macines in node1 node2 node3
+         do (ssh $machine some_command &)
+         done
+
+ssh Configuration Files:
+  - user configurations are stored in the .ssh directory
+  - ls -l ~/.ssh
