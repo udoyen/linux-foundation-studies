@@ -23,19 +23,19 @@ OBJECTIVES:
                                                          Locates boot program in MBR(Master Boot Record)
                                                                                 |
                                                                                 V
-									       GRUB(GRand Unified Bootloader)
-											  |
-							                                  V
-                                                                                        Kernel
-                                                                                          |
-                                                                                        Hardware check
-                                                                                          |
-                                                                                        init processes start
-                                                                                         /|\
-                                                                                        / | \
-                                                                               SysVinit   |  systemd
-                                                                           init scripts   |
-                                                                                        Upstart
+									                                            GRUB(GRand Unified Bootloader)
+											                                                          |
+							                                                                  V
+                                                                             Kernel
+                                                                                |
+                                                                          Hardware check
+                                                                                |
+                                                                       init processes start
+                                                                               /|\
+                                                                              / | \
+                                                                     SysVinit   |  systemd
+                                                                 init scripts   |
+                                                                             Upstart
 
    -Identify several types of boot loaders.
         Types include:
@@ -1058,7 +1058,7 @@ Using fdisk:
 
 		LUKS         plain dm-crypt volumes      loop-AES     TrueCrypt
 		 |	     	   	    |		   |              |
-		 |			    |		   |		  |
+		 |			          |		   |		          |
 		 |--------------------------|--------------|--------------|
 						|
 						|
@@ -1149,20 +1149,19 @@ Current Filesystem Types:
 Special Filesystems:
 	Filestsystem     |        Mount Point        |      Purpose
 	------------------------------------------------------------------------------------
-	rootfs			None			During kernel load, provides an empty root directory.
-	hugtlbfs		Anywhere		Provides extended page access (2 or 4 MB on x86)
-	bdev			None			Used for block devices.
-	proc			/proc			Pseudo filesystem access to many kernel structures and aubsystems.
-	sockfs			None			Used by BSD Sockets.
-	tmpfs			Anywhere		RAM disk with swapping, re-sizing.
-	shm			None			Used by System C IPC Shared Memory.
-	pipefs			None			Used for pipes.
-	binfmt_misc		Anywhere		Used by various executable formats.
-	devpts			/dev/pts		Used by Unix98 pseudo-termionals.
-	usbfs			/proc/bus/usb		Used ny USB sub-system for dynamical devices.
-	sysfs			/sys (or elsewhere)	Used as a device tree.
-	debugfs			/sys/kernel/debug (or	Used for simple debugging file access.
-				elsewhere)
+	rootfs			                  None			          During kernel load, provides an empty root directory.
+	hugtlbfs		                  Anywhere		        Provides extended page access (2 or 4 MB on x86)
+	bdev			                    None			          Used for block devices.
+	proc			                    /proc			          Pseudo filesystem access to many kernel structures and aubsystems.
+	sockfs			                  None			          Used by BSD Sockets.
+	tmpfs			                    Anywhere		        RAM disk with swapping, re-sizing.
+	shm			                      None			          Used by System C IPC Shared Memory.
+	pipefs			                  None			          Used for pipes.
+	binfmt_misc		                Anywhere		        Used by various executable formats.
+	devpts			                  /dev/pts		        Used by Unix98 pseudo-termionals.
+	usbfs			                    /proc/bus/usb		    Used ny USB sub-system for dynamical devices.
+	sysfs			                    /sys (or elsewhere)	Used as a device tree.
+	debugfs			                  /sys/kernel/debug (or	Used for simple debugging file access.elsewhere)
 
 
 <---------------------------------------------------------------------------------------------------------------->
@@ -1205,25 +1204,25 @@ Special Filesystems:
 			    > system - access control list (ACL),
 			    > security- SELinux.
 
-		format:	    chattr [-|+|=mode] filename (change attribute)
+format:	  chattr [-|+|=mode] filename (change attribute)
 			    lsattr filename   (list file attribute)
 	        Namespaces:
 			user --
 			     flags --> i: immutable, a: append-only, d: no-dump, A: No atime update
 
-       Creating anf Formatting Filesystems:
+       Creating and Formatting Filesystems:
        		utility for formatting (making) filesystem on a partition is 'mkfs'
-		format --> mkfs [-t fstype] [options] [device name], e.g.: sudo mkfs -t ext4 /dev/sda10 OR sudo mkfs.ext4 /sda10
+		        format --> mkfs [-t fstype] [options] [device name], e.g.: sudo mkfs -t ext4 /dev/sda10 OR sudo mkfs.ext4 /sda10
 
-       Checking and Fixing Filesystems:
+Checking and Fixing Filesystems:
        		utility for checking and fixing any errors in a filesystem is 'fsck'
-		format --> sudo fsck -t ext4 /dev/sda10 OR sudo fsck.ext4 /dev/sda10
-		       --> fsck [-t fstype] [options] [device-file]
+		        format --> sudo fsck -t ext4 /dev/sda10 OR sudo fsck.ext4 /dev/sda10
+		              --> fsck [-t fstype] [options] [device-file]
 		Note: SHOULD ONLY BE RUN ON UNMOUNTED FILESYSTEMS.
 		to do so run the following command --> sudo touch /forcefsck, sudo reboot
 
 
-      Mount:
+Mount:
 		Each file system is mounted under a specific directory as in:
 		--> sudo mount -t ext4 /dev/sdb4 /home
 
@@ -1235,7 +1234,7 @@ Special Filesystems:
 		--> sudo mount -U UUID=26d58ee2-94jjjfhv0-vnskjs-44ns48 /home
 		with mount --help you get a quick summary of mount options
 
-     unmount:
+unmount:
 		umount [device-file | mount-point]
 		--> sudo umount /home
 		--> sudo umount /dev/sda3
@@ -1483,15 +1482,15 @@ Special Filesystems:
   Ext4 Filesystem Enhancements:
     - is backwards-compatible with ext3 and ext2
     - increases the maximum fielsystem size to 1 EB (from 16 TB), and the maximum file to 16 TB (from 2 TB).
-    - INCREASE WITHOUT LIMIT THE MAXIMUM NUMBER OF SUBDIRECTORIES, WHICH WAS LIMITED TO 32K IN EXT3
-    - SPLITS LARGE FILES INTO THR LARGEST POSSIBLE EXTENTS INSTEAD OF USING INDIRECT BLOCK MAPPING.
-    - USES MULTIBLOCK ALLOCATION
-    - PRE-ALLOCATE DISK SPACE FOR A FILE
-    - USES ALLOCATE-ON-FLUSH
-    - USES FAST FSCK
-    - USES CHECKSUMS FOR THE JOURNAL WHICH IMPROVES RELIABILITY
-    - USES IMPROVED TIMESTAMPS WHICH IS MEASURED IN NANOSECONDS
-    - INCLUDES SNAPSHOT SUPPORT.
+    - increase without limit the maximum number of subdirectories, which was limited to 32k in ext3
+    - splits large files into thr largest possible extents instead of using indirect block mapping.
+    - uses multiblock allocation
+    - pre-allocate disk space for a file
+    - uses allocate-on-flush
+    - uses fast fsck
+    - uses checksums for the journal which improves reliability
+    - uses improved timestamps which is measured in nanoseconds
+    - includes snapshot support.
 
 
 <--------------------------------------------------------------------------------------------------------------------------------->
@@ -1501,55 +1500,55 @@ Special Filesystems:
   THESE ARE IMPORTANT CHALLENGERS TO THE EXT4 FILESYSTEM.
 
   OBJECTIVES:
-    - DESCRIBE THE XFS FILESYSTEM
-    - MAINTAIN THE XFS FILESYSTEM
-    - DESCRIBE THE BTRFS FILESYSTEM
+    - Describe the xfs filesystem
+    - Maintain the xfs filesystem
+    - Describe the btrfs filesystem
 
   XFS FILESYSTEM:
-    ORIGINALLY MADE BY SGI FOR IRIX OS
-    - ADVATAGES INCLUDE:
-      -- HANDLE:
-          --- UP TO 16EB(EXABYTES) FOR THE TOTAL FILESYSTEM
-          --- UP TO 8EB(EXABYTES) FOR AN INDIVIDUAL FILE
-      -- HIGH PERFORMANCE:
-          --- EMPLOYING DMA(DIRECT MEMORY ACCESS) I/O
-          --- GUARANTEEING AN I/O RATE
-          --- ADJUSTING STRIPE SIZE TO MATCH UNDERLYING RAID OR LVM DEVICES
-      -- CAN JOURNAL QUOTA INFORMATION, BUT LEADS TO DECREASE IN RECOVERY TIME WHEN A QUOTA-ENABLED FILESYSTEM IS UNCLEANLY UNMOUNTED
-      -- SUPPORTS EXTENDED ATTRIBUTES
+    originally made by sgi for irix os
+    - advatages include:
+      -- handle:
+          --- up to 16eb(exabytes) for the total filesystem
+          --- up to 8eb(exabytes) for an individual file
+      -- high performance:
+          --- employing dma(direct memory access) i/o
+          --- guaranteeing an i/o rate
+          --- adjusting stripe size to match underlying raid or lvm devices
+      -- can journal quota information, but leads to decrease in recovery time when a quota-enabled filesystem is uncleanly unmounted
+      -- supports extended attributes
 
   XFS FILESYSTEM MAINTENANCE:
-    - ADVANTAGE:
-      -- MOST MAINTENANCE TASKS CAN BE DONE ON-LINE WHILE THE FILESYSTEM IS FULLY MOUNTED, THESE INCLUDE:
-          --- DEFRAGMENTING
-          --- ENLARGING
-          --- DUMPING/RESTORING
-      -- BACKUP AND RESTORE CAN BE DONE WITH THE NATIVE XFS UTILITIES:
-        --- XFSDUMP
-        --- XFSRESTORE
+    - advantage:
+      -- most maintenance tasks can be done on-line while the filesystem is fully mounted, these include:
+          --- defragmenting
+          --- enlarging
+          --- dumping/restoring
+      -- backup and restore can be done with the native xfs utilities:
+        --- xfsdump
+        --- xfsrestore
 
   THE BTRFS FILESYSTEM:
-    B-TREE FILE SYSTEM:
-      - ADVANTAGES:
-          -- ADDRESSES THE LACK OF:-
-              --- POOLING,
-              --- SNAPSHOTS,
-              --- CHECKSUMS, AND
-              --- INTEGRAL MULTI-DEVICE SPANNING
+    b-tree file system:
+      - advantages:
+          -- addresses the lack of:-
+              --- pooling,
+              --- snapshots,
+              --- checksums, and
+              --- integral multi-device spanning
 
   <------------------------------------------------------------------------------------------------------------------->
 
                           CHAPTER 16. LOGICAL VOLUME MANAGEMENT(LVM)
 
-  - PERMITS HAVING ONE LOGICAL FILESYSTEM SPAN MUTIPLE PHYSICAL VOLUMES AND PARTITIONS WHILE APPEARING AS A SIMPLE PARTITION FOR NORMAL USE.
-  - MAKES SHRINKING AND EXPANDING EASY
+  - Permits having one logical filesystem span mutiple physical volumes and partitions while appearing as a simple partition for normal use.
+  - Makes shrinking and expanding easy
 
   OBJECTIVES:
-    - EXPLAIN THE CONCEPTS BEHIND LVM
-    - CREATE LOGICAL VOLUMES
-    - DISPLAY LOGICAL VOLUMES
-    - RESIZE LOGOCAL VOLUMES
-    - USE LVM SNAPSHOTS
+    - Explain the concepts behind lVM
+    - Create logical volumes
+    - Display logical volumes
+    - Resize logocal volumes
+    - Use lvm snapshots
 
   LVM:
     - BREAKS UP ONE VIRTUAL PARTITION INTO MULTIPLE CHUNKS, EACH OF WHICH CAN BE ON DIFFERENT PARTITIONS AND/OR DISKS.
@@ -1565,246 +1564,248 @@ Special Filesystems:
   |                       |-----------------------------------------------------------------------------|     |
   |   VOLUME GROUPS(VG)   |                           PRIMARY_VG                                        |     |
   |                       |-----------------------------------------------------------------------------|     |
-  |   PHYSICAL VOLUMES    | /DEV/SDB1   ||   /DEV/SDB2        ||     /DEV/SDC1     ||   /DEV/SDC2       |     |
+  |   PHYSICAL VOLUMES    | /DEV/Sdb1   ||   /DEV/Sdb2        ||     /DEV/Sdc1     ||   /DEV/Sdc2       |     |
   |                       |-----------------------------------------------------------------------------|     |
   |-----------------------------------------------------------------------------------------------------------|
 
      PARTITIONS           |---------------||-------------|              |----------------||-------------------|
-                          | /DEV/SDB1     || /DEV/SDB2   |              |  /DEV/SDC1     ||   /DEV/SDC2       |
+                          | /DEV/Sdb1     || /DEV/Sdb2   |              |  /DEV/Sdc1     ||   /DEV/Sdc2       |
                           |---------------||-------------|              |----------------||-------------------|
                           |------------------------------|              |-------------------------------------|
-    PHYSICAL DRIVES       |             /DEV/SDB         |              |                /DEV/SDC             |
+    PHYSICAL DRIVES       |             /Dev/Sdb         |              |                /Dev/Sdc             |
                           |------------------------------|              |-------------------------------------|
 
 
 
   LVM AND RAID:
-    - LVM CAN BE BUILT ON RAID
+    - lvm can be built on raid
 
   VOLUMES AND VOLUME GROUP:
-    - COMMANDS:
-      -- VGCREATE: CREATE VOLUME GROUP
-      -- VGEXTEND
-      -- VGREDUCE
-      -- PVCREATE: CONVERT A PARTITION TO A PHYSICAL VOLUME
-      -- PVDISPLAY: SHOWS THE PHYSICAL VOLUME
-      -- PVMOVE: MOVES THE DATA FROM ONE PHYSICAL VOLUME GROUP TO OTHERS
-      -- PVREMOVE
+    - commands:
+      -- vgcreate: create volume group
+      -- vgextend
+      -- vgreduce
+      -- pvcreate: convert a partition to a physical volume
+      -- pvdisplay: shows the physical volume
+      -- pvmove: moves the data from one physical volume group to others
+      -- pvremove
 
   LOGICAL VOLUMES UTILITIES:
-    - $ LS -LF /SBIN/LV* --> DOESN'T WORK ON UBUNTU TRUSTY
+    - $ ls -lf /sbin/lv* --> doesn't work on ubuntu trusty
 
   CREATING LOGICAL VOLUMES:
-    - COMMANDS:
-      -- LVCREATE --> ALLOCATES LOGICAL VOLUMES FROM WITHIN VOLUME GROUPS
-      -- LVDISPLAY --> REPORTS ON AVAILABLE LOGOICAL VOLUMES
-    - FILESYSTEMS ARE PLACED IN LOGICAL VOLUMES AND ARE FORMATTED WITH MKFS AS USUAL
-    - STEPS:
-       -- CREATE PARTITIONS ON DISK DRIVES (TYPE 8E IN FDSIK)
-       -- CREATE PHYSICAL VOLUMES FROM THE PARTITIONS                  --> $ SUDO PVCREATE /DEV/SDC1
-       -- CREATE THE VOLUMES GROUP                                     --> $ SUDO VGCREATE -S 16M VG /DEV/SDB1
-       -- ALLOCATE LOGICAL VOLUMES FROM THE VOLUME GROUP               --> $ SUDO LVCREATE -L 50G -N MYLVM VG
-       -- FORMAT THE LOGICAL VOLUMES                                   --> $ SUDO MKFS -T EXT4 /DEV/VG/MYLVM
-       -- MOUNT THE LOGICAL VOLUMES (ALSO UPDATE /ETC/FSTAB AS NEEDED) --> $ MKDIR /MYLVM, THEN --> $ SUDO MOUNT /DEV/VG/MYLVM /MYLVM, THEN --> /DEV/VG/MYLVM /MYLVM EXT4 DEFAULTS 0 0 ( TO THE /ETC/FSTAB)
+    - commands:
+      -- lvcreate --> allocates logical volumes from within volume groups
+      -- lvdisplay --> reports on available logoical volumes
+    - filesystems are placed in logical volumes and are formatted with mkfs as usual
+    - steps:
+       -- create partitions on disk drives (type 8e in fdsik)
+       -- create physical volumes from the partitions                  --> $ sudo pvcreate /dev/sdc1
+       -- create the volumes group                                     --> $ sudo vgcreate -s 16m vg /dev/sdb1
+       -- allocate logical volumes from the volume group               --> $ sudo lvcreate -l 50g -n mylvm vg
+       -- format the logical volumes                                   --> $ sudo mkfs -t ext4 /dev/vg/mylvm
+       -- mount the logical volumes (also update /etc/fstab as needed) --> $ mkdir /mylvm, then --> $ sudo mount /dev/vg/mylvm /mylvm, then --> /dev/vg/mylvm /mylvm ext4 defaults 0 0 ( to the /etc/fstab)
 
   DISPLAYING LOGICAL VOLUMES:
-    - SUDO PVDISPLAY OR SUDO PVDISPLAY /DEV/SDA5
-    - SUDO VGDISPLAY OR SUDO VGDISPLAY /DEV/VG0
-    - SUDO LVDISPLAY OR SUDO LVDISPLAY /DEV/VG0/LVM1
+    - sudo pvdisplay or sudo pvdisplay /dev/sda5
+    - sudo vgdisplay or sudo vgdisplay /dev/vg0
+    - sudo lvdisplay or sudo lvdisplay /dev/vg0/lvm1
 
   RESIZING LOGICAL VOLUMES:
-    -- WITH FS:
-        -- SHRINK --> 1. SHRINK FS 2. SHRINK VOLUME
-        -- EXPAND --> 1. EXPAND VOLUME, 2. EXPAND FS
+    -- with fs:
+        -- shrink --> 1. shrink fs 2. shrink volume
+        -- expand --> 1. expand volume, 2. expand fs
     -- UTILITY: RESIZEFS
   EXAMPLES OF RESIZING:
-        SUDO LVEXTEND -L +500M /DEV/VG/MYLVM
-        SUDO RESIZEFS /DEV/VG/MYLVM
+        sudo lvextend -l +500m /dev/vg/mylvm
+        sudo resizefs /dev/vg/mylvm
 
     - SHRINK:
-        SUDO UMOUNT /MYLVM
-        SUDO FSCK -F /DEV/VG/MYLVM
-        SUDO RESIZEFS /DEV/VG/MYLVM 200M
-        SUDO LVREDUCE -L 200M /DEV/VG/MYLVM
-        SUDO MOUNT /DEV/VG/MYLVM
+        sudo umount /mylvm
+        sudo fsck -f /dev/vg/mylvm
+        sudo resizefs /dev/vg/mylvm 200m
+        sudo lvreduce -l 200m /dev/vg/mylvm
+        sudo mount /dev/vg/mylvm
 
     - NEW VERSIONS OF LVM UTILITY:
-      -- SUDO
-      -- SUDO LVEXTEND -R -L +100M /DEV/VG/MYLVM
-      -- SUDO LVREDUCE -R -L -100M /DEV/VG/MYLVM
+      -- sudo
+      -- sudo lvextend -r -l +100m /dev/vg/mylvm
+      -- sudo lvreduce -r -l -100m /dev/vg/mylvm
 
     - VOLUME GROUP:
-      -- SUDO PVMOVE /DEV/SDC1
-      -- SUDO VGREDUCE VG /DEV/SDC1
+      -- sudo pvmove /dev/sdc1
+      -- sudo vgreduce vg /dev/sdc1
 
 
   LVM SNAPSHOTS:
-    - CREATES AN EXACT COPY OF AN EXISTING LOGICAL VOLUME
-    - USEFUL FOR:
-      -- BACKUPS, APPLICATION TESTING, AND DEPLOYING VMS
-    - CREATING SNAPSHOTS:
-      -- SUDO LVCREATE -L 128 -S -N MYSNAP /DEV/VG/MYLVM
-      --- MAKE A MOUNT POINT AND MOUNT THE SNAPSHOT:
-          ---- MKDIR /MYSNAP
-          ---- MOUNT -O RO /DEV/VG/MYSNAP /MYSNAP
-      --- TO USE AND REMOVE SNAPSHOT:
-          ---- SUDO UMOUNT /MYSNAP
-          ---- SUDO LVREMOVE /DEV/VG/MYSNAP
+    - creates an exact copy of an existing logical volume
+    - useful for:
+      -- backups, application testing, and deploying vms
+    - creating snapshots:
+      -- sudo lvcreate -l 128 -s -n mysnap /dev/vg/mylvm
+      --- make a mount point and mount the snapshot:
+          ---- mkdir /mysnap
+          ---- mount -o ro /dev/vg/mysnap /mysnap
+      --- to use and remove snapshot:
+          ---- sudo umount /mysnap
+          ---- sudo lvremove /dev/vg/mysnap
 
 
 <--------------------------------------------------------------------------------------------------------------------------->
 
 									CHAPTER 17. RAID
 
-- THE USE OF RAID SPREADS I/O ACTIVITY OVER MULTIPLE PHYSICAL DISKS, RATHER THAN JUST ONE.
-- ITS PURPOSE IS TO ENHANCE DATA INTEGRITY AND RECOVERABILITY IN CASE OF FAILURE, AS WELL AS TO BOOST PERFORMANCE WHEN USED WITH MODERN
-	STORAGE DEVICES.
-- RAID HAS DIFFERENT LEVELS WITH VARY IN THEIR RELATIVE STRENGTHS IN SAFETY, PERFORMANCE, COMPLEXITY AND COST.
+- The use of RAID spreads i/o activity over multiple physical disks, rather than just one.
+- Its purpose is to enhance data integrity and recoverability in case of failure, as well as to boost performance when used with modern
+	storage devices.
+- RAID has different levels with vary in their relative strengths in safety, performance, complexity and cost.
 
 OBJECTIVES:
-	- EXPLAIN THE CONCEPT OF RAID.
-	- SUMMARIZE RAID LEVELS.
-	- CONFIGURE A RAID DEVICE USING THE ESSENTIAL STEPS PROVIDED.
-	- MONITOR RAID DEVICES IN MULTIPLE WAYS.
-	- USE HOT SPARES.
+	- explain the concept of raid.
+	- summarize raid levels.
+	- configure a raid device using the essential steps provided.
+	- monitor raid devices in multiple ways.
+	- use hot spares.
 
 RAID:
-	- MEANING REDUNTANT ARRAY OF INDEPENDENT DISK
-	- RAID CAN BE IMPLEMENTED IN 'SOFTWARE' OR IN 'HARDWARE'
-	- SIMPLE IMPLEMENTATION:-
+	- meaning reduntant array of independent disk
+	- raid can be implemented in 'software' or in 'hardware'
+	- simple implementation:-
 
-			512GB HARD DRIVES ---> RAID SOFTWARE IMPLEMENTATION ---> 1TB DISK
+			512GB hard drives ---> RAID software implementation ---> 1TB DISK
 
-	- DISADVANTAGE OF RAID HARDWARE:
-		-- IF DISK CONTROLLER FAILS, IT MUST BE REPLACED BY A COMPATIBLE CONTROLLER UNLIKE SOFTWARE IMPLEMENTATION
-			WHICH CAN ALLOW THE DISK TO WORK WITH ANY CONTROLLER.
-	- THE ESSENTIAL FEATURES OF RAID ARE:
-		-- MIRRORING: WRITING THE SAME DATA TO MORE THAN ONE DISK.
-		-- STRIPING: SPLITTING OF DATA TO MORE THAN ONE DISK.
-		-- PARITY: EXTRA DATA IS STORED TO ALLOW PROBLEM DETECTION AND REPAIR, YIELDING FAULT TOLERANCE.
-		-- THUS USE OF RAID CAN IMPROVE BOTH PERFORMANCE AND RELIABILITY.
-	- RAID DEVICES ARE TYPICALLY CREATED BY COMBINING PARTITIONS FROM SEVERAL DISKS TOGETHER
-	- MDADM IS USED TO CREATE AND MANAGE RAID DEVICES, '/DEV/MDX' IS EQUIVALENT TO '/DEV/SDA1'
+	- disadvantage of raid hardware:
+		-- if disk controller fails, it must be replaced by a compatible controller unlike software implementation
+			which can allow the disk to work with any controller.
+	- the essential features of raid are:
+		-- mirroring: writing the same data to more than one disk.
+		-- striping: splitting of data to more than one disk.
+		-- parity: extra data is stored to allow problem detection and repair, yielding fault tolerance.
+		-- Thus use of raid can improve both performance and reliability.
+	- raid devices are typically created by combining partitions from several disks together
+	- mdadm is used to create and manage raid devices, '/dev/mdx' is equivalent to '/dev/sda1'
+
 RAID LEVELS:
-	- MANY LEVELS EXISTS BASED ON THE SPECIFICATION OF INCREASING COMPLEXITY AND USE, THESE ARE:
-		-- RAID 0: USES ONLY STRIPING.
-			--- ADVANTAGES:
-				---- DATA SPREAD ACROSS MULTIPLE DISKS
-				---- IMPROVED PERFORMANCE
-			--- DISADVANTAGES:
-				---- NO REDUNDANCY
-				---- NO STABILITY
-				---- NO RECOVERY CAPABILITIES
-		-- RAID 1: USES ONLY MIRRORING
-			--- ADVANTAGES:
-				---- GOOD FOR RECOVERY AS EACH DISK HAS A DUPLICATE
-		-- RAID 5: USES ROTATING PARITY STRIP;
-			--- ADVANTAGE:
-				---- DISK FAILURE ONLY CAUSES DROP IN PERFORMANCE, NO LOSS OF DATA
-				--NOTE: THEY MUST BE AT LEAST 3 DISKS
-		-- RAID 6: HAS STRIPED DISKS WITH DUAL PARITY,
-			--- CAN HANDLE LOSS OF TWO DISKS
-			--- REQUIRES AT LEAST 4 DISKS
-			--- REPLACES RAID 5 DUE TO ITS STRESS ON HARDWARE
-		-- RAID 10: IS A MIRRORED AND STRIPED DATA SET.
-			--- AT LEAST 4 DRIVES ARE NEEDED.
-		NOTE: ADDING MORE DISKS IMPROVES PERFORMANCE.
+	- many levels exists based on the specification of increasing complexity and use, these are:
+		-- raid 0: uses only striping.
+			--- advantages:
+				---- data spread across multiple disks
+				---- improved performance
+			--- disadvantages:
+				---- no redundancy
+				---- no stability
+				---- no recovery capabilities
+		-- raid 1: uses only mirroring
+			--- advantages:
+				---- good for recovery as each disk has a duplicate
+		-- raid 5: uses rotating parity strip;
+			--- advantage:
+				---- disk failure only causes drop in performance, no loss of data
+				--note: they must be at least 3 disks
+		-- raid 6: has striped disks with dual parity,
+			--- can handle loss of two disks
+			--- requires at least 4 disks
+			--- replaces raid 5 due to its stress on hardware
+		-- raid 10: is a mirrored and striped data set.
+			--- at least 4 drives are needed.
+		note: adding more disks improves performance.
+
 SOFTWARE RAID CONFIGURATION:
-	- STEPS FOR SETUP INCLUDES:
-		-- CREATE PARTITIONS ON EACH DISK (TYPE FD IN FDISK)
-		-- CREATE RAID DEVICE WITH MDADM
-		-- FORMAT RAID DEVICE
-		-- ADD DEVICE TO /ETC/FSTAB
-		-- MOUNT RAID DEVICE
-		-- CAPTURE RAID DETAILS TO ENSURE PERSISTENCE
-	- THE COMMAND: SUDO MDADM -S --> USED TO STOP RAID
+	- steps for setup includes:
+		-- create partitions on each disk (type fd in fdisk)
+		-- create RAID device with mdadm
+		-- format RAID device
+		-- add device to /etc/fstab
+		-- mount RAID device
+		-- capture RAID details to ensure persistence
+	- The command: sudo mdadm -s --> used to stop RAID
 	- EXAMPLE:
-		- CREATE TWO PARTITIONS OF TYPE FD ON DISKS /DEV/SDB, /DEV/SDC
-			-- SUDO FDISK /DEV/SDB, SUDO FDISK /DEV/SDC
-		- SET UP THE ARRAY
-			-- SUDO MDADM --CREATE /DEV/MD0 --LEVEL=1 --RAID-DISKS=2 /DEV/SDBX /DEV/SDCX
+		- create two partitions of type fd on disks /dev/sdb, /dev/sdc
+			-- sudo fdisk /dev/sdb, sudo fdisk /dev/sdc
+		- set up the array
+			-- sudo mdadm --create /dev/md0 --level=1 --raid-disks=2 /dev/sdbx /dev/sdcx
 		- FORMAT IT
-			-- SUDO MKFS.EXT4 /DEV/MD0
+			-- sudo mkfs.ext4 /dev/md0
 		- ADD TO CONFIGURATION
-			-- SUDO BASH -C "MDADM --DETAIL --SCAN >> /ETC/MDADM.CONF"
+			-- sudo bash -c "mdadm --detail --scan >> /etc/mdadm.conf"
 		- MOUNT IT
-			-- SUDO MKDIR /MYRAID
-			-- SUDO MOUNT /DEV/MD0 /MYRAID
-			-- ADD /DEV/MD0 /MYRAID EXT4 DEFAULTS 0 2
-		- EXAMINE /PROC/MDSTAT TO SEE THE RAID STATUS AS IN:
-			-- CAT /PROC/MDSTAT
+			-- sudo mkdir /myraid
+			-- sudo mount /dev/md0 /myraid
+			-- add /dev/md0 /myraid ext4 defaults 0 2
+		- examine /proc/mdstat to see the raid status as in:
+			-- cat /proc/mdstat
 		- TO STOP
-			-- SUDO MDADM -S /DEV/MD0
+			-- sudo mdadm -s /dev/md0
 
 MONITORING RAIDS:
-	- WAYS INCLUDE:
-		-- SUDO MDADM --DETAIL /DEV/MD0
-		-- CAT /PROC/MDSTAT
-		-- YOU CAN ALSO USE: MDMONITOR, REQUIRES THE CONFIGURATION OF /ETC/MDADM.CONF
-		-- STATUS OF RAID DEVICE /DEV/MDX:
-			--- SUDO MDADM --DETAIL /DEV/MDX
-		-- SHOW STATUS OF ALL RAID DEVICES ON THE SYSTEM
-			-- CAT /PROC/MDSTAT
-		-- MONITOR RAID VIA EMAIL:
-			--- MAILADDR EDDIE@HASKEL.COM
-			--- STARTING EMAIL SERVICE WITH:
-				---- SUDO SERVICE MDMONITOR START
-				---- SUDO CHKCONFIG <MDMONITOR | MDADM> ON
+	- ways include:
+		-- sudo mdadm --detail /dev/md0
+		-- cat /proc/mdstat
+		-- you can also use: mdmonitor, requires the configuration of /etc/mdadm.conf
+		-- status of raid device /dev/mdx:
+			--- sudo mdadm --detail /dev/mdx
+		-- show status of all raid devices on the system
+			-- cat /proc/mdstat
+		-- monitor raid via email:
+			--- mailaddr eddie@haskel.com
+			--- starting email service with:
+				---- sudo service mdmonitor start
+				---- sudo chkconfig <mdmonitor | mdadm> on
 
 RAID HOT SPARES:
-	- USED TO FIX REDUNDANCIES
-	- CREATE HOT SPARES FOR RAID
-		-- SUDO MDADM --CREATE /DEV/MD0 -L 5 -N3 -X 1 /DEV/SDA8 /DEV/SDA9 /DEV/SDA10 /DEV/SDA11
-		-- SWITCH '-X 1' TELLS RAID TO USE ONE HOT SPARES
-		-- TESTING THE REDUNDANCY AND HOT SPARE OF YOUR ARRAY
-			--- SUDO MDADM --FAIL /DEV/MD0 /DEV/SDB2
-		-- RESTORING TESTED DRIVE:
-			--- SUDO MDADM --REMOVE /DEV/MD0 /DEV/SDB2
-			--- SUDO MDADM --ADD /DEV/MD0 /DEV/SDE2
+	- used to fix redundancies
+	- create hot spares for raid
+		-- sudo mdadm --create /dev/md0 -l 5 -n3 -x 1 /dev/sda8 /dev/sda9 /dev/sda10 /dev/sda11
+		-- switch '-x 1' tells raid to use one hot spares
+		-- testing the redundancy and hot spare of your array
+			--- sudo mdadm --fail /dev/md0 /dev/sdb2
+		-- restoring tested drive:
+			--- sudo mdadm --remove /dev/md0 /dev/sdb2
+			--- sudo mdadm --add /dev/md0 /dev/sde2
 
 <---------------------------------------------------------------------------------------------------->
 
 						CHAPTER 18. LOCAL SYSTEM SECURITY
 
 OBJECTIVES:
-	- ASSESSING SYSTEM SECURITY RISKS
-	- FASHION AND IMPLEMENT SOUND COMPUTER SECURITY POLICIES AND PROCEDURES
-	- EFFICIENTLY PROTECT BIOS AND THE BOOT LOADER WITH PASSWORDS
-	- USE APPROPRAITE MOUNT OPTIONS, SETUID AND SETGID TO ENHANCE SECURITY
+	- assessing system security risks
+	- fashion and implement sound computer security policies and procedures
+	- efficiently protect bios and the boot loader with passwords
+	- use appropraite mount options, setuid and setgid to enhance security
 LOCAL SYSTEM SECURITY:
-	- CAN BE DEFINED IN TERMS OF:
-		-- THE SYSTEMS ABILITY TO REGURALARLY DO WHAT IT IS SUPPOSED TO DO
-		-- INTEGRITY AND CORRECTNESS OF SYSTEM
-		-- ENSURING THAT THE AYATEM IS ONLY AVAILABLE TO THOSE AUTHORIZED TO USE IT
+	- can be defined in terms of:
+		-- the systems ability to reguralarly do what it is supposed to do
+		-- integrity and correctness of system
+		-- ensuring that the ayatem is only available to those authorized to use it
 
 	- AREAS FOR SECURITY INCLUDE:
 		-- PHYSICAL
 		-- LOCAL
 		-- REMOTE, AND PERSONAL
 CREATING A SECURITY POLICY:
-	- BASIC STRUCTURE OF COMPUTER SECURITY:
-		-- BE SIMPLE AND EASY TO UNDERSTAND
-		-- GET CONSTANTLY UPDATED
-		-- BE IN THE FORM OF A WRITTEN DOCUMENTATION
-		-- DESCRIBE BOTH POLICIES AND PROCEDURES
-		-- SPECIFY ENFORCEMANT ACTIONS
-		-- SPECIFY ACTIONS TO TAKE IN REESPONSE TO A SECURITY BREACH
-	- BASIC STRUCTURE OF SECURITY POLICIES:
-		-- SHOULD BE GENERIC SO ITS EASY TO FOLLOW
-		-- MUST SAFE THE DATA THAT NEEDS PROTECTIONS
-		-- DENY ACCESS TO REQUIRED SERVICES AND PROTECT USER POLICY
-	- POLICIES SHOULD BE UPDATED ON A REGULAR BASIS
+	- basic structure of computer security:
+		-- be simple and easy to understand
+		-- get constantly updated
+		-- be in the form of a written documentation
+		-- describe both policies and procedures
+		-- specify enforcemant actions
+		-- specify actions to take in reesponse to a security breach
+	- basic structure of security policies:
+		-- should be generic so its easy to follow
+		-- must safe the data that needs protections
+		-- deny access to required services and protect user policy
+	- policies should be updated on a regular basis
 WHAT TO INCLUDE IN THE POLICY:
-	- METHODS OF PROTECTING INFORMATION FROM BEING READ OR COPIED BY UNAUTHORIZED PERSONEL
-	- PROTECTION OF INFORMATION FROM BEING ALTERED OR DELETED WITHOUT THE PERMISSION OF THE OWNERSHIP
-	- ALL SERVICES SHOULD BE PROTECTED SO THEY ARE AVAILABLE AND NOT DEGRADED IN ANY MANNER WITHOUT AUTHORIZATION
-	- ASPECTS INCLUDE:
-		-- CONFIDENTIALITY
-		-- DATA INTEGRITY
-		-- AVAILABILITY
-		-- CONSISTENCY
-		-- CONTROL
-		-- AUDIT
+	- methods of protecting information from being read or copied by unauthorized personel
+	- protection of information from being altered or deleted without the permission of the ownership
+	- all services should be protected so they are available and not degraded in any manner without authorization
+	- aspects include:
+		-- confidentiality
+		-- data integrity
+		-- availability
+		-- consistency
+		-- control
+		-- audit
 WHAT RISKS TO ASSESS:
 	- QUESTIONS ARE:
 		-- WHAT DO I WANT TO PROTECT?
@@ -2005,26 +2006,26 @@ APPARMOR:
 
 							CHAPTER 20. PROCESSES
 
- - A PROCESS IS AN EMBODIMENT OF A RUNNING APPLICATION WHICH MAY OR MAY NOT CONSIST OF MUTIPLE THREADS
- - PROCESSES HAVE BOTH ATTRIBUTES AND WELL-DELINEATED PERMISSIONS.
- - THEY MUST IN ONE OF A NUMBER OF ENUMERATED STATES, MOST COMMON BEING 'RUNNING' OR 'SLEEPING'
- - IMPORTANT TO KNOW WHEN A PROCESS IS RUNNING IN THE 'USER MODE' OR 'KERNEL MODE' WITH ELEVATED PRIVILEGES FOR THE LATTER.
- - A NUMBER OF DIFFERENT WAYS EXIST TO CREATE 'CHILD' PROCESSES AND TO SET AND MODIFY THEIR PRIORITIES.
+ - a process is an embodiment of a running application which may or may not consist of mutiple threads
+ - processes have both attributes and well-delineated permissions.
+ - they must in one of a number of enumerated states, most common being 'running' or 'sleeping'
+ - important to know when a process is running in the 'user mode' or 'kernel mode' with elevated privileges for the latter.
+ - a number of different ways exist to create 'child' processes and to set and modify their priorities.
 
 OBJECTIVES:
-	- DESCRIBE A PROCESS AND THE RESOURCES ASSOCIATED WITH IT
-	- DISTINGUISH BETWEEN PROCESSES, PROGRAMS AND THREADS
-	- UNDERSTAND PROCESS ATTRIBUTES, PERMISSIONS AND STATES
-	- KNOW THE DIFFERENCE BETWEEN RUNNING IN USER AND KERNEL MODES
-	- DESCRIBE 'DAEMON' PROCESSES
-	- UNDERSTAND HOW NEW PROCESSES ARE FORKED (CREATED)
-	- USE NICE AND RENICE TO SET AND MODIFY PRIORITIES
+	- describe a process and the resources associated with it
+	- distinguish between processes, programs and threads
+	- understand process attributes, permissions and states
+	- know the difference between running in user and kernel modes
+	- describe 'daemon' processes
+	- understand how new processes are forked (created)
+	- use nice and renice to set and modify priorities
 
 PROCESSES, PROGRAMS AND THREADS:
 	- PROCESS:
-		-- THIS IS AN EXECUTING PROGRAM AND ASSOCIATED RESOURCES, INCLUDING ENVIRONMENT, OPEN FILES, SIGNAL HANDLERS
-		-- THE SAME PROGRAM MAY BE EXECUTING MORE THAN ONCE SIMULTANEOUSLY AND THUS BE RESPONSIBLE FOR MULTIPLE PROCESSES
-		-- BASIC STRUCTURE
+		-- this is an executing program and associated resources, including environment, open files, signal handlers
+		-- the same program may be executing more than once simultaneously and thus be responsible for multiple processes
+		-- basic structure
 
 					PROGRAM
 						|
@@ -2040,24 +2041,24 @@ THREAD	 THREAD	  THREAD  THREAD  THREAD  THREAD  THREAD  THREAD
 
 
 THE INIT PROCESS:
-	- THIS IS THE FIRST USER PROCESS ON THE SYSTEM WITH A PROCESS ID = 1
-	- REMAINS TILL SHUTDOWN AND IS THE LAST PROCESS TO TERMINATE AT SHUTDOWN
-	- ANCESTRAL PARENT OF ALL OTHER USER PROCESSES
+	- this is the first user process on the system with a process id = 1
+	- remains till shutdown and is the last process to terminate at shutdown
+	- ancestral parent of all other user processes
 PROCESSES:
-	- IS AN INSTANCE OF A PROGRAM IN EXECUTION
-	- MAY BE IN A RUNNING STATE, OR SLEEP STATE
-	- EACH PROCESS HAS:
-		-- PID (PROCESS ID),
-		-- PPID (PARENT PROCESS ID),
-		-- PGI (PROCESS GROUP ID)
-	- ANY PROCESS FROM THE KERNEL HAS A '[]' AROUND THEIR NAMES WHEN '$ PS' IS RUN
-	- WHEN A PARENT PROCESS DIES BEFORE A CHILD, THE PPID IS SET TO 1 (INIT), OR TO 2 IN NEWER SYSTEMS USING 'SYSTEMD'
-	- WHEN CHILD PROCESS TERMINATES NORMALLY OR ABNORMALLY BEFORE ITS PARENTS WHICH HAS NOT WAITED FOR IT AND EXAMINED ITS EXIT CODE IS
-		KNOWN AS A 'ZOMBIE (OR DEFUNCT)' PROCESS
-	- THE PARENT 'INIT' PROCESS CHECKS ON ITS ADOPTED CHILD PROCESSES AND LETS THOSE WHO HAVE TERMINATED DIE GRACEFULLY
-	- PROCESS ARE CONTROLLED 'SCHEDULING', WHICH IS PREEMPTIVE AND IS ONLY DONE BY THE KERNEL
-	- LARGEST PID HAS BEEN LIMITED TO A 16-BIT NUMBER, OR 32768
-	- PID_MAX CAN BE ALTERED IN THE /PROC/SYS/KERNEL/PID_MAX
+	- is an instance of a program in execution
+	- may be in a running state, or sleep state
+	- each process has:
+		-- pid (process id),
+		-- ppid (parent process id),
+		-- pgi (process group id)
+	- any process from the kernel has a '[]' around their names when '$ ps' is run
+	- when a parent process dies before a child, the ppid is set to 1 (init), or to 2 in newer systems using 'systemd'
+	- when child process terminates normally or abnormally before its parents which has not waited for it and examined its exit code is
+		known as a 'zombie (or defunct)' process
+	- the parent 'init' process checks on its adopted child processes and lets those who have terminated die gracefully
+	- process are controlled 'scheduling', which is preemptive and is only done by the kernel
+	- largest pid has been limited to a 16-bit number, or 32768
+	- pid_max can be altered in the /proc/sys/kernel/pid_max
 PROCESS ATTRIBUTES:
 	- THESE INCLUDES:
 		-- THE PROGRAM BEING EXECUTED
@@ -2147,44 +2148,44 @@ PROCESS CREATING AND FORKING:
 CREATING PROCESSES IN A COMMAND SHELL:
 	- STEPS:
 		-- USER EXECUTES A COMMAND AT THE COMMAND SHELL:
-			---> A NEW PROCESS IS CREATED (FORKED)
-			---> A WAIT CALL PUTS THE PARENT TO SLEEP.
-			---> THE COMMAND IS LOADED ONTO THE CHILD'S PROCESS SPACE VIS THE EXEC SYSTEM CALL.
-			---> THE COMMAND CONPLETES EXECUTING, AND THE CHILD PROCESS DIES VIS THE EXIT SYSTEM CALL
-			---> THE PARENT SHELL IS RE-AWAKENDED BY THE DEATH OF THE CHILD PROCESS AND PROCEEDS TO ISSUE A NEW SHELL COMMAND.
-			-->> WITH '&' THE PARENT SHELL SHELL SKIPS THE WAIT REQUEST AND IS FREE TO ISSUE A NEW COMMAND IMMEDIATELY
-			-->> EXCEPTIONS ARE THE 'ECHO' AND 'KILL' WHICH ARE BUILT INTO THE SHELL AND NO PROGRAM FILES ARE LOADED FOR THEM TO RUN.
+			---> a new process is created (forked)
+			---> a wait call puts the parent to sleep.
+			---> the command is loaded onto the child's process space vis the exec system call.
+			---> the command conpletes executing, and the child process dies vis the exit system call
+			---> the parent shell is re-awakended by the death of the child process and proceeds to issue a new shell command.
+			-->> with '&' the parent shell shell skips the wait request and is free to issue a new command immediately
+			-->> exceptions are the 'echo' and 'kill' which are built into the shell and no program files are loaded for them to run.
 USING NICE TO SET PRIORITIES:
-	- PROCESS PRIORITIES ARE CONTROLLED USING THE NICE AND RENICE COMMANDS.
-	- SCALE (LEAST NICE, HIGHEST PRIORITY)-20 TO +19(MOST NICE, LOWEST PRIORITY)
-	- SYNTAX:
-		-- NICE -N 5 COMMAND [ARGS]
-		-- NICE -5 COMMAND [ARGS]
+	- process priorities are controlled using the nice and renice commands.
+	- scale (least nice, highest priority)-20 to +19(most nice, lowest priority)
+	- syntax:
+		-- nice -n 5 command [args]
+		-- nice -5 command [args]
 MODOFIEDDIFYING THE NICE VALUE:
-	- ONLY THE SUPERUSER CAN RUN NICE OR RENICE
-	- EDITING THE /ETC/SECURITY/LIMIT.CONF
-		-- RENICE +3 13848
-		-- MAN RENICE FOR MORE INFO
+	- only the superuser can run nice or renice
+	- editing the /etc/security/limit.conf
+		-- renice +3 13848
+		-- man renice for more info
 STATIC AND SHARED LIBRARIES:
-	- PROGRAMS ARE BUILT USING LIBRARIES OF CODE.
-	- STATIC:
-		-- THE CODE FOR THE LIBRARIES FUNCTIONS ARE INSERTED INTO THE PROGRAM AT COMPILE TIME AND
-			DOES NOT CHANGE THEREAFTER EVEN IF THE LIBRARY IS UPDATED
-	- SHARED:
-		-- CODE IS LOADED AT RUN TIME AND IF UPDATED THE PROGRAM WILL USE THE NEW LIBRARY.
-		-- ADVANTAGES:
-			-- SHARED BY APPLICATIONS
-			-- BETTER MEMORY USEAGE
-			-- SMALLER MORE MANAGEABLE EXECUTABLE SIZES
-			-- CALLED DLL (DYNAMIC LINK LIBRARY)
+	- programs are built using libraries of code.
+	- static:
+		-- the code for the libraries functions are inserted into the program at compile time and
+			does not change thereafter even if the library is updated
+	- shared:
+		-- code is loaded at run time and if updated the program will use the new library.
+		-- advantages:
+			-- shared by applications
+			-- better memory useage
+			-- smaller more manageable executable sizes
+			-- called dll (dynamic link library)
 SHARED LIBRARY VERSIONS:
-	- NAME CONVENTION: SHAREDLIB.SO.N --> WHERE N = VERSION NUMBER
+	- name convention: sharedlib.so.n --> where n = version number
 FINDING SHARED LIBRARIES:
-	- LDD: USED TO ACCERTAIN WHAT SHARED LIBRARIES AN EXECUTABLE REQUIRES.
-	- $ LDD /USR/BIN/VI
-	- LDCONFIG:
-		-- USUALLY RUN AT BOOT TIME BUT CCAN BE RUN ANYTIME AND USES THE /ETC/LD.SO.CONF
-		-- SHARED LIBS SHOULD ONLY BE STORED IN SYSTEM DIRECTORIES
+	- ldd: used to accertain what shared libraries an executable requires.
+	- $ ldd /usr/bin/vi
+	- ldconfig:
+		-- usually run at boot time but ccan be run anytime and uses the /etc/ld.so.conf
+		-- shared libs should only be stored in system directories
 
 
 
@@ -2193,28 +2194,28 @@ FINDING SHARED LIBRARIES:
 SIGNALS
 
 WHAT ARE SIGNALS?
-     SENDING SIGNALS TAKES THREE FORMS:
-     	     - KILL, KILLALL, PKILL
-     PATHS TAKEN BY A SIGNAL:
-     	   - FROM KERNEL TO A USER PROCESS AS A RESULT OF PROGRAMMING ERROR.
-	   - FROM USER PROCESS (USING A SYSTEM CALL) TO THE KERNEL WHICH WILL THEN SEBD IT TO A USER PROCESS.
-	   NOTE: SIGNALS CAN ONLY BE SENT BETWEEN PROCESSES OWNED BY SAME USER OR FROM SUPERUSER TO ANY PROCESS
-	   SIGKILL AND SIGSTOP CANNOT BE HANDLED AND WILL ALWAYS TERMINATE THE PROGRAM.
+     sending signals takes three forms:
+     	     - kill, killall, pkill
+     paths taken by a signal:
+     	   - from kernel to a user process as a result of programming error.
+	   - from user process (using a system call) to the kernel which will then sebd it to a user process.
+	   note: signals can only be sent between processes owned by same user or from superuser to any process
+	   sigkill and sigstop cannot be handled and will always terminate the program.
 
      TYPES OF SIGNALS:
-     	   SIGNALS ARE USED TO HANDLE TWO THINGS:-
-	   	   - EXCEPTIONS DETECTED BY HARDWARE
-		   - EXCEPTIONS GENERATED BY THE ENVIRONMENT
+     	   signals are used to handle two things:-
+	   	   - exceptions detected by hardware
+		   - exceptions generated by the environment
 	   $ KILL -L:
-	     SHOWS LIST OF SIGNALS
-             USE: $ KILL 1991, $ KILL -9 1991, $ KILL -SIGKILL 1991
+	     shows list of signals
+             use: $ kill 1991, $ kill -9 1991, $ kill -sigkill 1991
 
  KILLALL AND PKILL:
- 	 KILLALL - KILLS ALL PROCESSES
- 	 	 USE: $ KILLALL BASH, KILLALL -9 BASH, KILLALL -SIGKILL BASH
- 	 PKILL - SENDA A SIGNAL TO A PROCESS USING SELECTION CRITERIA
-	       USES: $ PKILL [-SIGNAL] [OPTIONS] [PATTERN]
-	       	     $ PKILL -U LIBBY FOOBAR
+ 	 killall - kills all processes
+ 	 	 use: $ killall bash, killall -9 bash, killall -sigkill bash
+ 	 pkill - senda a signal to a process using selection criteria
+	       uses: $ pkill [-signal] [options] [pattern]
+	       	     $ pkill -u libby foobar
 
 <---------------------------------------CHAPTER 22----------------------------------------------------------->
 
@@ -2929,3 +2930,365 @@ SSH:
 ssh Configuration Files:
   - user configurations are stored in the .ssh directory
   - ls -l ~/.ssh
+
+<-------------------------------------------- Group Management ------------------------------------------------>
+                                                  Chapter 34
+
+Learning Objectives:
+  - explain why it is useful to have Linux users belong to one or more groups
+  - use utilities such as 'groupadd, groupdel, groupmod' and 'suermod' to create, remove and manipulate groups and their membership
+  - describe User Private Groups
+  - explain the concept of group membership
+Groups:
+  - purpose include:
+    - allow users to share a work area
+    - setting up file permissions
+    - permitting certain specific users to access resources they would normally not be allowed to otherwise
+
+    - Groups are defined in '/etc/group' and the file looks like this:
+      -- groupname:pasword:GID:user1,user2,...
+      where:
+        - groupname --> name of group
+        - password --> is the password place-holder, group passwords maybe set, but only if the '/etc/gshadow' file exists
+        - GID --> is the group identifier
+                  - values btween 0 and 99 are for system groups
+                  - btween 100 and GID_MIN (as set in /etc/login.defs and usually the same as UID_MIN) are considered special
+                  - over GI_MIN are for UPG (User Private Groups).
+        - user1, user2, ... --> list of users who are members of the group
+
+Group Management:
+  - groupadd --> add new group
+  - groupdel --> remove group
+  - groupmod --> modify a groups's properties
+  - usermod --> modify a user's group membership (add or remove)
+
+  One can also edit the /etc/group directly but use of vigr is better as it is kinked to the vipw
+
+  The group manipulation utilities modify /etc/group and (if it exists) /etc/gshdow
+
+User Private Groups:
+  - the idea is that each user will have his or her own private group, but UPG are guaranteed to be private, additional members may be added to that group
+  - all users are created with GID = UID
+  - umask is set to 002 for all users created with UPG. Files = 644, directories = 775
+
+Group Membership:
+  - user have one primary group but may have between 0 to 15 secondary groups
+  - group membership identification:
+    - $ groups [user1 user2  ...]
+    - $ id -Gn [user1 user2 ...]
+
+<------------------------------------------------------------ File Permissions and Ownership ------------------------------------------->
+                                                                       Chapter 35
+
+DAC - directory access control
+
+Learning Objectives:
+  - explain the concepts of owner, group, and world
+  - set file access rights (read, write, and execute) for each category
+  - authenticate requests for file access, respecting proper permissions
+  - use chmod to change file permissions, chown to change user ownership, and chgrp to change group ownership
+  - understand the role of umask in stablishing desired permission on newly created files.
+  - user ACLs to extend the simpler user, group, world and read, write, execute model.
+
+Owner, Group and World:
+  - -rw-rwr-- 1 coop aproject 1601 Mar 9 15:04 a_file
+
+File Access Rights:
+  - specialized permissions -- setuid & setgid
+
+File Permission and Security and Authentication:
+  - Order of authentication:
+    -- if the requester is the owner, the file owner permission are used
+    -- otherwise, if the requester is in the group that owns the files, the group permissions are examined
+    -- if that doesn't succeed, the world permissions are examined.
+
+Changing Permissions: chmod:
+  - chmod uo+x,g-w a_file
+
+chmode: Numerical Syntax fro Permissions:
+  - octal form --> 0755
+  - symbolic form --> u+rwx,g+rwx,o+rx
+  - 4 - read, w - write, x - execute
+
+Changing User and Group File Ownership: chown and chgrp:
+  - chown coop:aproject a_file
+
+umask:
+  - default permissions for:
+    -- file --> 0666
+    -- folder --> 0777
+  - using 'umask':
+    - for file of 0666 --> 0666 & ~002 = 0664; folder --> 0777 & ~002 = 0775;
+  - change 'umask':
+    - $ umask 0022
+
+Filesystem ACLs:
+  - Access Control Lists:
+    - with this its possible to grant specific users or groups particular privileges without using 777 permissions
+    - default set of ACLs is created at system install.
+
+Getting and Setting ACLs:
+  - To see ACLs:
+    - getfacl file|directory
+  - To set ACLs:
+    - setfacl options permissions file|directory
+    - $ setfacl -m u:isablella:rx /home/george/file2
+    - $ setfacl -x u:isabella /home/george/file
+    Note: 'mv' and 'cp -p' preserve ACLs
+  - To remove ACLs:
+    - setfacl -x u:isabella /home/george/file1
+  - To set the default on directory:
+    - $ setfacl -m d:u:isabella:rx somedir
+
+<------ File Permissions and Ownership ------------------------------------------->
+                                                                       Chapter 35
+
+DAC - directory access control
+
+Learning Objectives:
+  - explain the concepts of owner, group, and world
+  - set file access rights (read, write, and execute) for each category
+  - authenticate requests for file access, respecting proper permissions
+  - use chmod to change file permissions, chown to change user ownership, and chgrp to change group ownership
+  - understand the role of umask in stablishing desired permission on newly created files.
+  - user ACLs to extend the simpler user, group, world and read, write, execute model.
+
+Owner, Group and World:
+  - -rw-rwr-- 1 coop aproject 1601 Mar 9 15:04 a_file
+
+File Access Rights:
+  - specialized permissions -- setuid & setgid
+
+File Permission and Security and Authentication:
+  - Order of authentication:
+    -- if the requester is the owner, the file owner permission are used
+    -- otherwise, if the requester is in the group that owns the files, the group permissions are examined
+    -- if that doesn't succeed, the world permissions are examined.
+
+Changing Permissions: chmod:
+  - chmod uo+x,g-w a_file
+
+chmode: Numerical Syntax fro Permissions:
+  - octal form --> 0755
+  - symbolic form --> u+rwx,g+rwx,o+rx
+  - 4 - read, w - write, x - execute
+
+Changing User and Group File Ownership: chown and chgrp:
+  - chown coop:aproject a_file
+
+umask:
+  - default permissions for:
+    -- file --> 0666
+    -- folder --> 0777
+  - using 'umask':
+    - for file of 0666 --> 0666 & ~002 = 0664; folder --> 0777 & ~002 = 0775;
+  - change 'umask':
+    - $ umask 0022
+
+Filesystem ACLs:
+  - Access Control Lists:
+    - with this its possible to grant specific users or groups particular privileges without using 777 permissions
+    - default set of ACLs is created at system install.
+
+Getting and Setting ACLs:
+  - To see ACLs:
+    - getfacl file|directory
+  - To set ACLs:
+    - setfacl options permissions file|directory
+    - $ setfacl -m u:isablella:rx /home/george/file2
+    - $ setfacl -x u:isabella /home/george/file
+    Note: 'mv' and 'cp -p' preserve ACLs
+  - To remove ACLs:
+    - setfacl -x u:isabella /home/george/file1
+  - To set the default on directory:
+    - $ setfacl -m d:u:isabella:rx somedir
+
+<------
+File Permissions and Ownership ------------------------------------------->
+                                                                      Chapter 35
+
+DAC - directory access control
+
+Learning Objectives:
+ - explain the concepts of owner, group, and world
+ - set file access rights (read, write, and execute) for each category
+ - authenticate requests for file access, respecting proper permissions
+ - use chmod to change file permissions, chown to change user ownership, and chgrp to change group ownership
+ - understand the role of umask in stablishing desired permission on newly created files.
+ - user ACLs to extend the simpler user, group, world and read, write, execute model.
+
+Owner, Group and World:
+ - -rw-rwr-- 1 coop aproject 1601 Mar 9 15:04 a_file
+
+File Access Rights:
+ - specialized permissions -- setuid & setgid
+
+File Permission and Security and Authentication:
+ - Order of authentication:
+   -- if the requester is the owner, the file owner permission are used
+   -- otherwise, if the requester is in the group that owns the files, the group permissions are examined
+   -- if that doesn't succeed, the world permissions are examined.
+
+Changing Permissions: chmod:
+ - chmod uo+x,g-w a_file
+
+chmode: Numerical Syntax fro Permissions:
+ - octal form --> 0755
+ - symbolic form --> u+rwx,g+rwx,o+rx
+ - 4 - read, w - write, x - execute
+
+Changing User and Group File Ownership: chown and chgrp:
+ - chown coop:aproject a_file
+
+umask:
+ - default permissions for:
+   -- file --> 0666
+   -- folder --> 0777
+ - using 'umask':
+   - for file of 0666 --> 0666 & ~002 = 0664; folder --> 0777 & ~002 = 0775;
+ - change 'umask':
+   - $ umask 0022
+
+Filesystem ACLs:
+ - Access Control Lists:
+   - with this its possible to grant specific users or groups particular privileges without using 777 permissions
+   - default set of ACLs is created at system install.
+
+Getting and Setting ACLs:
+ - To see ACLs:
+   - getfacl file|directory
+ - To set ACLs:
+   - setfacl options permissions file|directory
+   - $ setfacl -m u:isablella:rx /home/george/file2
+   - $ setfacl -x u:isabella /home/george/file
+   Note: 'mv' and 'cp -p' preserve ACLs
+ - To remove ACLs:
+   - setfacl -x u:isabella /home/george/file1
+ - To set the default on directory:
+   - $ setfacl -m d:u:isabella:rx somedir
+
+<------ File Permissions and Ownership ------------------------------------------->
+                                                                       Chapter 35
+
+DAC - directory access control
+
+Learning Objectives:
+  - explain the concepts of owner, group, and world
+  - set file access rights (read, write, and execute) for each category
+  - authenticate requests for file access, respecting proper permissions
+  - use chmod to change file permissions, chown to change user ownership, and chgrp to change group ownership
+  - understand the role of umask in stablishing desired permission on newly created files.
+  - user ACLs to extend the simpler user, group, world and read, write, execute model.
+
+Owner, Group and World:
+  - -rw-rwr-- 1 coop aproject 1601 Mar 9 15:04 a_file
+
+File Access Rights:
+  - specialized permissions -- setuid & setgid
+
+File Permission and Security and Authentication:
+  - Order of authentication:
+    -- if the requester is the owner, the file owner permission are used
+    -- otherwise, if the requester is in the group that owns the files, the group permissions are examined
+    -- if that doesn't succeed, the world permissions are examined.
+
+Changing Permissions: chmod:
+  - chmod uo+x,g-w a_file
+
+chmode: Numerical Syntax fro Permissions:
+  - octal form --> 0755
+  - symbolic form --> u+rwx,g+rwx,o+rx
+  - 4 - read, w - write, x - execute
+
+Changing User and Group File Ownership: chown and chgrp:
+  - chown coop:aproject a_file
+
+umask:
+  - default permissions for:
+    -- file --> 0666
+    -- folder --> 0777
+  - using 'umask':
+    - for file of 0666 --> 0666 & ~002 = 0664; folder --> 0777 & ~002 = 0775;
+  - change 'umask':
+    - $ umask 0022
+
+Filesystem ACLs:
+  - Access Control Lists:
+    - with this its possible to grant specific users or groups particular privileges without using 777 permissions
+    - default set of ACLs is created at system install.
+
+Getting and Setting ACLs:
+  - To see ACLs:
+    - getfacl file|directory
+  - To set ACLs:
+    - setfacl options permissions file|directory
+    - $ setfacl -m u:isablella:rx /home/george/file2
+    - $ setfacl -x u:isabella /home/george/file
+    Note: 'mv' and 'cp -p' preserve ACLs
+  - To remove ACLs:
+    - setfacl -x u:isabella /home/george/file1
+  - To set the default on directory:
+    - $ setfacl -m d:u:isabella:rx somedir
+
+<---------------------------------------------------- Pluggable Authentication Modules (PAM) ----------------------------------------------->
+                                                              Chapter 36
+Note: PAM can work with LDAP (Lightweight Directory Access Protocol) to provide centralized authentication throughout a network
+
+Learning objectives:
+  - explain the basic concepts that motivate the use of PAM
+  - list the steps involved in the authentication process
+  - use and modify PAM configuration files.
+  - know how to interpret PAM rules and create new ones.
+  - apply LDAP to use and administer distributed directory services over the network
+
+PAM: A Unified Approach to Authentication:
+  - uses libpam
+  - PAM incorporates the following components:
+    - PAM-aware applications
+    - Configuration files in /etc/pam.d
+    - PAM modules in the libpam* libraries, which can be found in different locations depending on Linux distribution.
+  - Each PAM-aware application, or service, may be configures with respect to PAM by an individual configuration file in /etc/pam.d
+
+Athentication Process:
+  - The steps include:
+    - user invokes PAM-aware application, such as login, ssh, or su
+    - the application calls libpam
+    - the library checks for files in /etc/pam.d; these delineates which PAM modules to invoke, including system-auth.
+    - each referenced module is executed in accordance with the rules of relevant configuration file for that apllication
+
+PAM Configuration Files:
+  - rules in the pam.d config files:
+    - type control module-path module-arguments
+
+PAM Rules:
+  - type:
+    - auth -- tells application to prompt for user identification
+    - account -- checks aspect of user account such as password aging, access control
+    - password -- updating user authentication token
+    - session -- used to provide functions before and after the session is established ( setting up environmental variables)
+  - Control:
+    - required: must return success for service to be granted, if part of a stack all other modules will run and the application would not be told which module failed
+    - requisite: same as required but any failure terminates the stack and return status is sent
+    - optional: modules is not required, if only module then then its return status to application may cause failure.
+    - sufficient: if this module succeeds then no subsequent modules in stack are executed.
+  - Other control flags include:
+    - substack
+  - module-path:
+    - file name of the library to be found in /lib*/security either absolute or relative path form
+  - module-arguments:
+    - can be given to modify the PAM module's behaviour
+
+LDAP:
+  - structure:
+    -- client----->LDAP Server
+                       / \
+                        |
+                        V
+                TLS (Transport Layer Security)
+  - When a system is configured for LDAP authentication, five files are changed:
+    - /etc/openldap
+    - /etc/pam_ldap.conf
+    - /etc/nslcd.conf
+    - /etc/sssd/sssd.conf
+    - /etc/nsswitch.conf
+    - these files can be edited manually or using tools like system-config-authentication or authconfiglg-tul.
