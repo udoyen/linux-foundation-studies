@@ -3527,7 +3527,9 @@ mt:
       - mt fsf --> move forward to the end of the current device.
 
 <------------------------------------------------------ Network Addresses -------------------------------------------------->
+
                                                         Chapter 38
+
 Addresses come in different classes according to the size of the local networks and it is important to be able to recognize the class based
 on the address value
 
