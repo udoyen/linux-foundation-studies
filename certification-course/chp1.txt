@@ -722,11 +722,11 @@ Objectives:
 		      |			 |	       |                 |
 		      |			 |	       |                 |
 		      V			 V	       |                 |
-	-------------------     --------------         |  -----------    |
+	      -------------------     --------------         |  -----------    |
         |character node   |     |block node  |<--------|  |socket   |    |
         -------------------     -------------             ----------     |
                / \                  / \                       / \        |
-                |	             |                         |         |
+                |	                   |                         |         |
                 |                    |                         |         |
                 V                    V                         V         V
         -------------------     --------------           -----------------
@@ -742,7 +742,7 @@ Objectives:
                  |             --------------            -----------------
                  |                  / \                       / \
                  |                   |                         |
-                 |	             |                         |
+                 |	                 |                         |
                  V                   V                         V
         ---------------------------------------------------------------------------------
         |                              Hardware                                         |
@@ -780,18 +780,18 @@ Objectives:
 
 
 
-							Create device node in /dev
-								    / \
-								     |
-								     |
-								     |
+							           Create device node in /dev
+								                 / \
+								                  |
+								                  |
+								                  |
 						                   udevd
 						                   /  \
 						                  /    \
 						                 /      \
 						                /        \
 						               /          \
-	                                                      /		   \
+	                           /		   \
 						       kernel module    Rules database
 
 	Creating udev Rules
@@ -859,31 +859,31 @@ Objectives:
 	                |    Platter                                                         Platter              |
 	                -------------------------------------------------------------------------------------------
 	                       / \                                                             / \
-	                        |								|
-                                |								|
-	                        |								|
-	                        |								|
-                       --------------------------------------------------------------------------------------------
+	                        |								                                                |
+                          |								                                                |
+	                        |								                                                |
+	                        |								                                                |
+           --------------------------------------------------------------------------------------------
  		       |                   Cylinders(group of similar platters on all sectors)                    |
  		       --------------------------------------------------------------------------------------------
  		              /   \                                                           /    \
- 		             /     \							     /      \
+ 		             /     \							                                           /      \
  		            /       \                                                       /        \
  		      circular  circular                                              circular   circular
 		       tracks    tracks                                                tracks     tracks
-		               |								|
-		               |								|
-		               |								|
+		               |								                                               |
+		               |							                                                 |
+		               |								                                               |
 		       -------------------------------------------------------------------------------------------
 		       |                           Data Blocks (Sectors)                                         |
 		       -------------------------------------------------------------------------------------------
-		              / \							       / \
+		              / \							                                                 / \
 		               |                                                                |
 		               |                                                                |
 		               |                                                                |
 		       -------------------------------------------------------------------------------------------
-                       |                                 Read by Heads                                           |
-                       -------------------------------------------------------------------------------------------
+          |                                 Read by Heads                                           |
+           -------------------------------------------------------------------------------------------
 
 
 	Partitioning:
@@ -3292,3 +3292,341 @@ LDAP:
     - /etc/sssd/sssd.conf
     - /etc/nsswitch.conf
     - these files can be edited manually or using tools like system-config-authentication or authconfiglg-tul.
+
+<----------------------------------------------------- Backup and Recovery Methods -------------------------------------------->
+
+                                                             Chapter 37
+
+Learning objectives:
+  - identify and prioritize data that needs backup
+  - employ different kinds of backup methods, depending on the situation
+  - establish efficient backup and restore strategies
+  - use different backup utilities, such as 'cpio, tar, gzip, bzip2, xz, dd, rsync, dump, restore and mt'
+  - describe the two most well-known backup programs, Amanda and Bacula.
+
+Why Backup ?
+  - data is valuable
+  - hardware fails
+  - software fails
+  - people make mistakes
+  - malicious people can cause deliberate damage
+  - unexplained events happen
+  - rewinds can be useful
+
+What Needs Backup ?
+  - 1. Definitely:
+        - business-realted data
+        - system configuration files
+        - User files (usually under /home)
+    2. Maybe:
+        - spooling directories ( for printing mail etc )
+        - Logging files ( found in /var/log, and elsewhere )
+    3. Probably not:
+        - installed software
+        - the /tmp directory
+    4. Definately not:
+        - psuedo-filessystems such as /proc, /dev and /sys
+        - any swap partitions or files
+
+Tape Drives:
+  - LTO (Linear Tape Open) variety
+  - 100GB to 2.5TB version
+
+Backup Methods:
+  - Full:
+    - a full backup
+  - Incremental:
+    - backup only changed files that have changed since last full backup or incremental bsckup
+  - Differential:
+    - backup all changed files since last full backup
+  - Multiple level Incremental:
+    - files that have changed since the previous backup at the same or previous lvel
+  - User:
+    - only specific files in user's directory are backed up
+
+Backup Strategies:
+  - helps to ensure proper backup is done right
+
+Backup Utilities:
+  - cpio
+  - tar
+  - gzip, bzip2, xz:
+    - cplo and tar create and extract archines of files.
+    - useful for transferring files from one filesystem or machine to another
+  - dd:
+    - transfer raw data btween media.
+    - can copy entire partitions or entire disks
+  - rsync:
+    - can synchronize directory subtrees or entire filesystems across a network, or bwteen filesystem locations on a local machine
+  - dump and reestore:
+    - read filesystems directly but must be restored on only same filesystem type they came from.
+  - mt:
+    - useful for querying and positioning tapes before performing backups and restores.
+
+cpio:
+  - lighter than 'tar'
+  - used by Linux kernel
+  - use:
+    - ls | cpio --create -O /dev/st0 -> create an archive [use: -o or --create]
+    - cpio -i somefile -I /dev/st0 -> extract from an archive [use: -i or --extract]
+    - cpio -t -I /dev/st0 -> list contents of an archive [ use: -t -r --list]
+
+tar:
+  - easier than 'cpio'
+  - reconsitutes directories as needed
+  - does incremental backups with '--newer' option
+  - handles backups not on one device
+  - use:
+    - create:
+      - tar --create --file /dev/st0 /root
+      - tar -cvf /dev/st0 /root, or using -f or --file options
+    - create with multi volume with -M or --multi-volume
+      - tar -cMf /dev/sto /root, will be prompted for next tape
+    - verify:
+      - tar --compare --verbose --file /dev/st0
+      - tar -dvf /dev/st0
+
+Using tar for Backups (cont.):
+  - short options -c, long options --create
+  - same command: tar cvf file.tar dir1 === tar -cvf file.tar dir1
+
+Using tar for Restoring Files:
+  - options include:
+    - -x or --extract
+    - -p or --same-permissions --> keeps file permissions
+    - -t or --list --> don't extract just list
+    - uses:
+      - extract:
+        - tar --extract --same-permission --verbose --file /dev/st0
+        - tar -xpvf /dev/st0
+        - tar xpvf /dev/st0
+      - specifying of specific files to restore:
+        - tar xvf /dev/st0 somefile
+      - listing contents of a tar backup:
+        - tar --list --file /dev/st0
+        - tar -tf /dev/st0
+
+Incremetal Backups with tar:
+  - using -N or --newer
+  - tar --create --newer '2011-12-1' -vf backup1.tar /var/tmp
+  - tar --create --after-data '2011-12-1' -vzf backup1.tar /var/tmp
+
+
+Compression: gzip, bzip2 and xz and Backups:
+  - based on compression efficiency:
+    - gzip: uses Lempel-Ziv Coding (LZ77), produces .gz files
+    - bzip2: uses Burrows-Wheeler block sorting text compression algorithm and huffman coding, and produces .bz2 files
+    - xz: produces .xz files and also supports legacy .lzma format
+    - .zip format is rarely used in Linux except legacy archives from other operating systems.
+    - using compression utilities with tar:
+      - tar zcvf source.tar.gz source
+      - tar jcvf source.tar.bz2 source
+      - tar Jcvf source.tar.xz source
+      - for the first command we could also do:
+        - tar cvf source.tar source ; gzip -v source.tar
+    - decompression:
+      - tar xzvf source.tar.gz
+      - tar xjvf source.tar.bz2
+      - tar xJvf source.tar.xz
+      - simpler version:
+        - tar xvf source.tar.gz
+        - Note: don't use on already compressed files such as: .jpg, .pdf
+      - Note meaning of options:
+        - tar 1234 name_of_compressed_file_with_appropraite_extension file_to_compress
+                                    --> 1 => type of compression
+                                    --> 2 => compress command
+                                    --> 3 => verboseness
+                                    --> 4 => file to compress
+        - tar 1234 file_to_decompress
+                                    --> 1 => decompress command
+                                    --> 2 => type of decompression
+                                    --> 3 => verboseness
+                                    --> 4 => file to decompress
+
+dd:
+  - use:
+    - dd if=input-file of=output-file options
+
+dd Examples:
+  - create 10MB file filled with zeros:
+    - dd if=/dev/zero of=outfile bs=1M count=10
+  - backup an entire hard drive to another (raw copy):
+    - dd if=/dev/sda of=/dev/sdb
+  - create an image of a hard disk (which could be transferred to another hard disk):
+    - dd if=/dev/sda of=sdadisk.img
+  - backup a partition:
+    - dd if=/dev/sda1 of=/partition1.img
+  - Use dd in a pipeline:
+    - dd if=ndata conv=swab count=1024 | uniq > ofile
+
+rsync:
+  - remote synchronize
+  - used to transfer files across a network or between different locations on the same machine:
+    - rsync [options] source destination
+    - rsync file.tar someone@backup.mydomain:/usr/local
+    - rsync -r a-machine:/usr/local b-machine:/user/
+    - rsync -t --dry-run /usr/local /BACKUP/usr
+    - good use for backup would be:
+      - rsync -r project-X archive-machine:archives/project-X
+
+dump and restore:
+  - directly reads and writes the filesystem amking it more efficient
+  - Features include:
+    - incremental backups
+    - understand specific filesystems and how to read it
+    - efficient when creating full back-ups
+    - can specify output tape size, density, block size and count, or even both
+    - dump to any valid device or file: defaults to /dev/tape
+    - parameters in /etc/fstab control what gets dumped and when
+
+  - Negative features:
+    - multiple filesystem passes are required for backups
+    - only works for ext2, ext3, and ext4 filesystems
+    - can't be run efficiently on mounted filesystems
+
+dump Options:
+  - -0-9:
+    - Level 0 is a full backup and higher numbers are incremental backups
+  - -B records:
+    - records per volume
+  - -b blocksize:
+    - KB per record
+  - -f file:
+    - output device or file
+  - -u:
+    - update /etc/dumpdates/
+  - -W:
+    - print most recent dump date of each filesystem in /etc/dumpdates or /var/lib/dumpdates (for debian systems)
+
+Level 0 Backup with dump:
+  - sudo dump -0uf /tmp/boot_backup /boot_master
+
+
+restore:
+  - used to restore files that where created using 'dump'
+  - sudo restore -rvf /tmp/boot_backup
+  - Options:
+    - -r restore everything
+    - -t list on standard out with no restoration
+    - -x files and directory are extracted
+    - -i interactive restoration
+
+mt:
+  - used to control magnetic tape devices
+  - options:
+    - -h help
+    - -f device: specify tape device
+    - operation
+    - count: used for repeat operations
+    - arguments: used for some operations
+    - mt [-h] [-f device] operation [count] [arguments...]
+    - use:
+      - mt status
+      - mt rewind
+      - mt erase
+      - mt fsf --> move forward to the end of the current device.
+
+<------------------------------------------------------ Network Addresses -------------------------------------------------->
+                                                        Chapter 38
+Addresses come in different classes according to the size of the local networks and it is important to be able to recognize the class based
+on the address value
+
+Learning Objectives:
+  - differentiate between different types of IPv4 and IPv6 addresses
+  - get, set, and change the hostname, based on the system you are using.
+
+IP Address:
+  - used globally and uniquely to identify nodes across the internet
+  - registered through ISPs
+  - two varieties include:
+    - IPv4 : 32-bit address, composed of 4 octets e.g. 148.114.252.10
+    - IPv6 : 128-bit address, composed of 8 octets, e.g. 2003:0db5:6123:0000:1f4f:0000:5529:fe23
+
+IPv4 Address Types:
+  - Unicast:
+    - address associated with a specific host: 140.211.169.4 or 64.254.248.193
+  - Network:
+    - address whose host portion is set to all binary zeroes, e.g. 192.168.1.0 the host portion can be 1-3 octets
+  - Broadcast:
+    - address to which each member of a particular network will listen. Will have the host portion set to all 1 bits, such as in 172.16.255.255,
+    148.114.255.255, and 192.168.1.255
+  - Multicast:
+    - address to which appropraitely configured nodes will listen. The address 224.0.0.2 is an example of a multicast address.
+      Only nodes specifically configured to pay attention to a specific multicast address will interpret packets for that multicast group.
+
+Special Addresses:
+  - certain addresses and address ranges are reserved for special purposes:
+    - 127.x.x.x where 0 <= x <= 254
+    - 0.0.0.0:
+      - used by systems that do not yet know their own address. e.g DHCP and BOOTP use this when attempting to communicate with a server
+    - 255.255.255.255
+      - generic broadcast private address, reserved for internal use. Never assigned to any group
+    - Other examples of reserved address ranges include:
+      - 10.0.0.0 - 10.255.255.255
+      - 172.16.0.0 - 172.31.255.255
+      - 192.168.0.0 - 192.168.255.255, etc
+
+IPv6 Address Types:
+  - Unicast:
+    - A packet is delivered to one interface:
+      - Link-local:
+      - Global
+      - Reserved for documentation
+    - Multicast:
+      - A packet is delivered to multiple interface
+    - Anycast:
+      - A packet is delivered to the nearest of multiple interfaces (in terms of routing distance)
+    - IPv4-mapped:
+      - An IPv4 address mapped to IPv6. For example, ::FFFF:a.b.c.d/96
+      - loopback use IPv6
+
+IPv4 Address Classes:
+   - IP Addresses are based on defined classes, A, B, and C are used to distinguish a network portion of the address from
+   a host portion of the address.
+
+   Network Class        |     Highest order octet range   |  Notes
+   ----------------------------------------------------------------------------------------------------------------
+   A                    |1-127                            | 128 networks, 16,772,214 hosts per network, 127.x.x.x reserved for loopback
+   B                    |128-191                          | 16,384 networks, 65,534 hosts per network
+   C                    |192-223                          | 2,097,152 networks, 254 hosts per network
+   D                    |224-239                          | Multicast addresses
+   E                    |240-254                          | Reserved address range
+   ===============================================================================================================
+
+Netmasks:
+  - used to determine how much of the address is used for network portion and how much for thr host portion
+  as we have seen. It is also used to determine network and broadcast addresses.
+
+
+
+  Network Class      | Decimal                  | Hex                       |  Binaries
+  -------------------------------------------------------------------------------------------------------------------
+  A                  |255.0.0.0                 | ff:00:00:00               | 11111111 00000000 00000000 00000000
+  B                  |255.255.0.0               | ff:ff:00:00               | 11111111 11111111 00000000 00000000
+  C                  |255.255.255.0             | ff:ff:ff:00               | 11111111 11111111 11111111 00000000
+  ===================================================================================================================
+
+  Class A addresses use 8 bits for the network portion of the address and 24 bits for the host portion of the address
+  Class B addresses use 16 bits for the network and 16 bits for the host
+  Class C addresses use 24 bits for the network and 8 for the host.
+  Class D addresses are used for multicasting.
+  Class E addresses are currently not used.
+
+  Obtaining network addresses:
+    - IP address & netmask --> 172.16.2.17 &255.255.0.0 --> 172.16.0.0
+
+Hostname:
+  - label used to distinguish a network device from other elements on the network. Also called a nodename
+  - For DNS purposes, hostnames are appended with a period (dot) and a domain name:
+    - thus antje --> FQDN ==> antje.linuxfoundation.org
+
+Getting and Setting the Hostname:
+  - to get the hostname `$ hostname`
+  - changing the hostname:
+    - $ sudo hostname lumpy (not persisted)
+  - location of hostname in:
+    - Ubuntu /etc/hostname
+    - SUSE /etc/HOSTAME
+    - RHEL /etc/sysconfig/network
+  - to persist use `hostnamectl`
+    - sudo hostnamectl set-hostname MYPC
