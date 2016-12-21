@@ -147,7 +147,7 @@ Steps:
 
 OBJECTIVE:
 	- Understand the importance of the 'init' process.
-	- Explain the traditional SysVinit method works and how it incorporates 'runlevels' and
+	- Explain the traditional init method works and how it incorporates 'runlevels' and
 	  what happens in each one.
 	- know how to use chkconfig and service to start and stop services or make them persistent across
 	  reboots.
@@ -186,13 +186,13 @@ On start the 'init' process reads the /etc/inittab
 
 
 The 'init' run steps:
-                                                         1                    2
+                                                  1                    2
 	(init)/sbin/init -----> /etc/inittab ===> (script)rc.sysinit ===> (script)rc
-	                   |                            ^                        ^
+	                   |              ^                        ^
 	                   |							|                        |
-	                   |					[start LVM, mount fs, etc.]      |
+	                   |			[start LVM, mount fs, etc.]      |
 	                   |							 |
-	    <Reads from for scripts to be run>                                   |
+	    <Reads from for scripts to be run>                     |
 	    									 |
 	    					<makes system to go to rc.d/rc[0-6].d and run all scrips there>
 
@@ -366,27 +366,27 @@ File systems are:
 File main directories present in FHS
 
 Directory       In FHS?         Purpose
-/		Yes		Primary directory of the entire file system hierarchy.
-/bin		Yes		Essential executable programs that must be available in 'single user mode'.
-/boot		Yes		Files neede to boot - kernel, initrd ot initramfs, images, boot configuration files and bootloader programs.
-/dev		Yes		Device nodes, used to interact with hardware devices.
-/etc		Yes		System wide configuration files.
-/home		Yes		User home directories including personal settings, files, etc.
-/lib		Yes		Libraries required bt executable binaries in .bin and /sbin.
-/lib64		No		64-bit libraries requires by executable binaries in /binand /sbin, for systems which can run both 32-bit and 64-bit programs.
-/media		Yes		Mount points for removable media such as CDs, DVDs, USB sticks etc.
-/mnt		Yes		Temporarily mounted filesystems.
-/opt		Yes		Optional application software packages.
-/proc		Yes 		Virtual pseudo-filesystem giving information about the system and processes running on it
-				Can be used to alter system parameters.
-/sys		No		Virtual psuedo-filesystem giving information about the system and processes running on it. Can be used to
-				alter system parameters. Similar to a device tree and is part of the Unified Device Model.
-/root		Yes		Home directory of the root user.
-/sbin		Yes		Essential system binaries.
-/srv		Yes		Site-specific data served up by the system. Seldom used.
-/tmp		Yes		Temporary files; on many distributions lost across reboot and may be a ramdisk in memory.
-/usr		Yes		Multi-user applications, utilities and data; theoretically read-only.
-/var		Yes		Variable data that changes during system operation.
+/		             Yes		         Primary directory of the entire file system hierarchy.
+/bin		         Yes		         Essential executable programs that must be available in 'single user mode'.
+/boot		         Yes		         Files neede to boot - kernel, initrd ot initramfs, images, boot configuration files and bootloader programs.
+/dev		         Yes		         Device nodes, used to interact with hardware devices.
+/etc		         Yes		         System wide configuration files.
+/home		         Yes		         User home directories including personal settings, files, etc.
+/lib		         Yes		         Libraries required bt executable binaries in .bin and /sbin.
+/lib64		       No		           64-bit libraries requires by executable binaries in /binand /sbin, for systems which can run both 32-bit and 64-bit programs.
+/media		      Yes		           Mount points for removable media such as CDs, DVDs, USB sticks etc.
+/mnt		        Yes		           Temporarily mounted filesystems.
+/opt		        Yes		           Optional application software packages.
+/proc		        Yes 		         Virtual pseudo-filesystem giving information about the system and processes running on it
+				                          Can be used to alter system parameters.
+/sys		         No		           Virtual psuedo-filesystem giving information about the system and processes running on it. Can be used to
+				                          alter system parameters. Similar to a device tree and is part of the Unified Device Model.
+/root		       Yes		           Home directory of the root user.
+/sbin		       Yes		           Essential system binaries.
+/srv		       Yes		           Site-specific data served up by the system. Seldom used.
+/tmp		       Yes		           Temporary files; on many distributions lost across reboot and may be a ramdisk in memory.
+/usr		       Yes		           Multi-user applications, utilities and data; theoretically read-only.
+/var		       Yes		            Variable data that changes during system operation.
 
 
  The three file associated with each 'bootable kernel' are:
@@ -471,7 +471,7 @@ Directory       In FHS?         Purpose
 	 the resources it is using, and its history.
 	Important pseudo-files include:
 		- /proc/interrupts -------
-		- /porc/meminfo          |
+		- /proc/meminfo          |
 		- /proc/mounts           |-------> system's hardware
 		- /proc/partitions  ------
 
@@ -521,20 +521,20 @@ Directory       In FHS?         Purpose
 	may be located at location different from root directory
 	software packages should not create subdirectories directly under /usr
 	typically read-only data
-	contains binaries which are not need in single user mode
+	contains binaries which are not needed in single user mode
 
 
 	Directory       |          Purpose
 	---------------------------------------------------------------------------------
-	/usr/bin	| binaries for applications not needed in single user mode
-	/usr/include	| header files for compiling applications
-	/usr/lib	| Libraries for programs in /bin and /sbin.
-	/usr/lib64	| 64-bit libraries for 64-bit programs in /bin and /sbin.
-	/usr/sbin	| Non-essential system binaries, e.g. system daemons.
-	/usr/share	| Shared dara used by applications, architecture-independent
-	/usr/src	| Source files usually for linux kernel.
-	/usr/X11R6	| X Window files; generally obsolete.
-	/usr/local	| Local data and programs specific to the host. Subdirectories include bin, sbin, lib, share, include, etc.
+	/usr/bin	      | binaries for applications not needed in single user mode
+	/usr/include	  | header files for compiling applications
+	/usr/lib	      | Libraries for programs in /bin and /sbin.
+	/usr/lib64	    | 64-bit libraries for 64-bit programs in /bin and /sbin.
+	/usr/sbin	      | Non-essential system binaries, e.g. system daemons.
+	/usr/share	    | Shared dara used by applications, architecture-independent
+	/usr/src	      | Source files usually for linux kernel.
+	/usr/X11R6	    | X Window files; generally obsolete.
+	/usr/local	    | Local data and programs specific to the host. Subdirectories include bin, sbin, lib, share, include, etc.
 
 
 -----------------
@@ -550,15 +550,15 @@ Directory       In FHS?         Purpose
 
 		Directory       |         Purpose
 		--------------------------------------------------------------------------------
-		/var/ftp	| ftp server base
-		/var/lib	| Persistent data modified by programs as they run.
-		/var/lock	| Lock files used to control simultaneous access to resources.
-		/var/log	| Log files
-		/var/mail	| User mailboxes
-		/var/run	| Information about the running system since the last boot.
-		/var/spool	| Tasks spooled or waiting to be processed, such as print queues.
-		/var/tmp	| Temporary files to be persisted across reboot, at times linked to /tmp
-		/var/www	| Root for website hierarchies.
+		/var/ftp	      | ftp server base
+		/var/lib	      | Persistent data modified by programs as they run.
+		/var/lock	      | Lock files used to control simultaneous access to resources.
+		/var/log	      | Log files
+		/var/mail	      | User mailboxes
+		/var/run	      | Information about the running system since the last boot.
+		/var/spool	    | Tasks spooled or waiting to be processed, such as print queues.
+		/var/tmp	      | Temporary files to be persisted across reboot, at times linked to /tmp
+		/var/www	      | Root for website hierarchies.
 
 
 -----------------
@@ -570,7 +570,8 @@ Directory       In FHS?         Purpose
 
 <------------------------------------------------------------------------------------------------------>
 
-				Chapter 6
+				                                              Chapter 6
+
 This lies at the heart of the Linux operating system.
 It controls access to hardware, competition for resources between different applications and other tasks, handles I/O activity and
 	files and data storage, security, networking, etc.
@@ -3040,7 +3041,7 @@ Getting and Setting ACLs:
   - To set the default on directory:
     - $ setfacl -m d:u:isabella:rx somedir
 
-<------ File Permissions and Ownership ------------------------------------------->
+<-------------------------------------------------------- File Permissions and Ownership ------------------------------------------->
                                                                        Chapter 35
 
 DAC - directory access control
@@ -3103,9 +3104,8 @@ Getting and Setting ACLs:
   - To set the default on directory:
     - $ setfacl -m d:u:isabella:rx somedir
 
-<------
-File Permissions and Ownership ------------------------------------------->
-                                                                      Chapter 35
+<------------------------------------------File Permissions and Ownership ------------------------------------------->
+                                                Chapter 35
 
 DAC - directory access control
 
@@ -3167,8 +3167,8 @@ Getting and Setting ACLs:
  - To set the default on directory:
    - $ setfacl -m d:u:isabella:rx somedir
 
-<------ File Permissions and Ownership ------------------------------------------->
-                                                                       Chapter 35
+<----------------------------------- File Permissions and Ownership ------------------------------------------->
+                                    Chapter 35
 
 DAC - directory access control
 
@@ -3632,3 +3632,310 @@ Getting and Setting the Hostname:
     - RHEL /etc/sysconfig/network
   - to persist use `hostnamectl`
     - sudo hostnamectl set-hostname MYPC
+
+<--------------------------------------------------------- Network Devices and Configuration ----------------------------------------------->
+                                                                      Chapter 39
+Learning Objectives:
+  - be able to identify network devices and understand how thr OS names them and binds them to specific duties
+  - use the lp utility to display and control devices, routing, policy-based routing, and tunneling
+  - use ifconfig to configure, control, and query network interface parameters from either the command line or from system system configuration scriptd
+  - use Network Manager (nmtul and nmcli) to configure network interfaces in a distribution-independent manner
+  - know how to set default routes and static routes
+  - configue name resolution as well as run diagnostic utilities.
+
+Network Devices:
+  - network devices are not associated with special device files, also devices nodes
+  - rather than having associated entries in the /dev directory, they are known by their names.
+  which consist of a type identifier followed by a number as in:
+    - eth0, eth1, eno1, eno2 etc. For ethernet devices
+    - wlan0, wlan1, wlan2, wlp3s0, wlp3s2, etc. For wireless devices
+    - br0, br1, br2 etc. For bridged interfaces
+    - vmnet0, vmnet1. vmnet2 etc. For virtual devices for communicating with virtual clients
+
+  - Sometimes multiple virtual devices can be associated withsingle physical devices.
+
+Problems with Network Device Names:
+  - these includes:
+    - distinguishing between interfaces of the same type and their connection to physical devices on the system.
+    - dynamic nature of MAC address
+
+Predictable Network Interface Device Names:
+  - PNIDN:
+    - strongly correlated with the use of 'udev' and integration with 'systemd'.
+    - 5 types of names that devices can be given:
+      - incorporating firmware or BIOS provided index numbers for on-board devices:
+        > eno1
+      - incorporating firmware or BIOS provided PCI Express hotplug slot index numbers:
+        > ens1
+      - incorporating Physical and/or geographic location of the hardware connection:
+        > enp2s0
+      - incorporating the MAC address:
+        > enx7837d1ea46da
+      - using the old classic method:
+        - eth0
+
+Examples of the New Naming Scheme:
+  - commands:
+    - ip, ifconfig | grep enp, ifconfig grep wl, lspci | grep <device name>
+
+ip:
+  - preferred to 'ifconfig' since its more versatile and more proficient
+  since it uses the 'netlink' sockets rather than ioctl system calls.
+  - can be used for:
+    - configuration
+    - control and query devices and interface devices
+    - manipulate routing, policy based routing, and tunneling.
+    - syntax:
+      - ip [ OPTIONS ] OBJECT { COMMAND | help }
+      - ip [ -force ] -batch filename, this can read commands from a disgnated file
+    - it is a multiplex utility; the OBJECT argumant describe what kind of action is going to be
+    performed.
+      - Main ip OBJETS:
+        OBJECT          | FUNCTION
+        -----------------------------------------------------------------------------------------------
+        address         | IPv4 or IPv6 protocol device address
+        link            | Network Devices
+        maddress        | Multicast Address
+        monitor         | Watch for netlink messages
+        route           | Routing table entry
+        rule            | Rule in the routing policy database
+        tunnel          | Tunnel over IP
+
+Examples of Using ip:
+  - show infromation for all network interfaces:
+    - $ ip link
+  - show info for the eth0 network interface:
+    - $ ip -s link show eth0
+  - set the IP address for eth0:
+    - sudo ip addr add 192.168.1.7 dev eth0
+  - bring eth0 down:
+    - sudo ip link set eth0 down
+  - set the MTU to 1480 bytes for eth0:
+    - sudo ip link set eth0 mtu 1480
+  - set the networking route:
+    - sudo ip route add 172.16.1.0/24 via 192.168.1.5
+
+ifconfig:
+  - used to:
+    -  configure, control, and query network interface parameters from either command line or from system configuration scripts
+    - it has been superseded by 'ip' and some Linux dsitribution no longer install it by default.
+    - commands include:
+      - display info about all interfaces:
+        - ifconfig
+      - display info about only eth0:
+        - inconfig eth0
+      - set the IP address to 192.168.1.50 on interface eth0:
+        - sudo ifconfig eth0 192.168.1.50
+      - set netmask to 24-bit
+        - sudo ifconfig eth0 netmask 255.255.255.0
+      - bring interface eth0 down:
+        - sudo ifconfig eth0 down
+      - set the MTU (Maximum Transfer Unit) to 1480 bytes for interface eth0:
+        - sudo ifconfig etho mtu 1480
+
+NIC Configuration Files:
+  - network interface configurations location: /etc/network/interfaces
+  - use network manager to persist changes to network interface
+
+Network Manager:
+  - preferred means to configure a network
+
+Network Manager Interfaces:
+  - Means of configuring a network interface:
+    - GUI:
+    - ntmui:
+      - no learning curve and edits underlying
+    - nmcli:
+      - use this to run scripts
+
+nmtui:
+  -
+
+nmcli:
+  - man nmcli-examples
+  - nmcli --help
+  - usage: nmcli [OPTIONS] OBJECT { COMMAND | help }
+
+Routing:
+  - this is the process of selecting paths in a network along which to send network traffic.
+  - Route table:
+    - a list of routes to other networks managed by the system.
+    - it defines paths to all networks and hosts, sending remote traffic to routers
+    - to see the current routing table:
+      - /sbin/route or ip route
+
+Default Route:
+  - this is the way packets are sent when there is no other match in the routing table
+  for reaching the specified network
+  - it can be obtained dynamically using DHCP. However, it can also be mutually configured(static).
+  With nmcli it can be done via:
+    - sudo nmcli con mod virbr0 ipv4.routes 192.168.10.0/24 +ipv4.gateway 192.168.122.0
+    - sudo nmcli con up virbr0
+
+Static Routes:
+  - are used to control packet flow when there is more than one router or route.
+  - are defined for each interface and can be either persistent or non-persistent
+  - either the route or ip command can be used to set a non-persistent route as in:
+    - sudo ip route add 10.5.0.0/16 via 192.168.1.100
+    - route
+    - persistent route can be set:
+      - on RHEL: /etc/sysconfig/network-scripts/route-ethX
+      - on Debian: /etc/network/interfaces
+        - iface eth1 inet dhcp
+            post-up route add -host 10.1.2.51 eth1
+            post-up route add -host 10.1.2.52 eth1
+      - on SUSE: /etc/sysconfig/network/ifroute-eth0
+
+Name Resolution:
+  - is the actof translating hostnames to the IP addresses of their hosts.
+  - e.g. - linux.org --> resolution --> 123.234.223.3 --> make requests to linux.org
+  - There are two facilities for doing this translation:
+    - Static name resolution (using /etc/hosts)
+    - Dynamic name resolution (using DNS servers)
+  - From command line:
+    - [dig | host | nslookup] linuxfoundation.org
+      - dig: generates the most information and has many options
+      - host: more compact
+      - nslookup: older
+  - Note: may also require 'reverse resolution': converting an IP address to a host name.
+
+/etc/hosts:
+  - holds a local database of hostnames and IP addresses.
+  - it is checked first before DNS is attemped to resolve an address; however, this priority can be controlled
+  by /etc/nsswitch.conf
+
+DNS:
+  - when a name resolution can not be done locally using /etc/hosts then the system will query a DNS (Domain Name Server) server.
+  - it consist of a network of servers which a client uses to look up names. The service is distributed; any one DNS server has only information about its 'zone of authority'
+  - the machine's usage of DNS is configures in /etc/resolv.conf, which
+   - can specify particular domains to search
+   - defines a strict order of nameservers to query
+   - may be manually configured or updated from a service such as DHCP
+  - most modern systems will have a /etc/hosts.resolv file generated automatically
+
+Network Diagnostic Utilities:
+  - ping:
+    -
+  - traceroute:
+    - used to display a network path to a destination.
+  - mtr:
+   - combines functionality of 'ping' and 'traceroute'
+  - dig:
+   - useful for testing DNS functionality
+
+<------------------------------------------------------------------------- Firewalls ------------------------------------------------->
+
+                                                                    Chapter 40
+Objective:
+  - understand what firewalls are and why they are necessary
+  - know both the comman line and GUI tools used
+  - be familiar with 'firewalld' and the 'firewall-cmd' program
+  - know how to work with zones, sources, services and ports.
+
+What is a Firewall:
+  - may be hardware or software based
+  - found in:
+   - network routers
+   - individual computers
+   - network nodes
+  - many have routing capabilities
+  - the three types of firewalls are:
+    - packet filtering firewalls -- content were inspected
+    - stateful filters -- content were inspected and the state of the connection checked
+    - application layer firewalls --
+     -- checked: type of application and protocol being used
+     -- block anygthing that should not be part of the normal flow
+
+Firewall Interface and Tools:
+  - using low level tools from the command line, combined withediting various configuration files in /etc folder
+    -- iptables
+    -- firewall-cmd
+    -- ufw
+  - using robust graphical interfaces:
+   -- system-config-firewall
+   -- firewall-config
+   -- gufw
+   -- yast
+
+
+firewalld:
+  - Dynamic Firewall Manager:
+    - utilizes network/firewall 'zones' which have defined levels of trust for network interfaces or connections.
+    - it supports both ipv4 and ipv6 protocols
+    - it separates 'runtime' and 'permanent' changes to configuration, and also includes interfaces for
+    services or applications to add firewall rules
+    - config files are kept in:
+      - /etc/firewalld and /usr/lib/firewalld; those in /etc/firewalls override the latter
+      - the command 'firewall-cmd' controls the 'firewall'
+    NOTE: firewalld replaces 'iptable' and its an 'error' to use both at the same time
+
+firewall Service Status:
+  - sudo systemctl [enable/disable] firewalld
+  - sudo systemctl [start/stop] firewalld
+  - sudo systemctl status firewalld
+  - sudo firewall-cmd --state --> checking the state
+  - when runnig more than one network interface using ipv4, you have to turn on ip forwarding.
+    - sudo sysctl net.ipv4.ip_forward=1
+    - echo 1 > /proc/sys/net/ipv4/ip_forward (needs to be run as root to get echo to work)
+    - to persist the changes add to /etc/sysctl.conf the line:
+      - net.ipv4.ip_forward=1
+      - sudo sysctl -p ( to read in the new setting without rebooting)
+
+Zones:
+  - each zone is a defined level of trust and a certain known behaviour for incoming and outgoing packets.
+  - each interface belongs to a particular zone (normally it is NetworkManager which informs firewalld which zone is applicable)
+  - The zones:
+    - drop -- block all incoming with no reply, outgoing connections are permitted
+    - block -- all incoming rejected. Only those within the system accepted
+    - public -- all computers on network not trusted, only certain conciuosly selected incoming connections are permitted
+    - external -- used when nasquerading is being used, such as in routers. Trust levels the same as in public
+    - dmz -- (demilitarized Zone) used when access to some (but not all) services are to be allowed to the public.
+      only incoming connections are allowed.
+    - work -- trust (but not completely) connected nodes to be not harmful. Only certain incoming connections are allowed
+    - home -- mostly trsut the other network nodes, but still select which incoming connection are allowed
+    - internal -- similar to the work zone
+    - trusted-- all networks connections are allowed.
+
+Zone Management:
+  - Get default zone:
+    - sudo firewall-cmd --get-default-zone
+  - obtain a list of zones currently being used:
+    - sudo firewall-cmd --get-zone
+  - to change the default zone to trusted and then the change it back
+    - sudo firewall-cmd --set-default-zone=trusted
+    - sudo firewall-cmd --set-default=public
+  - to assign an interface temporarily to a particular time zone
+    - sudo firewall-cmd --zone=internal --change-interface=eno1
+    - permanently -- sudo firewall-cmd --permanent --zone=internal --change-interface=eno1
+  - to acertain the zone associated with a particular interface
+    - sudo firewall-cmd --get-zone-of-interface=eno1
+  - to get details about a particualr zone:
+    - sudo firewall-cmd --zone=public --list-all
+
+Source Management:
+  - zones ca be bound not just to a network interface, but also to particular addresses.
+  - Packets are associated with a zone if:
+    - it comes from a source address already bound to the zone; or if not,
+    - it aomes from an interface bound to the zone
+    - any packet not fitting the above is assigned to the default zone
+  - to assign a source permanently:
+    - sudo firewall-cmd --permanent --zone=trusted --add-source=192.168.1.0/24
+    - remove source with --remove-source, or change source with --change-source
+  - list sources bound to a zone:
+    - sudo firewall-cmd --permanenr --zone=trusted --list-sources
+
+Service and Port Management:
+  - To see what services are available within assigned zones:
+    - sudo firewall-cmd --get-services
+  - to see currently accessible sevices within a zone:
+    - sudo firewall-cmd --list-services --zone=public
+  - to add service to a zone:
+    - sudo firewall-cmd --permanent --zone=home --add-service=dhcp
+    - sudo firewall-cmd --reload
+    - can also add service here /etc/firewall/services
+  - add ports to zones
+    - sudo firewall-cmd --zone=home --add-port-21/tcp
+  - list ports:
+    - sudo firewall-cmd --zone=home --list=ports
+    - whereby looking at /etc/services we can ascertain configured ports
+      - grep " 21/tcp" /etc/services
