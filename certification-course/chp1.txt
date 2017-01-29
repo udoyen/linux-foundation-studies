@@ -711,18 +711,18 @@ Objectives:
 	---------------------------------------------------------------------------------
         |		              Application                                       |
 	---------------------------------------------------------------------------------
-		                                  / \			/ \
-		                                   |                     |
-		                                   |                     |
-		                                   | 	                 |
-		                                   V       		 |
+		                                  / \			                    / \
+		                                   |                           |
+		                                   |                           |
+		                                   | 	                         |
+		                                   V       		                 |
 	-------------------------------------------------------------    |
 	|                        Virtual File System                |    |
 	-------------------------------------------------------------    |
-		     / \                / \           / \                |
-		      |			 |	       |                 |
-		      |			 |	       |                 |
-		      V			 V	       |                 |
+		     / \                / \           / \                      |
+		      |			             |	           |                       |
+		      |			             |	           |                       |
+		      V			             V	           |                       |
 	      -------------------     --------------         |  -----------    |
         |character node   |     |block node  |<--------|  |socket   |    |
         -------------------     -------------             ----------     |
@@ -792,7 +792,7 @@ Objectives:
 						                 /      \
 						                /        \
 						               /          \
-	                           /		   \
+	                        /		         \
 						       kernel module    Rules database
 
 	Creating udev Rules
@@ -899,14 +899,14 @@ Objectives:
 		-----------------------------------------------------------------
 		|                           Drives                              |
 		-----------------------------------------------------------------
-		       |			|			|
-		       |			|			|
-		       |			|			|
+		              |			                  |			                  |
+		              |			                  |			                  |
+		              |			                  |			                  |
 	        -----------------------------------------------------------------
 	        |                        Partitions                             |
 	        -----------------------------------------------------------------
-	        	|			|			|
-	        	|			|			|
+	        	      |			                  |			                  |
+	        	      |			                  |			                  |
 	               sda                     sdb                     sdc
 	               /|\
 	              / | \
@@ -952,7 +952,7 @@ Objectives:
           	- gives the following information:
           		- Active bit.
           		- Beginning address in cylinder/head/sectors (CHS) format (ignored by Linux)
-          		- Partition type code, indicating: xfs, LVM, ntf, ext4, swap, etc.
+          		- Partition type code, indicating: xfs, LVM, ntfs, ext4, swap, etc.
           		- Ending address in CHS(also ignored by Linux).
           		- Start sector, counting linearly from 0.
           		- Number of sectors in partion.
@@ -1038,16 +1038,17 @@ Using fdisk:
 
 <------------------------------------------------------------------------------------------------------->
                                 Chapter 10. Encryption Disks
+
    Linux distributions most often use the 'LUKS' method amd perform encryption-related tasks using 'cryptsetup'.
 
-   OBJECTIVES:
+OBJECTIVES:
 	- provide sound reasons for using encryption and know when it is called for.
 	- understand 'LUKS' operations through the use of 'cryptsetup'.
 	- be able to setp and use encrypted filesystems and partitions.
 	- know how to configure the system to mount encrypted partitions at boot.
 
 
-	Why use encryption:
+Why use encryption:
 	    Configuration and using block device level encryption provides one of the strongest protections agianst harm
 	    caused by loss or compromise of data contained in hard drives and other media.
 
@@ -1058,17 +1059,17 @@ Using fdisk:
 		LUKS is highly recommended for portable systems e.g. laptops, tablets, smartphones.
 
 		LUKS         plain dm-crypt volumes      loop-AES     TrueCrypt
-		 |	     	   	    |		   |              |
-		 |			          |		   |		          |
+		 |	     	   	              |		           |              |
+		 |			                    |		           |		          |
 		 |--------------------------|--------------|--------------|
 						|
 						|
 						v
-					    cryptsetup
-                 LUKS stores all necessary information in the partition header itself, it is rather easy to migrate partitions to other disks or systems.
-		 LUKS can also be used to transparently encrypt swap partitions.
+				cryptsetup
+    LUKS stores all necessary information in the partition header itself, it is rather easy to migrate partitions to other disks or systems.
+		LUKS can also be used to transparently encrypt swap partitions.
 
-     Cryptsetup:
+Cryptsetup:
 	command format -
 		cryptsetup [option...] <action> <action-specific>
 		listing possibilities ->
@@ -1284,7 +1285,7 @@ unmount:
 
     - In most cases the recommend swap size is the RAM
     - to see what ure system is currently using for swap areas: $ cat /proc/swaps
-                                          and current usage: $ free -o
+                                          and current usage: $ free -options
 
     - commands invovling swap are:
         - mkswap: format a swap partition or file
@@ -1597,7 +1598,7 @@ unmount:
   CREATING LOGICAL VOLUMES:
     - commands:
       -- lvcreate --> allocates logical volumes from within volume groups
-      -- lvdisplay --> reports on available logoical volumes
+      -- lvdisplay --> reports on available logical volumes
     - filesystems are placed in logical volumes and are formatted with mkfs as usual
     - steps:
        -- create partitions on disk drives (type 8e in fdsik)
@@ -1971,37 +1972,37 @@ USING SELINUX BOOLEANS:
 	- SELINUX POLICY BEHAVIOUR CAN BE CONFIGURED AT RUNTIME WITHOUT REWRITING THE POLICY.
 	  USING SELINUX BOOLEANS WHICH ARE POLICY PARAMETERS THAT CAN BE ENABLED AND DISABLED.
 	- SUDO SEMANAGE BOOLEN -L (LIST BOOLEANS OF CURRENT POLICY, INCLUDING CURRENT STATE AND SHORT DESCRIPTION)
-GETSEBOOL AND SETSEBOOL:
-	- GETSEBOOL -A --> PRINTS ONLY THE BOOLEAN NAME AND ITS CURRENT STATUS.
-	- SETSEBOOL: CHANGING BOOLEAN STATUS NON-PERSISTENTLY WITH -P IT PERSSISTS
-	- EXAMPLES:
-		-- GETSEBOOL SSH_CHROOT_RW_HOMEDIR
-		-- SUDO SETSEBOOL SSH_CHROOT_RW_HOMEDIR ON
-		-- SUDO REBOOT --> REMOVES THE ABOVE CHANGES
-		-- SUDO SETSEBOOL -P SSH_CHROOT_RW_HOMEDIR ON --> PERSSISTS CHANGES
-TROUBLESHOOTING TOOLS:
-	- EXAMPLE:
-		-- ECHO 'FILE CREATED AT /ROOT' > ROOTFILE
-		-- MV ROOTFILE /VAR/WWW/HTML
-		-- WGET -O - LOCALHOST/ROOTFILE
-			--- ACCESS DENIED
-		-- CHECK ERROR LOG --> $ TAIL /VAR/LOG/MESSGAES
-			-- SEALERT -L DSKJK03-KJFKLJ-KKHH-EUYKJ-3455
-			-- ON RHEL 7 --> GREP HTTPD /VAR/LOG/AUDIT/AUDIT.LOG | AUDIT2ALLOW -M MYPOL
-				--->> AUDIT2ALLOW (GENERATES SELINUX POLICIES) AND AUDIT2WHY (TRANSLATES SELINUX INTO A DESCRIPTION OF WHY THE ACCESS WAS DENIED)
-		-- CORRECTING ACCESS ISSUE --> RESTORECON -RV /VAR/WWW/HTML/
-		-- WGET -Q -O - LOCALHOST/ROOTFILE
-			--->> SUCCESS
-APPARMOR:
-	- IS AN LSM ALTERNATIVE TO SELINUX
-	- USED BY SUSE, UBUNTU AND OTHER DESTROS
-	- APPARMOR:
-		- PROVIDES MANDATORY ACCESS CONTROL (MAC)
-		- ALLOWS ADMINISTRATORS TO ASSOCIATE A SECURITY PROFILE TO A PROGRAM WHICH RESTRICTS ITS CAPABILITIES
-		- IS CONSIDERED BY SOME TO BE EASIER THAN SELINUX
-		- IS CONSIDERED FILESYSTEM-NEUTRAL(NO SECURITY LABELS REQUIRED)
-	- APPARMOR SUPPLEMENTS THE TRADITIONAL UNIX DISCREATIONARY ACCESS CONTROL (DAC) MODEL BY PROVIDING MANDATORY ACCESS CONTROL(MAC)
-	- IN APPARMOR: VIOLATIONS OF THE PROFILE ARE LOGGED AND CAN BE TURNED INTO A PROFILE BASED ON THE PROGRAMS TYPICAL BEHAVIOUR.
+Getsebool and setsebool:
+	- getsebool -a --> prints only the boolean name and its current status.
+	- setsebool: changing boolean status non-persistently with -p it perssists
+	- examples:
+		-- getsebool ssh_chroot_rw_homedir
+		-- sudo setsebool ssh_chroot_rw_homedir on
+		-- sudo reboot --> removes the above changes
+		-- sudo setsebool -p ssh_chroot_rw_homedir on --> perssists changes
+Troubleshooting tools:
+	- example:
+		-- echo 'file created at /root' > rootfile
+		-- mv rootfile /var/www/html
+		-- wget -o - localhost/rootfile
+			--- access denied
+		-- check error log --> $ tail /var/log/messgaes
+			-- sealert -l dskjk03-kjfklj-kkhh-euykj-3455
+			-- on rhel 7 --> grep httpd /var/log/audit/audit.log | audit2allow -m mypol
+				--->> audit2allow (generates selinux policies) and audit2why (translates selinux into a description of why the access was denied)
+		-- correcting access issue --> restorecon -rv /var/www/html/
+		-- wget -q -o - localhost/rootfile
+			--->> success
+AppArmor:
+	- is an lsm alternative to selinux
+	- used by suse, ubuntu and other destros
+	- apparmor:
+		- provides mandatory access control (mac)
+		- allows administrators to associate a security profile to a program which restricts its capabilities
+		- is considered by some to be easier than selinux
+		- is considered filesystem-neutral(no security labels required)
+	- apparmor supplements the traditional unix discreationary access control (dac) model by providing mandatory access control(mac)
+	- in apparmor: violations of the profile are logged and can be turned into a profile based on the programs typical behaviour.
 
 <-------------------------------------------------------------------------------------------------------------------->
 
@@ -2211,7 +2212,7 @@ WHAT ARE SIGNALS?
 	     shows list of signals
              use: $ kill 1991, $ kill -9 1991, $ kill -sigkill 1991
 
- KILLALL AND PKILL:
+ killall and pkill:
  	 killall - kills all processes
  	 	 use: $ killall bash, killall -9 bash, killall -sigkill bash
  	 pkill - senda a signal to a process using selection criteria
@@ -2225,21 +2226,21 @@ SYSTEM MONITORING
 SYSTEM MONITORING TOOLS INCLUDE: TOP, PS, AND SAR. THESE ACCESS THE PSEUDO-FILE SYSTEM /PROC, AND /SYS
 
 AVAILABLE MONITORING TOOLS:
-	  PROCESS AND LOAD MONITORING UTILITIES:-
-	  	  TOP        PROCESS ACTIVITY, DYNAMICALLY UPDATED
-		  UPTIME     HOW LONG THE SYSTEM IS RUNNING AND THE AVERAGE LOAD
-		  PS 	     DETAILED INFORMATION ABOUT PROCESSES
-		  PSTREE     A TREE OF PROCESSES AND THEIR CONNECTIONS
-		  MPSTAT     MULTIPLE PROCESSOR USAGE
-		  IOSTAT     CPU UTILIZATION AND I/O STATISTICS
-		  SAR	     DISPLAY AND COLLECT INFORMATION ABOUT SYSTEM ACTIVITY
-          numstat    Information about NUMA (Non-Uniform Memory Architecture)
-          strace     Information about all system calls a process makes
+	  process and load monitoring utilities:-
+	  	top        process activity, dynamically updated
+		  uptime     how long the system is running and the average load
+		  ps 	       detailed information about processes
+		  pstree     a tree of processes and their connections
+		  mpstat     multiple processor usage
+		  iostat     cpu utilization and i/o statistics
+		  sar	       display and collect information about system activity
+      numstat    Information about NUMA (Non-Uniform Memory Architecture)
+      strace     Information about all system calls a process makes
 
       Memory Monitoring Utilities:-
           free        Brief summary of memory usage
           vmstat      Detailed virtual memory statistics and block I/O,
-dynamically update
+                       dynamically update
           pmap        Process memory map
 
       I/O Monitoring Utilities:-
@@ -2252,7 +2253,7 @@ dynamically update
           netstat       Detailed networking statistics
           iptraf        Gather information on network interface
           tcpdump       Detailed analysis of network packets and traffic
-          wireshare     Detialed network traffic analysis
+          wireshare     Detailed network traffic analysis
 /proc Basics:
     All important processes have a subdirectory in /proc
     $ ls -F /proc
@@ -2275,7 +2276,7 @@ dynamically update
 sar:
     Systems Activity Reporter
     -gathers system activity and performance data and creating reports that
-are readable by humans.
+      are readable by humans.
 
 <----------------------------------------------------Chapter 23---------------------------------------------------------->
 
@@ -2328,7 +2329,7 @@ BSD Option Format for ps:
 UNIX Option Format for ps:
      $ ps -elf
      F S UID        PID  PPID  C PRI  NI ADDR SZ WCHAN  STIME TTY          TIME CMD
-     Common selectio options for UNIX:
+     Common selection options for UNIX:
      	    -A or -e: select all processes
 	    -N: Negate selection
 	    -C: Select by command name.
@@ -2361,7 +2362,7 @@ Viewing System Loads with top:
 
 Two main tools for use in identifying and isolating problems are:
     iostat and iotop
-    ionice is used to prioritize the competeion between processes as well
+    ionice is used to prioritize the competetion between processes as well
 
 
 Learning Objectives:
@@ -3351,7 +3352,7 @@ Backup Utilities:
   - cpio
   - tar
   - gzip, bzip2, xz:
-    - cplo and tar create and extract archines of files.
+    - cpio and tar create and extract archives of files.
     - useful for transferring files from one filesystem or machine to another
   - dd:
     - transfer raw data btween media.
@@ -3702,7 +3703,7 @@ ip:
         tunnel          | Tunnel over IP
 
 Examples of Using ip:
-  - show infromation for all network interfaces:
+  - show information for all network interfaces:
     - $ ip link
   - show info for the eth0 network interface:
     - $ ip -s link show eth0
@@ -3787,7 +3788,7 @@ Static Routes:
       - on SUSE: /etc/sysconfig/network/ifroute-eth0
 
 Name Resolution:
-  - is the actof translating hostnames to the IP addresses of their hosts.
+  - is the act of translating hostnames to the IP addresses of their hosts.
   - e.g. - linux.org --> resolution --> 123.234.223.3 --> make requests to linux.org
   - There are two facilities for doing this translation:
     - Static name resolution (using /etc/hosts)
@@ -3805,7 +3806,7 @@ Name Resolution:
   by /etc/nsswitch.conf
 
 DNS:
-  - when a name resolution can not be done locally using /etc/hosts then the system will query a DNS (Domain Name Server) server.
+  - when a name resolution can not be done locally using /etc/hosts, then the system will query a DNS (Domain Name Server) server.
   - it consist of a network of servers which a client uses to look up names. The service is distributed; any one DNS server has only information about its 'zone of authority'
   - the machine's usage of DNS is configures in /etc/resolv.conf, which
    - can specify particular domains to search
@@ -3913,7 +3914,7 @@ Zone Management:
     - sudo firewall-cmd --zone=public --list-all
 
 Source Management:
-  - zones ca be bound not just to a network interface, but also to particular addresses.
+  - zones can be bound not just to a network interface, but also to particular addresses.
   - Packets are associated with a zone if:
     - it comes from a source address already bound to the zone; or if not,
     - it aomes from an interface bound to the zone
@@ -3922,7 +3923,7 @@ Source Management:
     - sudo firewall-cmd --permanent --zone=trusted --add-source=192.168.1.0/24
     - remove source with --remove-source, or change source with --change-source
   - list sources bound to a zone:
-    - sudo firewall-cmd --permanenr --zone=trusted --list-sources
+    - sudo firewall-cmd --permanent --zone=trusted --list-sources
 
 Service and Port Management:
   - To see what services are available within assigned zones:
@@ -3939,3 +3940,120 @@ Service and Port Management:
     - sudo firewall-cmd --zone=home --list=ports
     - whereby looking at /etc/services we can ascertain configured ports
       - grep " 21/tcp" /etc/services
+
+<--------------------------------------------------- Basic Troubleshooting ----------------------------------------------------->
+                                                          Chapter 41
+
+Learning objectives:
+  - following a number of steps iteratively until solutions are found.
+  - check your network and file integrity for possible issues.
+  - resolve problems when there is system boot failure.
+  - repair and recover corrupted filesystems
+  - understand how rescue and recovery media can be used for troubleshooting
+
+Troubleshooting Overview:
+  - Three levels of troubleshooting include:
+    - beginner
+    - experienced
+    - wizard
+
+Basic Techniques:
+  - These include:
+    - xterize the problem
+    - reproduce the problem
+    - always try the easy steps first
+    - eliminate possible cuases one at a time
+    - change one thing at a time; if that doesn't fix the problem, change it back.
+    - check the system logs (/var/log/messages, /var/log/secure, etc) fir further information
+
+
+Intuition and Experience:
+  - good intuition is built from experience
+  - good procedures help lessen dependence on any one individual
+
+Things to Check: Networking -
+  - IP configuration:
+    - use ifconfig or ip; to check if"
+      -- the interface is up and if up if configured well
+    - Network Driver:
+      - is the correct driver loaded.
+      - check with 'lsmod'
+      - or check relevant pseudo-files:
+        -- /proc/interrupts, /sys/class/net
+    - Connectivity:
+      - use ping to see if network is visible
+      - traceroute can follow packets through the network
+      - mtr: can do this in a continues fashion.
+    - Default gateway and routing configuration:
+      - run route -n and see if the routing table make sense.
+    - Hostname resoulution:
+      - run dig or host on a URL and see if DNS is working
+
+Things to Check: File Integrrity -
+  - For RPM-based systems:
+    - rpm -V some_package
+    - rpm -Va --> checks all package on the system
+  - On Debian-based systems
+    - debsum options some_package
+    - dkpg [-V | --verify] package_name
+  - aides and --check
+    - does intrusion checks on your files comparing them to the last scan.
+
+Boot Process Failures:
+  - If BIOS state is passed:
+    - No bootloader screen:
+      -- check for GRUB misconfiguration, or a corrupt boot sector. You may have to re-install the bootloader
+    - Kernel fails to load:
+      - if kernel panics during the boot process. It is most likely a misconfiguration or corrupt kernel
+      or incorrect parameters specified on the kernel command line in the GRUB configuration file has been altered.
+    - Kernel loads but fails to mount the boot filesystem:
+      The main causes here are:
+        - 1. Misconfigured GRUB configuration fiel
+        - 2. Misconfigured /etc/fstab
+        - 3. no support for the root file system type either built into the kernel or as a module in the initramfs Initial ram
+        disk or filesystem
+    - Failure during the 'init' process.
+      - repair may invovle booting into a lower runlevel such as 3 (no graphics) or 1 (single mode)
+
+Filesystem Corruption and Recovery:
+  - To repair check '/etc/fstab':
+    - sudo mount -o remount,rw /
+    - if '/etc/fstab' seems to be correct:
+      - sudo mount -a, then
+      - run: fsck and mount particular file systems that are faulty.
+
+Using Rescue/Recovery Media:
+  - Categories of tools:
+    - Disk Maintenance Utilities
+    - Netwworking Utilities
+    - Miscellaneous Utilities
+    - Logging files
+
+Common Utilities on Rescue/Recovery Media:
+  - Disk utilities for creating partitions, managing RAID devices, managing logical volume, and creating filesystems
+    - fdisk, mdadm, pvcreate, vgcreate, lvcreate, mkfs, etc
+  - Networking utilities for network debugging and network connectivity:
+    - ifconfig, route, traceroute, mtr, host, ftp, scp, ssh
+  - Numerous other commands are also available:
+    - bash, chroot, ps, kill, vi, dd, tar, cpio, gzip, rpm, mkdir, ls, cp, mv, and rm etc
+
+Using Rescue/Recovery Media:
+  - FIlesystem to be rescured are usually mount at /mnt/sysimage
+  - you can move or change into that environment with:
+    - sudo chroot /mnt/sysimage
+    - for networl rescue you may need to mount /mnt/source
+
+
+<------------------------------------------------------- System Rescue ----------------------------------------------------------->
+                                                          Chapter 42
+Learning objectives:
+  - explin what forms system rescue media come in and how they are amde available or can be prepared
+  - know how to enter emergency mode and what can be done there
+  - know how to enter single user mode, what can be done there, and how it differs from emergency mode
+
+
+Emergency Boot Media:
+  - needed when:
+    - misconfigured, missing files or service exist
+    - root possword recovery
+    - runs in memory
