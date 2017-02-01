@@ -1129,9 +1129,9 @@ Filesystems can also be of a network nature and their true physical embodiment c
 VFS:
 	user software <---------> VFS <---------> actual filesystem
 	     	      		   |
-				   |
-				   |
-				   v
+				             |
+				             |
+				             v
 			/dev, /sys, /temp, /proc, /run
 
 Journalling Filesystems:
