@@ -1515,7 +1515,7 @@ unmount:
       -- high performance:
           --- employing dma(direct memory access) i/o
           --- guaranteeing an i/o rate
-          --- adjusting stripe size to match underlying raid or lvm devices
+          --- adjusting stripe size to match underlying raid or  devices
       -- can journal quota information, but leads to decrease in recovery time when a quota-enabled filesystem is uncleanly unmounted
       -- supports extended attributes
 
@@ -1540,22 +1540,22 @@ unmount:
 
   <------------------------------------------------------------------------------------------------------------------->
 
-                          CHAPTER 16. LOGICAL VOLUME MANAGEMENT(LVM)
+                          CHAPTER 16. LOGICAL VOLUME MANAGEMENT()
 
   - Permits having one logical filesystem span mutiple physical volumes and partitions while appearing as a simple partition for normal use.
   - Makes shrinking and expanding easy
 
   OBJECTIVES:
-    - Explain the concepts behind lVM
+    - Explain the concepts behind
     - Create logical volumes
     - Display logical volumes
     - Resize logocal volumes
-    - Use lvm snapshots
+    - Use  snapshots
 
-  LVM:
-    - BREAKS UP ONE VIRTUAL PARTITION INTO MULTIPLE CHUNKS, EACH OF WHICH CAN BE ON DIFFERENT PARTITIONS AND/OR DISKS.
-    - TYPICAL LVM STRUCTURE OR LAYOUT
-    - STRIPING (SPLITTING OF DATA TO MORE THAN ONE DISK)
+  :
+    - breaks up one virtual partition into multiple chunks, each of which can be on different partitions and/or disks.
+    - typical  structure or layout
+    - striping (splitting of data to more than one disk)
 
   |-----------------------------------------------------------------------------------------------------------|
   |                                                         LVM                                               |
@@ -2062,76 +2062,76 @@ PROCESSES:
 	- largest pid has been limited to a 16-bit number, or 32768
 	- pid_max can be altered in the /proc/sys/kernel/pid_max
 PROCESS ATTRIBUTES:
-	- THESE INCLUDES:
-		-- THE PROGRAM BEING EXECUTED
-		-- CONTEXT (STATE)
-		-- PERMISSIONS
-		-- ASSOCIATED RESOURCES
-	- CONTEXT SWITCHING: IS DONE BY THE KERNEL
+	- these includes:
+		-- the program being executed
+		-- context (state)
+		-- permissions
+		-- associated resources
+	- context switching: is done by the kerneL
 
 CONTROLLING PROCESSES WITH ULIMIT:
-	- ULIMIT IS A BUILT IN BASH COMMAND THAT DISPLAY OR RESETS A NUMBER OF RESOURCES LIMITS ASSOCIATED
-		WITH PROCESSES RUNNING UNDER A SHELL.
-	- RUN $ ULIMIT -A
+	- ulimit is a built in bash command that display or resets a number of resources limits associated
+		with processes running under a shell.
+	- run $ ulimit -a
 CONTROLLING PROCESSES WITH ULIMIT(CONT.)
-	- THE 'ULIMIT -A' VALUES CAN BE CHANGED TO:
-		-- RESTRICT (LIMIT TO A VALUE), OR
-		-- EXPAND (INCREASE THE CURRENT LIMIT OR VALUE)
-	- KINDS OF LIMIT INCLUDE:
-		-- HARD: MAX VALUE CAN'T BE EXCEEDED, SET ONLY BY ROOT USER
-		-- SOFT: THE CURRENT LIMITING VALUE WHICH A USER CAN MODIFY BUT CAN'T EXCEED HARD LIMIT
-	- SYNTAX:
-		-- $ ULIMIT [OPTIONS] [LIMIT]
-			--- AS IN: ULIMIT -N 1600
-		-- PERMANENTLY CHANGING THIS VALUES TO AFFECT ALL CURRENTLY LOGGED IN SHELLS ONE MUST MODIFY /ETC/SECURITY/LIMITS.CONF, THEN REBOOT
+	- the 'ulimit -a' values can be changed to:
+		-- restrict (limit to a value), or
+		-- expand (increase the current limit or value)
+	- kinds of limit include:
+		-- hard: max value can't be exceeded, set only by root user
+		-- soft: the current limiting value which a user can modify but can't exceed hard limit
+	- syntax:
+		-- $ ulimit [options] [limit]
+			--- as in: ulimit -n 1600
+		-- permanently changing this values to affect all currently logged in shells one must modify /etc/security/limits.conf, then reboot
 
 PROCESS PERMISSION AND SETUID:
-	- PROCESS PERMISSIONS ARE BASED ON PROCESS OWNERSHIP OR USER WHO INVOKED IT.
-	- TWO TYPES OF PROGRAMS EXISTS:
-		-- SETUID PROGRAMS, PROGRAMS MARKED WITH AN S EXECUTE BIT. THESE RUN WITH A DIFFERENT OWNERSHIP FROM THE CURRENT INVOKER
-		-- NON-SETUID PROGRAMS, THAT RUN BASED ON THE REAL USER ID
+	- process permissions are based on process ownership or user who invoked it.
+	- two types of programs exists:
+		-- setuid programs, programs marked with an s execute bit. these run with a different ownership from the current invoker
+		-- non-setuid programs, that run based on the real user id
 MORE ON PROCESS STATES:
-	- RUNNING:
-		-- IS EITHER RUNNING OR SITTING IN RUN QUEUES
-	- SLEEPING:
-		-- WAITING ON A REQUEST (USUALLY I/O) THAT WAS MADE
-	- STOPPED:
-		-- SUSPENDED PROCESS, USING CTRL-Z OR DEBUGGER
-	- ZOMBIE:
-		-- ENTERS THE STATE WHEN IT TERMINATES AND NO OTHER PROCESS (USUALLY PARENT) HAS INQUIRED ABOUT IT STATE.
-		-- HERE ALL RESOURCES ARE RELEASED EXCEPT ITS EXIT STATE AND ITS ENTRY IN THE PROCESS TABLE
-		-- IT IS ADOPTED BY THE INIT (PID=1) OR KTHREADD (PID=2) WHEN ITS PARENT PROCESS DIES.
+	- running:
+		-- is either running or sitting in run queues
+	- sleeping:
+		-- waiting on a request (usually i/o) that was made
+	- stopped:
+		-- suspended process, using ctrl-z or debugger
+	- zombie:
+		-- enters the state when it terminates and no other process (usually parent) has inquired about it state.
+		-- here all resources are released except its exit state and its entry in the process table
+		-- it is adopted by the init (pid=1) or kthreadd (pid=2) when its parent process dies.
 EXECUTION MODES:
-	- ANY ONE PROCESS CAN BE IN EITHER:
-		-- USER MODE
-		-- SYSTEM MODE
-	- MODES ARE ENFORCED AT HARDWARE LEVEL NOT SOFTWARE LEVEL
+	- any one process can be in either:
+		-- user mode
+		-- system mode
+	- modes are enforced at hardware level not software level
 USER MODE:
-	- ALL PROCESS ARE STARTED IN THE USE MODE BY DEFAULT
-	- ALL PROCESSES ARE ISOLALED IN THEIR OWN ENVIRONMENT CALLED PROCESS RESOURCE ISOLATION
-	- SYSTEM MODE PROCESSES RUN IN USER MODE UNLESS THEY ARE JUMPING  INTO A SYSTEM CALLED
+	- all process are started in the use mode by default
+	- all processes are isolaled in their own environment called process resource isolation
+	- system mode processes run in user mode unless they are jumping  into a system called
 KERNEL MODE:
 	- HERE CPU HAS ACCESS TO ALL HARDWARE ON THE SYSTEM.
 DAEMONS:
-	- THIS IS A BACKGROUND PROCESS WHOSE SOLE PURPOSE IS TO PROVIDE SOME SPECIFIC SERVICE TO USERS OF THE SYSTEM
-	- BASICS OF DAEMONS:
-		-- DAEMONS CAN BE QUITE S=EFFICIENT BECAUSE THEY ARE ONLY CALLED WHEN NEEDED
-		-- MANY DAEMONS ARE STARTED AT BOOT TIME
-		-- DAEMONS NAMES USUALLY END WITH D
-		-- SOME EXAMPLES ARE: HTTPD, UDEVD
-		-- DAEMONS MAY RESPOND TO EXTERNAL EVENTS (UDEVD), OR ELAPSED TIME (CROND)
-		-- DAEMONS GENERALLY HAVE NO CONTROLLING TERMINAL AND NO STANDARD INPUT/OUTPUT DEVICES
-		-- DAEMONS SOMETIMES PROVIDE BETTER SECURITY CONTROL
+	- this is a background process whose sole purpose is to provide some specific service to users of the system
+	- basics of daemons:
+		-- daemons can be quite s=efficient because they are only called when needed
+		-- many daemons are started at boot time
+		-- daemons names usually end with d
+		-- some examples are: httpd, udevd
+		-- daemons may respond to external events (udevd), or elapsed time (crond)
+		-- daemons generally have no controlling terminal and no standard input/output devices
+		-- daemons sometimes provide better security control
 KERNEL-CREATED PROCESSES:
-	- THE KERNEL DIRECTLY CREATES TWO KINDS OF PROCESSES:
-		-- INTERNAL KERNEL PROCESSES:
-			--- TAKE CARE OF MAINTANANCE WORK
-			--- THESES OFTEN RUN AS LONG AS THE SYSTEM RUNS
-		-- EXTERNAL USER PROCESSES:
-			--- RUN IN USER SPACE LIKE NORMAL APPLICATIONS BUT WHERE STARTED BY THE KERNEL
-			--- THEY ARE FEW AND SHORT LIVED
-		-- TO SEE THESE:
-			--- $ PS -ELF
+	- the kernel directly creates two kinds of processes:
+		-- internal kernel processes:
+			--- take care of maintanance work
+			--- theses often run as long as the system runs
+		-- external user processes:
+			--- run in user space like normal applications but where started by the kernel
+			--- they are few and short lived
+		-- to see these:
+			--- $ ps -elf
 PROCESS CREATING AND FORKING:
 	- STEPS:								   THREAD 2
 						    CLIENT REQUEST	  /
