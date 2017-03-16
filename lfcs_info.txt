@@ -1,0 +1,24 @@
+Confirmation Code
+670-309
+Candidate Id
+5100980455
+Transaction Date
+3/1/2017
+Transaction Details
+Exam Fee	0 USD
+Total Amount	0 USD
+
+What to bring:
+You will need to use 670-309 as the confirmation code to begin your exam.
+Candidates are required to provide a means of photo identification before the Exam can be launched. Acceptable forms of photo ID include current, non-expired: passport, government-issued driver's license/permit, national ID card, state or province-issued ID card, or other form of government issued identification. If acceptable proof of identification is not provided to the exam proctor prior to the exam, entry to the exam will be refused. Candidates who are refused entry due to lack of sufficient ID will not be eligible for a refund or rescheduling. Please also note that the presented international Passport or government issued form of identification must contain Western (English) characters.
+
+Cancellation and Refund Policy:
+
+If you should need to cancel or reschedule your exam, please use the cancellation options found at https://www.examslocal.com/Candidate or email us at examsupport@examslocal.com or call +1-888-504-9178, +1-312-612-1049 for additional support.
+To receive a full refund you may cancel or reschedule the examination 24 hours prior to the scheduled time.
+If you do not cancel the exam within 24 hours of your scheduled appointment, you will be charged the full original fee and you will not be issued a refund. In addition your appointment will be marked as a "no show".
+Exams must be canceled or rescheduled 24 hours before the scheduled exam time. Failing to cancel or reschedule within this time period, will result in forfeiting exam fees, exam credits and/or your exam eligibility will be marked as redeemed.
+
+Additional Exam Program Information:
+
+Refund requests can only be processed by Exam Sponsor. The refund policy for this exam is as follows: You have up to three (3) business days following payment of exam registration fees or up to 24 hours prior to a scheduled exam reservation, whichever comes first, to request a full refund on your exam registration fees. If you already scheduled an exam reservation, you must first cancel the reservation. A refund cannot be issued if there is a pending exam reservation in the system. Once you have canceled the reservation, you will need to contact certification@linuxfoundation.org to request a refund on the exam registration fees. Be sure to provide your name, email address, and exam title as listed on your exam registration record.

@@ -83,7 +83,7 @@ OBJECTIVES:
                       based on configuration files in the /etc/grub.d directory and on /etc/default/grub
               GRUB 2 :
                  - file read at boot are
-                      /boot/grub/grub.conf or /boot/grub/menu.lst.
+                      /boot/grub/grub.cfg or /boot/grub/menu.lst.
                       In RHEL 5-7, it can be edited using the 'grubby utility'. Any changes made will be preserved
                       but in GRUB 2 any changes to grub.cfg is lost when next it is auto-generated.
       - Be familiar with the interactive selections you can make at boot.
@@ -865,7 +865,7 @@ Objectives:
 	                        |								                                                |
 	                        |								                                                |
            --------------------------------------------------------------------------------------------
- 		       |                   Cylinders(group of similar platters on all sectors)                    |
+ 		       |                   Cylinders(group of similar tracks on all platters )                    |
  		       --------------------------------------------------------------------------------------------
  		              /   \                                                           /    \
  		             /     \							                                           /      \
@@ -937,16 +937,16 @@ Objectives:
           |          |
           |          |
           |          -----
-    512   |          -----
-    bytes |          | Partition 1 - 16 bytes
-          |          |----
-          |          | Partition 2 - 16 bytes              <----Partiton Table
-          |          |----
-          |          | Partition 3 - 16 bytes
-          |          |----
-          |          | Partition 4 - 16 bytes { 0x55AA }
-          |          |
-          ---------  -----
+    512   |          -----                                            ----------
+    bytes |          | Partition 1 - 16 bytes                                  |
+          |          |----                                                     |
+          |          | Partition 2 - 16 bytes              <----Partiton Table |
+          |          |----                                                     |
+          |          | Partition 3 - 16 bytes                                  |--> 64byts
+          |          |----                                                     |
+          |          | Partition 4 - 16 bytes { 0x55AA } -> Magic Number       |
+          |          |                                                         |
+          ---------  -----                                            ---------|
 
           Note: each entry in the partition table 16 bytes long
           	- gives the following information:
@@ -4008,12 +4008,12 @@ Boot Process Failures:
       or incorrect parameters specified on the kernel command line in the GRUB configuration file has been altered.
     - Kernel loads but fails to mount the boot filesystem:
       The main causes here are:
-        - 1. Misconfigured GRUB configuration fiel
+        - 1. Misconfigured GRUB configuration file
         - 2. Misconfigured /etc/fstab
         - 3. no support for the root file system type either built into the kernel or as a module in the initramfs Initial ram
         disk or filesystem
     - Failure during the 'init' process.
-      - repair may invovle booting into a lower runlevel such as 3 (no graphics) or 1 (single mode)
+      - repair may involve booting into a lower runlevel such as 3 (no graphics) or 1 (single mode)
 
 Filesystem Corruption and Recovery:
   - To repair check '/etc/fstab':

@@ -1,0 +1,1 @@
+sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/java-9-oracle/bin/java 100
