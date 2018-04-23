@@ -1056,7 +1056,7 @@ $ rpm2cpio foobar.rpm | cpio --extract --make-directories
 The Debian Package Manager (DPKG) is used by all Debian-based distributions to control the installation, verification, upgrade, and removal of software on Linux systems. The low-level dpkg program can perform all these operations, either on just one package, or on a list of packages. Operations which would cause problems (such as removing a package that another package depends on, or installing a package when the system needs other software to be installed first) are blocked from completion.
 
 
-7.2. laerning Objectives
+7.2. learning Objectives
 
 By the end of this chapter, you should be able to:
 
@@ -1065,3 +1065,494 @@ By the end of this chapter, you should be able to:
     Know what source packages look like.
     Use querying and verifying operations on packages.
     Install, upgrade, and uninstall Debian packages.
+
+7.3. DPKG Essentials
+
+DPKG (Debian Package) is the packaging system used to install, remove, and manage software packages under Debian Linux and other distributions derived from it. Like RPM, it is not designed to directly retrieve packages in day-to-day use, but to install and remove them locally.
+
+Package files have a .deb suffix and the DPKG database resides in the /var/lib/dpkg directory.
+
+Like rpm, the dpkg program has only a partial view of the universe: it knows only what is installed on the system, and whatever it is given on the command line, but knows nothing of the other available packages, whether they are in some other directory on the system, or out on the Internet. As such, it will also fail if a dependency is not met, or if one tries to remove a package other installed packages need. 
+
+
+7.4. Package File Names
+
+Debian package file names are based on fields that represent specific information. The standard naming format for a binary package is:
+
+<name>_<version>-<revision_number>_<architecture>.deb
+
+as in:
+
+logrotate_3.8.7-1_amd64.deb
+
+on Debian, and
+
+logrotate_3.8.7-1ubuntu1_amd64.deb
+
+on Ubuntu. Note that, for historical reasons, the 64-bit x86 platform is called amd64 rather than x86_64, and distributors such as Ubuntu manage to insert their name in the package name.
+
+
+7.5.a. Source Packages I
+
+In the Debian packaging system, a source package consists of at least three files:
+
+    An upstream tarball, ending with .tar.gz. This is the unmodified source as it comes from the package maintainers.
+    A description file, ending with .dsc, containing the package name and other metadata, such as architecture and dependencies.
+    A second tarball that contains any patches to the upstream source, and additional files created for the package, and ends with a name .debian.tar.gz or .diff.gz, depending on distribution.
+
+7.6. DPKG Queries
+
+Here are some examples of queries you can make:
+
+    List all packages installed:
+    $ dpkg -l
+    One can also specify a package name.
+    List files installed in the wget package:
+    $ dpkg -L wget
+    Show info about an installed package:
+    $ dpkg -s wget
+    Show info about a package file:
+    $ dpkg -I webfs_1.21+ds1-8_amd64.deb
+    List files in a package file:
+    $ dpkg -c webfs_1.21+ds1-8_amd64.deb
+    Show what package owns /etc/init/networking.conf:
+    $ dpkg -S /etc/init/networking.conf
+    Show the status of a package:
+    $ dpkg -s wget
+    Verify the installed package's integrity:
+    $ dpkg -V package
+    Without arguments, this will verify all packages on the system. See the man page to interpret the output. Note: only recent versions of dpkg (1.17+) support this option.
+
+
+7.7. Installing/Upgrading/Uninstalling Packages
+
+The command:
+
+$ sudo dpkg -i foobar.deb
+
+would be used for either installing or upgrading the foobar package.
+
+If the package is not currently installed, then it will be installed. If the package is newer than the one currently installed, then it will be upgraded.
+
+The command:
+
+$ sudo dpkg -r package
+
+is used to remove all of an installed package except for its configuration files. The command:
+
+$ sudo dpkg -P package
+
+is used to remove all of an installed package including its configuration files.  (Note that -P stands for purge.)
+
+8.1. yum - Intro
+
+The yum program provides a higher level of intelligent services for using the underlying rpm program. It can automatically resolve dependencies when installing, updating and removing packages. It accesses external software repositories, synchronizing with them and retrieving and installing software as needed.
+
+
+8.2. Learning Objectives
+
+By the end of this chapter, you should be able to: 
+
+    Discuss package installers and their characteristics.
+    Explain what yum is.
+    Configure yum to use repositories.
+    Discuss the queries yum can be used for.
+    Verify, install, remove, and upgrade packages using yum.
+
+8.3. Package Installers
+
+The lower-level package utilities such as rpm and dpkg deal with the details of installing specific software package files and managing already installed software.
+
+The higher-level package management systems (such as yum, dnf, apt and zypper) work with databases of available software and incorporate the tools needed to find, install, update, and uninstall software in a highly intelligent fashion. They:
+
+    Can use both local and remote repositories as a source to install and update binary as well as source software packages.
+    Are used to automate the install, upgrade, and removal of software packages.
+    Resolve dependencies automatically.
+    Save time because there is no need to either download packages manually or search out dependency information separately.
+
+The software repositories are provided by distributions and other independent software providers. The package installers maintain databases of available software derived from catalogs kept by the repositories. Unlike the low-level package tools, they have the ability to find and install dependencies automatically, a critical feature.
+
+In this section we will talk about yum and dnf; we will get to zypper and apt next.
+
+
+8.4. What is yum?
+
+yum provides a frontend to rpm. Its primary task is to fetch packages from multiple remote repositories and resolve dependencies among packages. It is used by the majority (but not all) distributions that use rpm, including RHEL, CentOS, Scientific Linux and Fedora.
+
+yum caches information and databases to speed up performance. To remove some or all cached information, one can run the command:
+
+$ yum clean [ packages | metadata | expire-cache | rpmdb | plugins | all ]
+
+yum has a number of modular extensions (plugins) and companion programs that can be found under /usr/bin/yum* and /usr/sbin/yum*.
+
+We will concentrate on the command line use of yum and not consider the graphical interfaces distributions provide.
+
+
+8.5. Configuring yum to Use Repositories
+
+Repository configuration files are kept in /etc/yum.repos.d/ and have a .repo extension. For example, on one RHEL 7 system we have:
+
+    ls -l /etc/yum.repos.d
+
+Note that on RHEL 6 there is no redhat.repo file. RHEL 6 and earlier versions handled the distribution-supplied repos in a somewhat different manner, although RHEL clones like CentOS used conventional repos for the main distribution packages.
+
+
+8.6. Repository Files
+
+A very simple repository file might look like:
+
+[repo-name]
+
+name=Description of the repository
+
+baseurl=http://somesystem.com/path/to/repo
+
+enabled=1
+
+gpgcheck=1
+
+More complicated examples can be found in /etc/yum.repos.d and it would be a good idea to examine them.
+
+One can toggle the use of a particular repository on or off by changing the value of enabled to 0 or 1, or using the --disablerepo=somerepo and --enablerepo=somerepo options when using yum. One can (but should not) also turn off integrity checking with the gpgcheck variable.
+
+
+8.7.a. Queries I
+
+Like rpm, yum can be used for queries such as searches; however, it can search not just what is present on the local system, it can also inquire about remote repositories. Some examples:
+
+    Search for packages with keyword in name:
+
+    $ sudo yum search keyword
+    $ sudo yum list "*keyword*"
+
+    These two commands give somewhat different information. The first one tells more about the packages, while the second one makes it clearer what is installed and what else is available.
+    Display information about a package:
+
+    $ sudo yum info package
+
+    Information includes size, version, what repository it came from, a source URL, and a longer description. Wildcards can be given, as in yum info "libc*", for this and most yum commands. Note that the package need not be installed, unlike queries made with rpm -q.
+
+
+8.7.b. Queries II
+
+More yum examples:
+
+    List all packages, or just those installed, available, or updates that have not yet been installed:
+
+    $ sudo yum list [installed | updates | available ]
+    Show information about package groups installed or available, etc.:
+
+    $ sudo yum grouplist [group1] [group2]
+    $ sudo yum groupinfo group1 [group2]
+    Show packages that contain a certain file name:
+
+    $ sudo yum provides
+
+    as in
+
+    $ sudo yum provides "/logrotate.conf"
+
+    Please note the need to use at least one / in the file name, which can be confusing.
+
+8.8. Verify Packages
+
+Package verification requires installation of the yum-plugin-verify package. So, you might have to do:
+
+$ sudo yum install yum-plugin-verify
+
+Note that this is a yum plugin, not an executable. There are many other plugins available for yum, which extend the possible set of commands and arguments it can take:
+
+    To verify a package, giving the most information:
+    $ sudo yum verify [package]
+    To mimic rpm -V exactly:
+    $ sudo yum verify-rpm [package]
+    To list all differences, including configuration files:
+    $ sudo yum verify-all [package]
+
+Without arguments, the above commands will verify all packages installed on the system.
+
+By default, the verification commands ignore configuration files which may change through normal and safe usage. There are some other options: see man yum-verify.
+
+8.9.a. Installing/Removing/Upgrading Packages I
+
+Here are some examples of commonly performed operations:
+
+    Install one or more packages from repositories, resolving and installing any necessary dependencies:
+
+    $ sudo yum install package1 [package2]
+    Install from a local rpm:
+
+    $ sudo yum localinstall package-file
+
+    This is not quite the same as
+
+    $ rpm -i package-file
+
+    because it will attempt to resolve dependencies by accessing remote repositories.
+
+8.9.b. Installing/Removing/Upgrading Packages II
+
+Here are some more examples of commonly performed operations:
+
+    Install a specific software group from a repository, resolving and installing any necessary dependencies for each package in the group:
+
+    $ sudo yum groupinstall group-name
+
+    or
+
+    $ sudo yum install @group-name 
+    Remove packages from the system:
+
+    $ sudo yum remove package1 [package2]
+
+    One must be careful with package removal, as yum will not only remove requested packages, but all packages that depend on them! This may not be what you want, so never run yum remove with the -y option, which assumes automatic confirmation of removal.
+    Update a package from a repository:
+
+    $ sudo yum update [package]
+
+    If no package name is given, all packages are updated.
+
+
+
+8.9.c. Installing/Removing/Upgrading Packages III
+
+During installation (or update), if a package has a configuration file which is updated, it will rename the old configuration file with an .rpmsave extension. If the old configuration file will still work with the new software, it will name the new configuration file with an .rpmnew extension. You can search for these filename extensions (almost always in the /etc subdirectory tree) to see if you need to do any reconciliation, by doing:
+
+$ sudo find /etc -name "*.rpm*"
+
+This is the same behavior the more naked underlying rpm utility exhibits, but we mention it here for reference.
+
+8.10.a. Additional Commands I
+
+ There is no shortage of additional capabilities for yum, according to what plugins are installed. You can list them all with:
+
+$ sudo yum list "yum-plugin*"
+
+In particular:
+
+    Show a list of all enabled repositories:
+
+    $ sudo yum repolist
+    Initiate an interactive shell in which to run multiple YUM commands:
+
+    $ sudo yum shell [text-file]
+
+    If text-file is given, yum will read and execute commands from that file instead of from the terminal.
+
+8.11.b. Additional Commands II
+
+Some more examples of yum commands are:
+
+    Download packages, but do not install them; just store them under the /var/cache/yum directory, or another directory you can specify:
+
+    $ sudo yum install --downloadonly package
+
+    or you can type "d" instead of "y" or "n" when prompted after issuing an install command. The package(s) will be downloaded under /var/cache/yum in a location depending on the repository from which the download proceeds, unless the --downloaddir= option is used. Any other necessary packages will also be downloaded to satisfy dependencies.
+    You can view the history of yum commands, and, with the correct options, even undo or redo previous commands:
+
+    $ sudo yum history
+
+8.11. dnf
+
+dnf is intended to be a next generation replacement for yum. However, it has yet to be adopted by any major Enterprise distribution; Fedora is a test bed for RHEL and it is rarely used directly in Enterprise deployments.
+
+Furthermore, you can gradually learn to use dnf on Fedora systems because it accepts the subset of yum commands that take care of the majority of day-to-day tasks, and points out at each use of yum that has a dnf equivalent.
+
+To learn more, see https://docs.fedoraproject.org/en-US/Fedora/24/html/System_Administrators_Guide/part-Package_Management.html.
+
+9.1. zypper - Introduction
+
+For use on SUSE-based systems, the zypper program provides a higher level of intelligent services for using the underlying rpm program, and plays the same role as yum on Red Hat-based systems. It can automatically resolve dependencies when installing, updating and removing packages. It accesses external software repositories, synchronizing with them and retrieving and installing software as needed.
+
+9.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Explain what zypper is.
+    Discuss the queries zypper can be used for.
+    Install, remove and ugrade packages using zypper.
+
+
+9.3. What is zypper?
+
+zypper is the command line tool for installing and managing packages in SUSE Linux and openSUSE. It is very similar to yum in its functionality and even in its basic command syntax, and also works with rpm packages.
+
+zypper retrieves packages from repositories, installs, removes and updates while resolving any dependencies encountered. It is equivalent in practice to yum and apt-get in that it can retrieve packages from a repository and can also resolve dependencies. 
+
+9.4. zypper Queries
+
+Here are some examples of commonly performed operations involving querying:
+
+    Show a list of available updates:
+
+    $ zypper list-updates
+    List available repositories:
+
+    $ zypper repos
+    Search repositories for string:
+
+    $ zypper search <string>
+    List information about package:
+
+    $ zypper info <package>
+    Search repositories to ascertain what packages provide a file:
+
+    $ zypper search --provides <file> 
+
+9.5.a. Installing/Removing/Upgrading I
+
+Here are some examples of commonly performed operations:
+
+    Install or update package(s):
+
+    $ sudo zypper install package
+    Do not ask for confirmation when installing or upgrading:
+
+    $ sudo zypper --non-interactive install <package>
+
+    This is useful for scripts and is equivalent to running yum -y.
+
+
+9.5.a. Installing/Removing/Upgrading I
+
+Here are some more examples of commonly performed operations:
+
+    Update all installed packages:
+
+    $ sudo zypper update
+
+    Giving package names as an argument will update only those packages and any required dependencies. Do this without asking for confirmation:
+
+    $ sudo zypper --non-interactive update
+    Remove a package from the system:
+
+    $ sudo zypper remove <package>
+
+    Like with yum, one has to be careful with the removal command, as any package that needs the package being removed would be removed as well.
+
+
+9.6. Additional zypper Commands
+
+Sometimes, a number of zypper commands must be run in a sequence. To avoid re-reading all the databases for each command, you can run zypper in shell mode as in:
+
+$ sudo zypper shell
+> install bash
+...
+> exit
+
+Because zypper supports the readline library, you can use all the same command line editing functions in the zypper shell available in the bash shell.
+
+To add a new repository:
+
+$ sudo zypper addrepo URI alias
+
+which is located at the supplied URI and will use the supplied alias.
+
+To remove a repository from the list:
+
+$ sudo zypper removerepo alias
+
+using the alias of the repo you want to delete.
+
+9.7 Using YasT Demo
+
+Video presentation
+
+
+10.1. APT - Introduction
+
+For use on Debian-based systems, the APT (Advanced Packaging Tool) set of programs provides a higher level of intelligent services for using the underlying dpkg program, and plays the same role as yum on Red Hat-based systems. The main utilities are apt-get and apt-cache. It can automatically resolve dependencies when installing, updating and removing packages. It accesses external software repositories, synchronizing with them and retrieving and installing software as needed.
+
+10.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Explain what APT is.
+    Use apt-cache to perform queries.
+    Install, remove, and upgrade packages using apt-get.
+
+10.3. What is APT?
+
+APT is not a program in itself: it stands for Advanced Packaging Tool, which includes a number of utilities, such as apt-get and apt-cache. These, of course, in turn, invoke the lower-level dpkg program.
+
+The APT system works with Debian packages whose files have a .deb extension. There are many distributions that have descended from Debian (including Ubuntu and Linux Mint) which have adopted the Debian packaging system with no essential modification. In fact, it is not uncommon to use a repository on more than one Debian-based Linux distribution.
+
+Once again, we are going to ignore graphical interfaces (on your computer) such as synaptic or the Ubuntu Software Center, or other older frontends to APT, such as aptitude.
+
+However, excellent Internet-based resources can be found at http://packages.debian.org and http://packages.ubuntu.com. These databases let you search for packages, examine their contents, and download.
+
+10.4. apt-get
+
+apt-get is the main APT command line tool for package management. It can be used to install, manage and upgrade individual packages or the entire system. It can even upgrade the distribution to a completely new release, which can be a difficult task.
+
+There are even (imperfect) extensions that let apt-get work with rpm files. 
+
+Like yum and zypper it works with multiple remote repositories.
+
+10.5. Queries Using apt-cache
+
+Queries are done using the apt-cache utility:
+
+    Search the repository for a package named apache2:
+
+    $ apt-cache search apache2
+    Display basic information about the apache2 package:
+
+    $ apt-cache show apache2
+    Display more detailed information about the apache2 package:
+
+    $ apt-cache showpkg apache2
+    List all dependent packages for apache2:
+
+    $ apt-cache depends apache2
+    Search the repository for a file named apache2.conf:
+
+    $ apt-file search apache2.conf
+    List all files in the apache2 package:
+
+    $ apt-file list apache2
+
+    Find package that provides the file specified as argument
+    $ apt-file find <file-name>
+
+10.6.a. Installing/Removing/Upgrading I
+
+The apt-get program is the work horse of installing, removing, and upgrading packages:
+
+    Synchronize the package index files with their repository sources. The indexes of available packages are fetched from the location(s) specified in /etc/apt/sources.list:
+
+    $ sudo apt-get update
+    Install new packages or update an already installed package:
+
+    $ sudo apt-get install [package]
+    Remove a package from the system without removing its configuration files:
+
+    $ sudo apt-get remove [package]
+    Remove a package from the system, as well as its configuration files:
+
+    $ sudo apt-get --purge remove [package]
+    Apply all available updates to packages already installed:
+
+    $ sudo apt-get upgrade
+
+10.6.b. Installing/Removing/Upgrading II
+
+The apt-get program is the work horse of installing, removing and upgrading packages (continued):
+
+    Do a smart upgrade that will do a more thorough dependency resolution and remove some obsolete packages and install new dependencies:
+
+    $ sudo apt-get dist-upgrade
+
+    This will not update to a whole new version of the Linux distribution as is commonly misunderstood.
+    Note that you must update before you upgrade, unlike with yum, where the update argument does both steps, it updates the repositories and then upgrades the packages. This can be confusing to habitual yum users on Debian-based systems.
+    Get rid of any packages not needed anymore, such as older Linux kernel versions:
+
+    $ sudo apt-get autoremove
+    Clean out cache files and any archived package files that have been installed:
+
+    $ sudo apt-get clean
+
+    This can save a lot of space.
+
+
+
