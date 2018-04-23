@@ -1,0 +1,44 @@
+SignalValueDefault ActionPOSIX?Meaning
+SIGHUP    1TerminateYesHangup detected on controlling terminal or death of controlling process.
+SIGINT2TerminateYesInterrupt from keyboard.
+SIGQUIT3Core dump        YesQuit from keyboard.
+SIGILL4Core dump    Yes Illegal Instruction. 
+SIGTRAP5Core dump No Trace/breakpoint trap for debugging. 
+
+SIGABRT
+
+SIGIOT
+6Core dumpYes Abnormal termination. 
+SIGBUS7Core dump        Yes     Bus error.
+SIGFPE8Core dumpYes Floating point exception. 
+SIGKILL9TerminateYesKill signal (can not be caught or ignored). 
+SIGUSR110Terminate Yes User-defined signal 1. 
+SIGSEGV11Core dump        Yes Invalid memory reference. 
+SIGUSR212TerminateYes User-defined signal 2. 
+SIGPIPE13TerminateYes Broken pipe: write to pipe with no readers. 
+SIGALRM14TerminateYes Timer signal from alarm. 
+SIGTERM15TerminateYes Process termination. 
+SIGSTKFLT16TerminateNo Stack fault on math co-processor. 
+SIGCHLD17Ignore        Yes Child stopped or terminated. 
+SIGCONT18ContinueYes Continue if stopped. 
+SIGSTOP19StopYes Stop process (can not be caught or ignored). 
+SIGTSTP20StopYes Stop types at tty. 
+SIGTTIN21StopYes Background process requires tty input. 
+SIGTTOU22StopYes Background process requires tty output. 
+SIGURG23IgnoreNoUrgent condition on socket (4.2 BSD).
+SIGXCPU24Core dumpYes CPU time limit exceeded (4.2 BSD). 
+SIGXFSZ25Core dumpYes File size limit exceeded (4.2 BSD). 
+SIGVTALRM26TerminateNo Virtual alarm clock (4.2 BSD). 
+SIGPROF27TerminateNo Profile alarm clock (4.2 BSD). 
+SIGWINCH28IgnoreNo Window resize signal (4.3 BSD, Sun).
+
+SIGIO
+
+SIGPOLL
+29TerminateNo I/O now possible (4.2 BSD) (System V). 
+SIGPWR30TerminateNoPower Failure (System V). 
+
+SIGSYS
+
+SIGUNUSED
+31TerminateNo Bad System Called. Unused signal.

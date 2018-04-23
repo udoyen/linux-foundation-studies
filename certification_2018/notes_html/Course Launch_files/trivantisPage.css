@@ -1,0 +1,132 @@
+* { margin:0; padding:0; }
+
+/*
+ * Edit mode (publisher) keeps the browser default margin for input elements (which is 3px 3px 0px 5px).
+ * If we don't keep this default here (published content), some input elements in question obejcts (eg: likert)
+ * are noticeably off with their surroundings.
+ */
+input[type="radio"], input[type="checkbox"] { margin: 3px 3px 0px 5px; }
+
+a {
+text-decoration:none;
+}
+img {
+border:0px;
+}
+h1 {
+margin-top:0px;
+}
+h2 {
+font-size:1.2em;
+}
+h3 {
+margin-top:30px;
+}
+pre {
+color:red;
+}
+body {
+background-color:#FFFFFF;
+font-family:Trebuchet MS,Lucida Sans Unicode,Arial,sans-serif;
+font-size:0.8em;
+}
+
+/* Note: using div[name="dCon2"] does not work in IE for published content, position absolute fails bug 11142 */
+
+/* ttxt is defined in trivantis-common.css
+
+.ttxt
+{
+	position: absolute;
+	overflow: hidden;
+	font-family: Arial, sans-serif;
+	background-color: transparent !important;
+	font-size: 10pt;
+	background-image: url(images/trivantis-blank.gif);
+	color:black;
+	line-height:1.4; // Normal doesn't play nice cross-browser
+}
+
+.ttxt p, .ttxt ul, .ttxt ol, .ttxt li
+{
+	margin: 0px;
+	text-indent: 0px;
+	font-family: Arial, sans-serif;
+}
+
+.ttxt h1, .ttxt h2
+{
+	padding: 0px 0px 0px 0px;
+	font-weight:normal;
+	font-size:10pt;
+}
+
+.ttxt ul
+{
+	padding: 0px 0px 0px 30px;
+	list-style-type: disc;
+}
+
+.ttxt ol
+{
+	padding: 0px 0px 0px 30px;
+}
+
+.ttxt li
+{
+	padding: 0px;
+}
+
+.ttxt a
+{
+	cursor:pointer;
+	color:inherit;
+}
+*/
+
+.DLG_listbox{
+	position:absolute;
+}
+div.DLG_listbox{
+	border:2px inset #8EB9F3;
+	overflow:auto;
+}
+div.DLG_listbox p{
+	cursor:default;
+	padding-left:3px;
+	font-family:arial;
+	font-size:9pt;
+	white-space:nowrap;
+	color:#000000;
+	margin: 0px;
+}
+
+/* the following table style is needed for tables to inherit styles from a div in firefox  */
+/* in Webtora runtime we run in a panel which sets oIFrame.src = 'javascript:void(0)'      */
+/* and that actually takes care of the inheritance problem in runtime, but since we        */
+/* do not have a frame in runtime I just added the following styles                        */
+table, caption {
+	font-family: inherit;
+	background-color: inherit;
+	color: inherit;
+	font-size: inherit;
+	font-weight: inherit;
+	font-style: inherit;
+	font-variant: inherit;
+}
+
+.TV_lastLine{
+	background-image: url(images/trivantis-lastLine_n.gif);
+	background-repeat: no-repeat;
+	background-position: 8px top;
+}
+
+.TV_midLine{
+	background-image: url(images/trivantis-midLine_n.gif);
+	background-repeat: no-repeat;
+	background-position: 8px top;
+}
+
+p.DLG_selected{
+	background-color:#C3DAF9;
+}

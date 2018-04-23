@@ -1,0 +1,240 @@
+.mejs-container.mejs-polishedmetal {
+
+}
+
+div[id^="video"] .mejs-polishedmetal .mejs-controls {
+	background: url(Sprites/control-polishedmetal.png) 0 0;
+	height: 24px;
+	bottom: -24px;
+}
+
+div[id^="audio"] .mejs-polishedmetal .mejs-controls {
+	background: url(Sprites/control-polishedmetal.png) 0 0;
+	height: 24px;
+	bottom: 0;
+}
+
+div[id^="vid"] .mejs-polishedmetal .mejs-controls {
+	background: url(Sprites/control-polishedmetal.png) 0 0;
+	height: 24px;
+	bottom: -24px;
+}
+
+div[id^="sndtobj"] .mejs-polishedmetal .mejs-controls {
+	background: url(Sprites/control-polishedmetal.png) 0 0;
+	height: 24px;
+	bottom: 0;
+}
+
+.mejs-polishedmetal .mejs-time-slider{
+	left:20px;
+	top:4px;
+	height:8px;
+}
+
+.mejs-polishedmetal .mejs-time{
+	top:0px;
+    left: -4px;
+	position:relative;
+}
+
+.mejs-polishedmetal .mejs-controls .mejs-time-rail .mejs-time-total {
+	background: #383838;
+	background: rgba(0,0,0,0.6);
+	height: 8px;
+}
+.mejs-polishedmetal .mejs-controls .mejs-time-rail .mejs-time-buffering {
+	height: 8px;
+}
+.mejs-polishedmetal .mejs-controls .mejs-time-rail .mejs-time-loaded {
+	background: #808080;
+	background: rgba(128,128,128,0.3);
+	width: 0;
+	height: 8px;
+}
+.mejs-polishedmetal .mejs-controls .mejs-time-rail .mejs-time-current {
+	background: #00ff00;
+	width: 0;
+	height: 8px;
+} 
+.mejs-polishedmetal .mejs-controls .mejs-time-rail .mejs-time-handle  {
+	display: block;
+	border:none;
+	margin: 0;
+	width: 6px;
+	left: -3px;
+	height: 16px;
+	top: -5px;
+	background: url(Sprites/control-polishedmetal.png) no-repeat -44px -72px;	
+}
+.mejs-polishedmetal .mejs-controls .mejs-time-rail .mejs-time-float {	
+	display: none;
+}
+.mejs-polishedmetal .mejs-controls .mejs-playpause-button  {
+	top: 0px;
+	left: 0px;
+	width: 20px;
+	height: 24px;
+}
+.mejs-polishedmetal .mejs-controls .mejs-playpause-button  button {
+	width: 20px;
+	height: 24px;
+	background: url(Sprites/control-polishedmetal.png) no-repeat 0 -24px;
+	margin: 0;
+	padding: 0;
+}
+.mejs-polishedmetal .mejs-controls .mejs-pause button  {
+	width: 20px;
+	height: 24px;
+	background: url(Sprites/control-polishedmetal.png) no-repeat -40px -24px;
+	margin: 0;
+	padding: 0;
+}
+
+.mejs-polishedmetal .mejs-controls .mejs-playpause-button  button:hover {
+	background: url(Sprites/control-polishedmetal.png) no-repeat -20px -24px;
+}
+
+.mejs-polishedmetal .mejs-controls .mejs-pause button:hover {
+	background: url(Sprites/control-polishedmetal.png) no-repeat -60px -24px;
+}
+
+.mejs-polishedmetal .mejs-controls .mejs-fullscreen-button  {
+	top: 0px;
+	right: 12px;
+	width: 20px;
+	height: 44px;
+	background : none;
+}
+.mejs-polishedmetal .mejs-controls .mejs-fullscreen-button  button {
+	width: 20px;
+	height: 24px;
+	background: transparent url(Sprites/control-polishedmetal.png) no-repeat 0 -48px;
+	margin: 0;
+	padding: 0;
+}
+.mejs-polishedmetal .mejs-controls .mejs-unfullscreen  button {
+	background: transparent url(Sprites/control-polishedmetal.png) no-repeat -40px -48px;
+	margin: 0;
+	padding: 0;
+}
+
+.mejs-polishedmetal .mejs-controls .mejs-fullscreen-button  button:hover {
+	background: transparent url(Sprites/control-polishedmetal.png) no-repeat -20px -48px;
+
+}
+.mejs-polishedmetal .mejs-controls .mejs-unfullscreen  button:hover{
+	background: transparent url(Sprites/control-polishedmetal.png) no-repeat -60px -48px;
+}
+
+.mejs-polishedmetal .mejs-controls .mejs-volume-button  {
+	top: 0px;
+	right: 3px;
+	width: 11px;
+	height: 24px;
+}
+.mejs-polishedmetal .mejs-controls .mejs-mute button {
+	background: url(Sprites/control-polishedmetal.png) no-repeat 0 -72px;
+	width: 11px;
+	height: 24px;
+	margin: 0;
+	padding: 0;
+}
+.mejs-polishedmetal .mejs-controls .mejs-unmute button {
+	background: url(Sprites/control-polishedmetal.png) no-repeat -22px -72px;
+	width: 11px;
+	height: 24px;
+	margin: 0;
+	padding: 0;	
+}
+.mejs-polishedmetal .mejs-controls .mejs-mute button:hover {
+	background: url(Sprites/control-polishedmetal.png) no-repeat -11px -72px;
+}
+.mejs-polishedmetal .mejs-controls .mejs-unmute button:hover {
+	background: url(Sprites/control-polishedmetal.png) no-repeat -33px -72px;
+}
+
+.mejs-polishedmetal  .mejs-controls .mejs-volume-button .mejs-volume-slider {
+	background: #C0C1E0;
+	border: solid 1px #aaa;
+	border-width: 1px 1px 0 1px;
+	width: 20px;
+	height: 65px;
+	top: -65px;
+	left: -4px;
+}
+.mejs-polishedmetal  .mejs-controls .mejs-volume-button .mejs-volume-total {
+	background: #333;
+	background: rgba(0,0,0,0.8);
+	left: 7px;
+	width: 6px;
+	height: 50px;
+}
+.mejs-polishedmetal  .mejs-controls .mejs-volume-button .mejs-volume-current {
+	left: 7px;
+	width: 6px;	
+	background: #fff;
+	background: rgba(255,0,0,0.8);
+	height: 50px;
+}
+
+.mejs-polishedmetal  .mejs-controls .mejs-volume-button .mejs-volume-handle {
+	display: none;
+}
+
+.mejs-polishedmetal .mejs-controls .mejs-time span {
+	color: #000000;
+}
+.mejs-polishedmetal .mejs-controls .mejs-currenttime-container  {
+	position: absolute;
+	top: 32px;
+	right: 100px;
+	border: solid 1px #999;
+	background: #333;
+	color: #FFFFFF;
+	padding-top: 2px;
+	border-radius: 3px;
+}
+.mejs-polishedmetal .mejs-controls .mejs-duration-container  {
+
+	position: absolute;
+	top: 32px;
+	right: 65px;
+	border: solid 1px #999;
+	background: #fff;
+	color: #333;
+	padding-top: 2px;
+	border-radius: 3px;
+	color: #333;
+}
+
+.mejs-polishedmetal .mejs-controls .mejs-time  button{
+	color: #333;
+}
+.mejs-polishedmetal .mejs-controls .mejs-captions-button {
+	position:relative;
+    width:24px;
+	height:24px;
+	right:4px;
+	top:0px;
+}
+.mejs-polishedmetal .mejs-controls .mejs-captions-button button {
+	width:24px;
+	height:24px;
+	left:-4px;
+	top:0px;
+	background: url(Sprites/control-polishedmetal.png) no-repeat 0 -96px;
+}
+.mejs-controls .mejs-captions-button .mejs-captions-selector {
+	bottom: 22px;
+}
+.mejs-polishedmetal .mejs-controls .mejs-stop button{
+
+}
+.mejs-polishedmetal .mejs-controls .mejs-stop button:hover{
+
+}
+.mejs-controls .mejs-horizontal-volume-slider .mejs-horizontal-volume-current {
+	background: #FF0202;
+	background: url(timeProgress.png) repeat-x;
+}

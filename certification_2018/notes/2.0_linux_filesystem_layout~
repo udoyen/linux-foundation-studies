@@ -1,0 +1,1067 @@
+Data distinctions:
+    - Shareable vs non-shareable
+        -- lock file:- non-shared; home directories:- shared
+    - Variable vs static
+
+Main Directory Layout 1:
+    -------------------------------------------------------------------------------------------
+    Directory       |        In FHS? |          Purpose
+    -------------------------------------------------------------------------------------------
+        /                   Yes         Primary directory of the entire file system hierarchy.
+        /bin                Yes         Essentially executable programs that must be available in "single user mode".
+        /boot               Yes         Files needed to boot the system such as the kernel, initrd or inittramfs images, and
+                                        boot configuration files and bootloader programs
+        /dev                Yes         Devie Nodes, used to interact with hardware and software devices.
+        /etc                Yes         System wide configuration files.
+        /home               Yes         User home directories including personal settings, files, etc.
+        /lib                Yes         Libraries required by executable binaries in /bin and /sbin.
+        /lib64              Yes         64-bit libraries required by executable binaries in /bin and /sbin, for systems which can
+                                        run both 32-bit and 64-bit programs
+        /media              Yes         Mount points for removable media such as CDs, DVDs, USB sticks etc.
+        /mnt                Yes         Temporarily mounted filesystems
+        /opt                Yes         Optional application software packages
+        /proc               Yes         Virtual pseudo-filesystem giving information about the system and processes running
+                                        on it. Can be used to alter system parameters.
+        /sys                No          Virtual pseudo-filesystem giving information about the system and processes running
+        /root               Yes         Home directory for the root user
+                                        on it. Can be used to alter parameters. Similar to a device tree and is part of the Unified Device Model
+        /sbin               Yes         Essential system binaries
+        /srv                Yes         Site-specific data served up by the system. Seldom used.
+        /tmp                Yes         Temporary files; on many distributiona lost across a reboot and may be a ramdisk in memory
+        /usr                Yes         Multi-user applications, utilities and data; theoritically read-only.
+        /var                Yes         Variable data that changes during system operation.
+
+Main Directory Layout II:
+
+extra compoents of FHS specific to certain distributions include:
+
+/misc: for miscellaneous data, 
+/tftpboot: used for booting using tftp
+
+Special folders:
+/bin:  
+        - executables programs and scripts needed by both system adm ins and non-privileged users,
+        - needed in single user mode
+        - may contain executable used directoy by scripts
+        - may not include any subdirectories
+        - programs which must exists in /bin, include:
+            - cat, chgrp, chmod, cp, date, dd, df, dmesg, echo, false, hostname, kill, ln, login, mkdir
+                mknode, more, mount, mv ps, pwd, rm, rmdir, sed, sh, stty, su, sync, true, umount and uname. 
+            - Optinally test, csh, ed, tar, cpio, gunzip, zcat, netstat and ping
+
+/boot:
+        - Essential files for booting the system must be in the /boot directory and its subdirectories, two very important ones are:
+            - vmlinuz:- compressed linuz kernel
+            - initramfs:- the initial RAM Filesystem, which is mounted before the real root filesystem becomes available.
+        - Non-essential files include:
+            - config:- used when compiling the kernel, here for booking keeping
+            - System.map:- the kernel "sysmbol table", which is very useful for debugging.
+            - Master boot sectors, other data.
+
+/dev:
+
+        - special device files also known as device nodes.
+        - Note:- Network devices don't device nodes and are referenced by name only, e.g.: eth1, wlan0.
+
+/etc:
+
+        - machine specific configuration files.
+        - others include: /etc/init.d, contains start up and shutdown scripts when using System V initialization
+
+/lib and /lib64:
+
+        - kernel modules:- /lib/modules/<kernel-version-number>
+        - PAM:- /lib/security
+
+/media:
+
+        - on RHEL and SUSE removable media pops up under /run/media
+
+/mnt:
+        - Common use for it is mounting of:
+
+            -- NFS, Samba, CIFS, AFS
+
+/proc:
+        - The kernel exposes some important data structures through /proc entries.
+        - Additionally each active process on the system has its own subdirectory that gives detailed information about the 
+            state of the process, the resources it's using, and its history.
+        - importsnt pseudo-files like /proc/interrupts, /proc/meminfo, /proc/mounts, and 
+            /proc/partitions, gives an up-to-the-moment glimpse of the system hardware.
+        - /proc/filesystem, /proc/sys:- provide system configuration information an interfaces.
+
+/sys:
+        - used both to gather information about the system, and modify its behaviour while running.
+
+/sbin:
+        - contains binaries essential for booting, restoring, and/or repairing inaddition to those binaries in the
+            /bin directory. 
+        - programs that must be there include:
+            -- fdisk, fsck, getty, halt, ifconfig, init, mkfs, mkswap, reboot, route, swapon, update
+
+/tmp:
+        - preventing use of this location to create large files systems we issue the followinf command:
+            -- systemctl mask tmp.mount, then reboot
+/usr:
+        - secondary file hierarchy
+        - used for files which are not needed for system booting
+        - typically contain read-only data
+        - contents:- /usr/bin, /usr/etc, /usr/games, /usr/include (Header files to compile applications), /usr/lib
+                        /usr/lib64, /usr/local(third-level hierarchy for machine local files), /usr/sbin, /usr/share
+                        /usr/src, /usr/tmp
+/run:
+        - store transient files: those that contain runtime information, which may need to be written early in system startup but don't need 
+            to be preserved when rebooting.
+
+
+Processes, Programs and Threads:
+--------------------------------
+
+A process is an executing program and associated resources, including environment, open files, signal handlers, etc. The same program may be executing more than once simultaneously, and thus, be responsible for multiple processes.
+
+At the same time, two or more tasks, or threads of execution, can share various resources, such as their entire memory spaces (or just particular memory areas), open files, etc. When there is an everything shared circumstance, one speaks of a multi-threaded process.
+
+In other operating systems, there may be a big distinction between full heavy weight processes and light weight ones; strictly speaking, the heavy weight process may include a number of light weight processes, or just one of them.
+
+In Linux, the situation is quite different. Each thread of execution is considered individually, the difference between heavy and light having to do only with sharing of resources and somewhat faster context switching between threads of execution.
+
+Unlike some other operating systems, Linux has always done an exceptionally fast job of creating, destroying, and switching between processes. Thus, the model adopted for multi-threaded applications resembles multiple processes; each thread is scheduled individually and normally, as if it were a stand-alone process. This is done instead of involving more levels of complication, such as having a separate method of scheduling among the threads of a process, as well as having a scheduling method between different processes.
+
+At the same time, Linux respects POSIX and other standards for multi-threaded processes; e.g., each thread returns the same process ID (called the thread group ID internally), while returning a distinct thread ID (called the process ID internally). This can lead to confusion for developers, but should be invisible to administrators. 
+
+2.23: /tmp
+
+Putting files here can be disabled with the command:
+
+   $ sudo systemctl mask tmp.mount
+
+2.24.a. /usr 1
+
+- secondary filesystem hierarchy
+- used for files not needed for system booting
+- contains binaries not needed in single user mode
+
+2.26.a. /run 1
+
+- store transient files: those have information that may be needed to be written early in system startup
+- pseudo-filesystem existing only in memory
+
+2.27. Examine main Consumers of Storage
+
+
+
+3.5:Processes:-
+
+A process is an instance of a program in execution. It may be in a number of different states, such as running or sleeping. Every process has a pid (Process ID), a ppid (Parent Process ID), and a pgid (Process Group ID). In addition, every process has program code, data, variables, file descriptors, and an environment.
+
+init is usually the first user process run on a system, and thus becomes the ancestor of all subsequent processes running on the system, except for those initiated directly from the kernel (which show up with [] around their name in a ps listing).
+
+If the parent process dies before the child, the ppid of the child is set to 1; i.e., the process is adopted by init. (Note: in recent Linux systems using systemd, the ppid will be set to 2, which corresponds to an internal kernel thread known as kthreadd, which has taken over from init the role of adopter of orphaned children.)
+
+A child process which terminates (either normally or abnormally) before its parent, which has not waited for it and examined its exit code, is known as a zombie (or defunct) process. Zombies have released almost all resources and remain only to convey their exit status. One function of the init process is to check on its adopted children and let those who have terminated die gracefully. Hence, it is sometimes known as the zombie killer, or more grimly, the child reaper.
+
+Processes are controlled by scheduling, which is completely preemptive. Only the kernel has the right to preempt a process; they cannot do it to each other.
+
+For historical reasons, the largest PID has been limited to a 16-bit number, or 32768. It is possible to alter this value by changing /proc/sys/kernel/pid_max, since it may be inadequate for larger servers. As processes are created, eventually they will reach pid_max, at which point they will start again at PID = 300.
+
+3.6:Process Attributes:-
+
+All processes have certain attributes:
+
+    The program being executed
+    Context (state)
+    Permissions
+    Associated resources.
+
+Every process is executing some program. At any given moment, the process may take a snapshot of itself by trapping the state of its CPU registers, where it is executing in the program, what is in the process' memory, and other information. This is the context of the process.
+
+Since processes can be scheduled in and out when sharing CPU time with others (or have to be put to sleep while waiting for some condition to be fulfilled, such as the user to make a request or data to arrive), being able to store the entire context when swapping out the process and being able to restore it upon execution resumption is critical to the kernel's ability to do context switching.
+
+3.7.a:Controlling Processes with ulimit:-
+
+ulimit is a built-in bash command that displays or resets a number of resource limits associated with processes running under a shell. You can see what running ulimit with the -a argument gives us in the screenshot on this page.
+
+Note: If you run this command as root, you will get a somewhat different output.
+
+3.7.b:
+
+A system administrator may need to change some of these values in either direction:
+
+    To restrict capabilities so an individual user and/or process cannot exhaust system resources, such as memory, cpu time or the maximum number of processes on the system.
+    To expand capabilities so a process does not run into resource limits; for example, a server handling many clients may find that the default of 1024 open files makes its work impossible to perform.
+
+There are two kinds of limits:
+
+    Hard: The maximum value, set only by the root user, that a user can raise the resource limit to.
+    Soft: The current limiting value, which a user can modify but cannot exceed the hard limit.
+
+One can set any particular limit by doing:
+
+$ ulimit [options] [limit]
+
+as in
+
+$ ulimit -n 1600
+
+which would increase the maximum number of file descriptors to 1600.
+
+Note that the changes only affect the current shell. To make changes that are effective for all logged-in users, one needs to modify /etc/security/limits.conf, a very nicely self-documented file, and then reboot.
+
+3.8:Process permissions and setuid:-
+
+Every process has permissions based on which specific user invoked it. In addition, it may also have permissions based on who owns its program file.
+
+As we will explain later in the local security section, programs which are marked with an s execute bit have a different effective user id than their real user id. These are referred to as setuid programs. They run with the user id of the user who owns the program; non-setuid programs run with the permissions of the user who runs them. setuid programs owned by root can be a well-known security problem. 
+
+The passwd program is an example of a setuid program. Any user can run it. When a user executes this program, the process must run with root permission in order to be able to update the write-restricted /etc/passwd and /etc/shadow files where the user passwords are maintained.
+
+3.9:More on Process States:
+
+Processes can be in one of several possible states, the main ones being:
+
+    -->Running
+    The process is either currently executing on a CPU or CPU core or sitting in the run queue, eagerly awaiting a new time slice. It will resume running when the scheduler decides it is now deserving to occupy the CPU, or when another CPU becomes idle and the scheduler migrates the process to that CPU.
+    -->Sleeping (i.e., Waiting)
+    The process is waiting on a request (usually I/O) that it has made and cannot proceed further until the request is completed. When the request is completed, the kernel will wake up the process and put it back on the run queue and it will be given a time slice on a CPU when the scheduler decides to do so.
+   -->Stopped
+    The process has been suspended. This state is commonly experienced when a programmer wants to examine the executing program's memory, CPU registers, flags, or other attributes. Once this is done, the process may be resumed. This is generally done when the process is being run under a debugger or the user hits Ctrl-Z.
+    -->Zombie
+    The process enters this state when it terminates, and no other process (usually the parent) has inquired about its exit state; i.e., reaped it. Such a process is also called a defunct process. A zombie process has released all of its resources, except its exit state and its entry in the process table. If the parent of any process dies, the process is adopted by init (PID = 1) or kthreadd (PID = 2).
+
+
+3.10: Execution Modes:-
+
+At any given time, a process (or any particular thread of a multi-threaded process) may be executing in either user mode or system mode, which is usually called kernel mode by kernel developers.
+
+What instructions can be executed depends on the mode and is enforced at the hardware, not software, level.
+
+The mode is not a state of the system; it is a state of the processor, as in a multi-core or multi-CPU system each unit can be in its own individual state.
+
+In Intel parlance, user mode is also termed Ring 3 and system mode is termed Ring 0.
+
+3.11: User Mode:-
+
+Except when executing a system call (described in the next section), processes execute in user mode, where they have lesser privileges than in kernel mode.
+
+When a process is started, it is isolated in its own user space to protect it from other processes. This promotes security and creates greater stability. This is sometimes called process resource isolation.
+
+Each process executing in user mode has its own memory space, parts of which may be shared with other processes; except for the shared memory segments, a user process is not able to read or write into or from the memory space of any other process.
+
+Even a process run by the root user or as a setuid program runs in user mode, except when jumping into a system call, and has only limited ability to access hardware. 
+
+
+ ------------------                                               -------------------
+|                 |                                               |   Kernel        |
+|                 |     System Call                               |   Mode          |
+| User Mode       |---------------------------------------------->|                 |
+|                 |<----------------------------------------------|                 |
+|                 |        Return                                 |                 |
+-------------------                                               -------------------                    
+
+
+3.12: Kernel Mode:-
+
+In kernel (system) mode, the CPU has full access to all hardware on the system, including peripherals, memory, disks, etc. If an application needs access to these resources, it must issue a system call, which causes a context switch from user mode to kernel mode. This procedure must be followed when reading and writing from files, creating a new process, etc.  
+
+Application code never runs in kernel mode, only the system call itself which is kernel code. When the system call is complete, a return value is produced and the process returns to user mode with the inverse context switch.
+
+There are other times when the system is in kernel mode that have nothing to do with processes, such as when handling hardware interrupts or running the scheduling routines and other management tasks for the system.
+
+3.13: Daemons:-
+
+A daemon process is a background process whose sole purpose is to provide some specific service to users of the system:
+
+    Daemons can be quite efficient because they only operate when needed.
+    Many daemons are started at boot time.
+    Daemon names often (but not always) end with d.
+    Some examples include httpd and systemd-udevd.
+    Daemons may respond to external events (systemd-udevd) or elapsed time (crond).
+    Daemons generally have no controlling terminal and no standard input/output devices.
+    Daemons sometimes provide better security control.
+
+When using SysVinit, scripts in the /etc/init.d directory start various system daemons. These scripts invoke commands as arguments to a shell function named daemon, defined in the /etc/init.d/functions file.
+
+3.14: Creating Processes in a Command Shell:-
+
+What happens when a user executes a command in a command shell interpreter, such as bash?
+
+    A new process is created (forked from the user's login shell).
+    A wait system call puts the parent shell process to sleep.
+    The command is loaded onto the child process's space via the exec system call. In other words, the code for the command replaces the bash program in the child process's memory space.
+    The command completes executing, and the child process dies via the exit system call.
+    The parent shell is re-awakened by the death of the child process and proceeds to issue a new shell prompt. The parent shell then waits for the next command request from the user, at which time the cycle will be repeated.
+
+If a command is issued for background processing (by adding an ampersand -&- at the end of the command line), the parent shell skips the wait request and is free to issue a new shell prompt immediately, allowing the background process to execute in parallel. Otherwise, for foreground requests, the shell waits until the child process has completed or is stopped via a signal.
+
+Some shell commands (such as echo and kill) are built into the shell itself, and do not involve loading of program files. For these commands, no fork or exec are issued for the execution.
+
+3.15: Kernel-Created Processes:-
+
+Not all processes are created, or forked from user parents. The Linux kernel directly creates two kinds of processes on its own initiative. These are:
+
+    Internal kernel processes:
+    These take care of maintenance work, such as making sure buffers get flushed out to disk, that the load on different CPUs is balanced evenly, that device drivers handle work that has been queued up for them to do, etc. These processes often run as long as the system is running, sleeping except when they have something to do. 
+    External user processes
+    These are processes which run in user space like normal applications but which the kernel started. There are very few of these and they are usually short lived.
+
+It is easy to see which processes are of this nature; when you run a command such as
+
+$ ps -elf
+
+to list all processes on the system while showing the parent process IDs, they will all have  PPID = 2, which refers to kthreadd, the internal kernel thread whose job is to create such processes, and their names will be encapsulated in square brackets, such as [ksoftirqd/0].
+
+3.16: Process Creating and Forking:-
+
+An average Linux system is always creating new processes. This is often called forking; the original parent process keeps running while the new child process starts.
+
+When most computers had only single processors, they were usually configured so the parent would initially pause while the child started to run; there is a UNIX expression:  "Children come first."  However, with modern multi-CPU systems, both will tend to run simultaneously on different CPUs.
+
+Often rather than just a fork, one follows it with an exec, where the parent process terminates and the child process inherits the process ID of the parent. The term fork and exec is used so often, people think of it sometimes as one word.
+
+Older UNIX systems often used a program called spawn, which is similar in many ways to fork and exec, but differs in details. It is not part of the POSIX standard, and is not a normal part of Linux.
+
+To see how new processes may start, consider a web server that handles many clients. It may launch a new process every time a new connection is made with a client. On the other hand, it may simply start only a new thread as part of the same process; in Linux, there really isn't much difference on a technical level between creating a full process or just a new thread, as each mechanism takes about the same time and uses roughly the same amount of resources.
+
+As another example, the sshd daemon is started when the init process executes the sshd init script, which then is responsible for launching the sshd daemon. This daemon process listens for ssh requests from remote users.
+
+When a request is received, sshd creates a new copy of itself to service the request. Each remote user gets their own copy of the sshd daemon running to service their remote login. The sshd process will start the login program to validate the remote user. If the authentication succeeds, the login process will fork off a shell (say bash) to interpret the user commands, and so on. 
+
+3.17.a.: Using nice to Set Priorities:-
+
+Process priority can be controlled through the nice and renice commands. Since the early days of UNIX, the idea has been that a nice process lowers its priority to yield to others. Thus, the higher the niceness is, the lower the priority.
+
+The niceness value can range from -20 (the highest priority) to +19 (the lowest priority). The normal way to run nice is as in:
+
+$ nice -n 5 command [ARGS]
+
+which would increase the niceness by 5. This is equivalent to doing:
+
+$ nice -5 command [ARGS] 
+
+3.17.b.: Using nice to Set Priorities:-
+
+If you do not give a nice value, the default is to increase the niceness by 10. If you give no arguments at all, you report your current niceness. So, for example:
+
+$ nice
+0
+$ nice cat &
+[1] 24908
+$ ps -l
+F S UID   PID  PPID C PRI NI ADDR SZ WCHAN  TTY          TIME CMD
+0 S 500  4670  4603 0 80   0 - 16618 wait   pts/0    00:00:00 bash
+0 S 500 24855  4670 0 80   0 - 16560 wait   pts/0    00:00:00 bash
+0 T 500 24908 24855 0 90  10 - 14738 signal pts/0    00:00:00 cat
+0 R 500 24909 24855 0 80   0 - 15887 -      pts/0    00:00:00 ps
+
+Note that increasing the niceness of a process does not mean it won't run; it may even get all the CPU time if there is nothing else with whitch to compete.
+
+If you supply such a large increment or decrement that you try to step outside the -20 to 19 range, the increment value will be truncated.
+
+3.18: Modifying the Nice Value:-
+
+By default, only a superuser can decrease the niceness; i.e., increase the priority. However, it is possible to give normal users the ability to decrease their niceness within a predetermined range, by editing /etc/security/limits.conf.
+
+To change the niceness of an already running process, it is easy to use the renice command, as in:
+
+$ renice +3 13848
+
+which will increase niceness by 3 of the process with pid  =  13848. More than one process can be done at the same time and there are some other options, so see man renice. 
+
+See 'man nice'
+
+3.20.: Static and Shared Libraries:-
+
+Programs are built using libraries of code, developed for multiple purposes and used and reused in many contexts.
+
+There are two types of libraries:
+
+    Static
+    The code for the library functions is inserted in the program at compile time, and does not change thereafter, even if the library is updated.
+    Shared
+    The code for the library functions is loaded into the program at run time, and if the library is changed later, the running program runs with the new library modifications.
+
+Using shared libraries is more efficient because they can be used by many applications at once; memory usage, executable sizes, and application load time are reduced.
+
+Shared Libraries are also called DLLs (Dynamic Link Library).
+
+3.21.: Shared Libraries Versions:-
+
+Shared libraries need to be carefully versioned. If there is a significant change to the library and a program is not equipped to handle it, serious problems can be expected. This is sometimes known as DLL Hell.
+
+Therefore, programs can request a specific major library version rather than the latest one on the system. However, usually the program will always use the latest minor version available.
+
+Some application providers will use static libraries bundled into the program to avoid these problems. However, if there are improvements or bugs and security holes fixed in the libraries, they may not make it into the applications in a timely fashion.
+
+Shared libraries have the extension .so. Typically, the full name is something like libc.so.N  where N is a major version number.
+
+Under Linux, shared libraries are carefully versioned. For example:
+
+c7:/usr/lib64>ls -lF libgdbm.so*
+
+lrwxrwxrwx 1 root root 16 Apr 9 2015 libgdbm.so -> libgdbm.so.4.0.0*
+
+lrwxrwxrwx 1 root root 16 Apr 9 2015 libgdbm.so.4 -> libgdbm.so.4.0.0*
+
+-rwxr-xr-x 1 root root 36720 Jan 24 2014 libgdbm.so.4.0.0*
+
+c7:/usr/lib64>
+
+so a program that just asks for libgdm  gets  libgdm.so  and the others for specific major and minor versions.
+
+3.22.a.: Finding Shared Libraries:-
+
+A program which uses shared libraries has to be able to find them at runtime.
+
+ldd can be used to ascertain what shared libraries an executable requires. It shows the soname of the library and what file it actually points to.
+
+3.22.b.: Finding Shared Libraries:-
+
+ldconfig is generally run at boot time (but can be run anytime), and uses the file /etc/ld.so.conf, which lists the directories that will be searched for shared libraries. ldconfig must be run as root and shared libraries should only be stored in system directories when they are stable and useful.
+
+Besides searching the data base built up by ldconfig, the linker will first search any directories specified in the environment variable LD_LIBRARY_PATH, a colon separated list of directories, as in the PATH variable. So, you can do:
+
+$ LD_LIBRARY_PATH=$HOME/foo/lib
+
+$ foo [args]
+
+or
+
+$ LD_LIBRARY_PATH=$HOME/foo/lib foo [args]
+
+4.3: What Are Signals?
+
+Signals are one of the oldest methods of Inter-Process Communication (IPC) and are used to notify processes about asynchronous events (or exceptions).
+
+By asynchronous, we mean the signal-receiving process may:
+
+    Not expect the event to occur.
+    Expect the event, but not know when it is most likely to occur.
+
+For example, if a user decides to terminate a running program, it could send a signal to the process through the kernel to interrupt and kill the process.
+
+There are two paths by which signals are sent to a process:
+
+    From the kernel to a user process, as a result of an exception or programming error.
+    From a user process (using a system call) to the kernel which will then send it to a user process. The process sending the signal can actually be the same as the one receiving it.
+
+Signals can only be sent between processes owned by the same user or from a process owned by the superuser to any process.
+
+When a process receives a signal, what it does will depend on the way the program is written. It can take specific actions, coded into the program, to handle the signal or it can just respond according to system defaults. Two signals (SIGKILL and SIGSTOP) cannot be handled and will always terminate the program.
+
+
+
+4.4.a.: Types of Signals:-
+
+There are a number of different types of signals, and the particular signal which is dispatched indicates what type of event (or exception) occurred. Generally, signals are used to handle two things:
+
+    Exceptions detected by hardware (such as an illegal memory reference)
+    Exceptions generated by the environment (such as the premature death of a process from the user's terminal).
+
+To see a list of the signals in Linux, along with their numbers, do kill -l, as reflected in this screenshot.
+
+The signals from SIGRTMIN on are termed real-time signals and are a relatively recent addition. They have no predefined purpose, and differ in some important ways from normal signals; they can be queued up and are handled in a FIFO (First In First Out) order.
+
+The meaning attached to the signal type indicates what event caused the signal to be sent. While users can explicitly send any signal type to one of their processes, the meaning attached may no longer be implied by the signal number or type, and can be used in any way that the process desires.
+
+Typing man 7 signal will give further documentation.
+
+Signal                          Value   DefaultAction           POSIX?          Meaning
+SIGHUP                          1       Terminate               Yes             Hangup  detected on controlling terminal or death of controlling  process.
+SIGINT                          2       Terminate               Yes             Interrupt  from   keyboard.
+SIGQUIT                         3       Cordump                 Yes             Quit from keyboard.
+SIGILL                          4       Coredump                Yes             Illegal Instruction.
+SIGTRAP                         5       Coredump                No              Trace/breakpoint trap for debugging.
+SIGABRT
+SIGIOT                          6       Coredump                Yes             Abnormal termination.
+SIGBUS                          7       Coredump                Yes             Bus error.
+SIGFPE                          8       Coredump                Yes             Floating point exception.
+SIGKILL                         9       Terminate               Yes             Kill signal (can not be caught or ignored).
+SIGUSR1                         10      Terminate               Yes             User-definedsignal 1.
+SIGSEGV                         11      Coredump                Yes             Invalid memory reference.
+SIGUSR2                         12      Terminate               Yes             User-defined signal 2.
+SIGPIPE                         13      Terminate               Yes             Broken pipe: write to pipe with no readers.
+SIGALRM                         14      Terminate               Yes             Timer  signal from alarm.
+SIGTERM                         15      Terminate               Yes             Process termination.
+SIGSTKFLT                       16      Terminate               No              Stack fault on math co-processor.
+SIGCHLD                         17      Ignore                  Yes             Child stopped or terminated.
+SIGCONT                         18      Continue                Yes             Continue if stopped.
+SIGSTOP                         19      Stop                    Yes             Stop process (can not be caught or ignored).
+SIGTSTP                         20      Stop                    Yes             Stop types at tty.
+SIGTTIN                         21      Stop                    Yes             Background process requires tty input.
+SIGTTOU                         22      Stop                    Yes             Background process requires tty output.
+SIGURG                          23      Ignore                  No              Urgent condition on socket (4.2 BSD).
+SIGXCPU                         24      Coredump                Yes             CPU time limit exceeded (4.2 BSD).
+SIGXFSZ                         25      Coredump                Yes             File size limit exceeded (4.2 BSD).
+SIGVTALRM                       26      Terminate               No              Virtual alarm clock (4.2 BSD).
+SIGPROF                         27      Terminate               No              Profile alarm clock (4.2 BSD).
+SIGWINCH                        28      Ignore                  No              Window resize signal (4.3 BSD, Sun).
+SIGIO
+SIGPOLL                         29      Terminate               No              I/O now possible (4.2 BSD) (System V).
+SIGPWR                          30      Terminate               No              Power Failure (System V).
+SIGSYS
+SIGUNUSED                       31      Terminate               No              Bad System Called. Unused signal.
+
+4.5: kill:-
+
+A process cannot send a signal directly to another process; it must ask the kernel to send the signal by executing a system call. Users (including the superuser) can send signals to other processes from the command line or scripts by using kill as in:
+
+$ kill 1991
+
+$ kill -9 1991
+
+$ kill -SIGKILL 1991
+
+where we are sending a signal to the process with PID = 1991. If a signal number is not given (as in the first example), the default is to send SIGTERM (15), a terminate signal that can be handled; the program can take elusive action or clean up after itself, rather than just die immediately. If this signal is ignored, the user can usually send a SIGKILL (9), which cannot be ignored, to terminate with extreme prejudice.
+
+The name kill is really a bad name, a misnomer that survives for historical reasons. Although it is often used to kill (terminate) processes, the command's real function is to send any and all signals to processes, even totally benign informative ones.
+
+4.6.: killall and pkill:-
+
+killall kills all processes with a given name, assuming the user has sufficient privilege. It uses a command name rather than a process ID, and can be done as in:
+
+$ killall bash
+
+$ killall -9 bash
+
+$ killall -SIGKILL bash
+
+pkill sends a signal to a process using selection criteria:
+
+$ pkill [-signal] [options] [pattern]
+
+For example:
+
+$ pkill -u libby foobar
+
+will kill all of libby's processes with a name of foobar.
+
+Another example:
+
+$ pkill -HUP rsyslogd
+
+makes rsyslog re-read its configuration file.
+
+5.1. Package Management Systems
+
+- APT: Advanced Packageing Tool
+- RPM: Redhat Package Management
+
+- Levels:
+    - Low level:
+        - rpm
+        - dpkg
+    - Higher level:
+        - yum, dnf, zypper
+        - apt-get apt
+
+5.3. Software Packaging Concepts:
+
+- Allows for automating installations, upgrading, configuring and removing software packages in a known predictable, consistent manner.
+- These systems:
+    - gather and compress associated software files into single package (archive), which may require one or more packages to be installed first
+    - allow for easy software installation or removal,
+    - can verify file integrity via an internal database
+    - can authenticate the origin of the packages.
+    - facilitate upgrades
+    - group packages by logical features
+    - manage dependencies between packages
+
+5.4. Why Use Packages:
+
+Software package management systems are widely seen as one of the biggest advancements Linux brought to enterprise IT environments. By keeping track of files and metadata in an automated, predictable and reliable way, system administrators can use package management systems to make their installation processes scale to thousands of systems without requiring manual work on each individual system. Features include:
+
+    Automation:  No need for manual installs and upgrades.
+    Scalability:  Install packages on one system, or 10,000 systems.
+    Repeatability and predictability.
+    Security and auditing.
+
+5.5. Package Types
+
+Packages come in several different types:
+
+    Binary packages contain files ready for deployment, including executable files and libraries. These are architecture-dependent and must be compiled for each type of machine.
+    Source packages are used to generate binary packages; one should always be able to rebuild a binary package (for example, by using rpmbuild --rebuild on RPM-based systems) from the source package. One source package can be used for multiple architectures.
+    Architecture-independent packages contain files and scripts that run under script interpreters, as well as documentation and configuration files.
+    Meta-packages are essentially groups of associated packages that collect everything needed to install a relatively large subsystem, such as a desktop environment, or an office suite, etc.
+
+Binary packages are the ones that system administrators have to deal with most of the time.
+
+On 64-bit systems that can run 32-bit programs, one may have two binary packages installed for a given program, perhaps one with x86_64 or amd64 in its name, and the other with i386 or i686 in its name.
+
+Source packages can be helpful in keeping track of changes and source code used to come up with binary packages. They are usually not installed on a system by default, but can always be retrieved from the vendor. Packages come in several different types:
+
+    Binary packages contain files ready for deployment, including executable files and libraries. These are architecture-dependent and must be compiled for each type of machine.
+    Source packages are used to generate binary packages; one should always be able to rebuild a binary package (for example, by using rpmbuild --rebuild on RPM-based systems) from the source package. One source package can be used for multiple architectures.
+    Architecture-independent packages contain files and scripts that run under script interpreters, as well as documentation and configuration files.
+    Meta-packages are essentially groups of associated packages that collect everything needed to install a relatively large subsystem, such as a desktop environment, or an office suite, etc.
+
+Binary packages are the ones that system administrators have to deal with most of the time.
+
+On 64-bit systems that can run 32-bit programs, one may have two binary packages installed for a given program, perhaps one with x86_64 or amd64 in its name, and the other with i386 or i686 in its name.
+
+Source packages can be helpful in keeping track of changes and source code used to come up with binary packages. They are usually not installed on a system by default, but can always be retrieved from the vendor. Packages come in several different types:
+
+    Binary packages contain files ready for deployment, including executable files and libraries. These are architecture-dependent and must be compiled for each type of machine.
+    Source packages are used to generate binary packages; one should always be able to rebuild a binary package (for example, by using rpmbuild --rebuild on RPM-based systems) from the source package. One source package can be used for multiple architectures.
+    Architecture-independent packages contain files and scripts that run under script interpreters, as well as documentation and configuration files.
+    Meta-packages are essentially groups of associated packages that collect everything needed to install a relatively large subsystem, such as a desktop environment, or an office suite, etc.
+
+Binary packages are the ones that system administrators have to deal with most of the time.
+
+On 64-bit systems that can run 32-bit programs, one may have two binary packages installed for a given program, perhaps one with x86_64 or amd64 in its name, and the other with i386 or i686 in its name.
+
+Source packages can be helpful in keeping track of changes and source code used to come up with binary packages. They are usually not installed on a system by default, but can always be retrieved from the vendor. Packages come in several different types:
+
+    Binary packages contain files ready for deployment, including executable files and libraries. These are architecture-dependent and must be compiled for each type of machine.
+    Source packages are used to generate binary packages; one should always be able to rebuild a binary package (for example, by using rpmbuild --rebuild on RPM-based systems) from the source package. One source package can be used for multiple architectures.
+    Architecture-independent packages contain files and scripts that run under script interpreters, as well as documentation and configuration files.
+    Meta-packages are essentially groups of associated packages that collect everything needed to install a relatively large subsystem, such as a desktop environment, or an office suite, etc.
+
+Binary packages are the ones that system administrators have to deal with most of the time.
+
+On 64-bit systems that can run 32-bit programs, one may have two binary packages installed for a given program, perhaps one with x86_64 or amd64 in its name, and the other with i386 or i686 in its name.
+
+Source packages can be helpful in keeping track of changes and source code used to come up with binary packages. They are usually not installed on a system by default, but can always be retrieved from the vendor. Packages come in several different types:
+
+    Binary packages contain files ready for deployment, including executable files and libraries. These are architecture-dependent and must be compiled for each type of machine.
+    Source packages are used to generate binary packages; one should always be able to rebuild a binary package (for example, by using rpmbuild --rebuild on RPM-based systems) from the source package. One source package can be used for multiple architectures.
+    Architecture-independent packages contain files and scripts that run under script interpreters, as well as documentation and configuration files.
+    Meta-packages are essentially groups of associated packages that collect everything needed to install a relatively large subsystem, such as a desktop environment, or an office suite, etc.
+
+Binary packages are the ones that system administrators have to deal with most of the time.
+
+On 64-bit systems that can run 32-bit programs, one may have two binary packages installed for a given program, perhaps one with x86_64 or amd64 in its name, and the other with i386 or i686 in its name.
+
+Source packages can be helpful in keeping track of changes and source code used to come up with binary packages. They are usually not installed on a system by default, but can always be retrieved from the vendor. ackages come in several different types:
+
+    Binary packages contain files ready for deployment, including executable files and libraries. These are architecture-dependent and must be compiled for each type of machine.
+    Source packages are used to generate binary packages; one should always be able to rebuild a binary package (for example, by using rpmbuild --rebuild on RPM-based systems) from the source package. One source package can be used for multiple architectures.
+    Architecture-independent packages contain files and scripts that run under script interpreters, as well as documentation and configuration files.
+    Meta-packages are essentially groups of associated packages that collect everything needed to install a relatively large subsystem, such as a desktop environment, or an office suite, etc.
+
+Binary packages are the ones that system administrators have to deal with most of the time.
+
+On 64-bit systems that can run 32-bit programs, one may have two binary packages installed for a given program, perhaps one with x86_64 or amd64 in its name, and the other with i386 or i686 in its name.
+
+Source packages can be helpful in keeping track of changes and source code used to come up with binary packages. They are usually not installed on a system by default, but can always be retrieved from the vendor. Packages come in several different types:
+
+    Binary packages contain files ready for deployment, including executable files and libraries. These are architecture-dependent and must be compiled for each type of machine.
+    Source packages are used to generate binary packages; one should always be able to rebuild a binary package (for example, by using rpmbuild --rebuild on RPM-based systems) from the source package. One source package can be used for multiple architectures.
+    Architecture-independent packages contain files and scripts that run under script interpreters, as well as documentation and configuration files.
+    Meta-packages are essentially groups of associated packages that collect everything needed to install a relatively large subsystem, such as a desktop environment, or an office suite, etc.
+
+Binary packages are the ones that system administrators have to deal with most of the time.
+
+On 64-bit systems that can run 32-bit programs, one may have two binary packages installed for a given program, perhaps one with x86_64 or amd64 in its name, and the other with i386 or i686 in its name.
+
+Source packages can be helpful in keeping track of changes and source code used to come up with binary packages. They are usually not installed on a system by default, but can always be retrieved from the vendor. Packages come in several different types:
+
+    Binary packages contain files ready for deployment, including executable files and libraries. These are architecture-dependent and must be compiled for each type of machine.
+    Source packages are used to generate binary packages; one should always be able to rebuild a binary package (for example, by using rpmbuild --rebuild on RPM-based systems) from the source package. One source package can be used for multiple architectures.
+    Architecture-independent packages contain files and scripts that run under script interpreters, as well as documentation and configuration files.
+    Meta-packages are essentially groups of associated packages that collect everything needed to install a relatively large subsystem, such as a desktop environment, or an office suite, etc.
+
+Binary packages are the ones that system administrators have to deal with most of the time.
+
+On 64-bit systems that can run 32-bit programs, one may have two binary packages installed for a given program, perhaps one with x86_64 or amd64 in its name, and the other with i386 or i686 in its name.
+
+Source packages can be helpful in keeping track of changes and source code used to come up with binary packages. They are usually not installed on a system by default, but can always be retrieved from the vendor. Packages come in several different types:
+
+    Binary packages contain files ready for deployment, including executable files and libraries. These are architecture-dependent and must be compiled for each type of machine.
+    Source packages are used to generate binary packages; one should always be able to rebuild a binary package (for example, by using rpmbuild --rebuild on RPM-based systems) from the source package. One source package can be used for multiple architectures.
+    Architecture-independent packages contain files and scripts that run under script interpreters, as well as documentation and configuration files.
+    Meta-packages are essentially groups of associated packages that collect everything needed to install a relatively large subsystem, such as a desktop environment, or an office suite, etc.
+
+Binary packages are the ones that system administrators have to deal with most of the time.
+
+On 64-bit systems that can run 32-bit programs, one may have two binary packages installed for a given program, perhaps one with x86_64 or amd64 in its name, and the other with i386 or i686 in its name.
+
+Source packages can be helpful in keeping track of changes and source code used to come up with binary packages. They are usually not installed on a system by default, but can always be retrieved from the vendor. Packages come in several different types:
+
+    Binary packages contain files ready for deployment, including executable files and libraries. These are architecture-dependent and must be compiled for each type of machine.
+    Source packages are used to generate binary packages; one should always be able to rebuild a binary package (for example, by using rpmbuild --rebuild on RPM-based systems) from the source package. One source package can be used for multiple architectures.
+    Architecture-independent packages contain files and scripts that run under script interpreters, as well as documentation and configuration files.
+    Meta-packages are essentially groups of associated packages that collect everything needed to install a relatively large subsystem, such as a desktop environment, or an office suite, etc.
+
+Binary packages are the ones that system administrators have to deal with most of the time.
+
+On 64-bit systems that can run 32-bit programs, one may have two binary packages installed for a given program, perhaps one with x86_64 or amd64 in its name, and the other with i386 or i686 in its name.
+
+Source packages can be helpful in keeping track of changes and source code used to come up with binary packages. They are usually not installed on a system by default, but can always be retrieved from the vendor. 
+
+
+5.6. Available Package Management Systems:
+
+There are two very common package management systems:
+
+    RPM (Red Hat Package Manager)
+    This system is used by all Red Hat-derived distributions, such as Red Hat Enterprise Linux, CentOS, Scientific Linux and CentOS, as well as by SUSE and its related community openSUSE distribution.
+    dpkg (Debian Package)
+    This system is used by all Debian-derived distributions ,including Debian, Ubuntu and Linux Mint.
+
+There are other package management systems, such as portage/emerge used by Gentoo, pacman used by Arch, and specialized ones used by Embedded Linux systems and Android.
+
+Another ancient system is just to supply packages as tarballs without any real management or clean removal strategies; this approach still marks Slackware, one of the oldest Linux distributions.
+
+But most of the time, it is either RPM or dpkg and these are the only ones we will consider in this course.
+
+
+5.7. Packaging Tool Levels and Varieties
+
+There are two levels to packaging systems:
+
+    Low Level Utility
+    This simply installs or removes a single package, or a list of packages, each one of which is individually and specifically named. Dependencies are not fully handled, only warned about:
+    - If another package needs to be installed, first installation will fail.
+    - If the package is needed by another package, removal will fail.
+    The rpm and dpkg utilities play this role for the packaging systems that use them.
+    High Level Utility
+    This solves the dependency problems:
+    - If another package or group of packages needs to be installed before software can be installed, such needs will be satisfied.
+    - If removing a package interferes with another installed package, the administrator will be given the choice of either aborting, or removing all affected software.
+    The yum, dnf, and zypper utilities (and more recently, PackageKit) take care of the dependency resolution for rpm systems, and apt-get and apt-cache and other utilities take care of it for dpkg systems.
+
+In this course, we will only discuss the command line interface to the packaging systems; while the graphical frontends used by each Linux distribution can be useful, we would like to be less tied to any one interface and have more flexibility. 
+
+5.8. Package Soures
+
+Every distribution has one or more package repositories where system utilities go to obtain software and to update with new versions. It is the job of the distribution to make sure all packages in the repositories play well with each other.
+
+There are always other, external repositories, which can be added to the standard distribution-supported list. Sometimes, these are closely associated with the distribution, and only rarely produce significant problems; an example would be the EPEL (Extra Packages for Enterprise Linux) set of version-dependent repositories, which fit well with RHEL since their source is Fedora and the maintainers are close to Red Hat.
+
+However, some external repositories are not very well constructed or maintained. For example, when a package is updated in the main repository, dependent packages may not be updated in the external one, which can lead to one form of dependency hell. 
+
+5.11. Available Source Control Systems
+
+There is no shortage of available products, both proprietary and open; a brief list of products released under a GPL license includes:
+
+ 
+Product 	URL
+==========================
+RCS	        http://www.gnu.org/software/rcs
+CVS	        http://ximbiot.com/cvs/wiki 
+Subversion	http://subversion.tigris.org 
+git	        http://www.kernel.org/pub/software/scm/git
+GNU Arch	http://www.gnu.org/software/gnu-arch 
+Monotone	http://www.monotone.ca
+Mercurial	http://mercurial-scm.org/
+PRCS	    http://prcs.sourceforge.net
+
+ 
+
+We will focus only on git, a widely used product which arose from the Linux kernel development community. git has risen to a dominant position in use for open source projects in a remarkably short time, and is often used even in closed source environments.
+
+
+5.12 The Linux Kernel and the Birth of git
+
+The Linux kernel development system has special needs in that it is widely distributed throughout the world, with literally thousands of developers involved. Furthermore it is all done very publicly, under the GPL license.
+
+For a long time, there was no real source revision control system. Then, major kernel developers went over to the use of BitKeeper (see http://www.bitkeeper.com), a commercial project which granted a restricted use license for Linux kernel development.
+
+However, in a very public dispute over licensing restrictions in the spring of 2005, the free use of BitKeeper became unavailable for Linux kernel development.
+
+The response was the development of git, whose original author was Linus Torvalds. The source code for git can be obtained from http://www.kernel.org/pub/software/scm/git/, and full documentation can be found at http://www.kernel.org/pub/software/scm/git/docs/.
+
+5.13. How git works
+
+Technically, git is not a source control management system in the usual sense, and the basic units it works with are not files. It has two important data structures: an object database and a directory cache.
+
+The object database contains objects of three varieties:
+
+    Blobs: Chunks of binary data containing file contents
+    Trees: Sets of blobs including file names and attributes, giving the directory structure
+    Commits: Changesets describing tree snapshots.
+
+The directory cache captures the state of the directory tree.
+
+By liberating the controls system from a file-by-file-based system, one is better able to handle changesets which involve many files.
+
+git is always under rapid development and graphical interfaces to it are also under speedy construction. For example, see http://www.kernel.org/git/. One can easily browse particular changes, as well as source trees.
+
+Sites such as http://www.github.com now host literally millions of git repositories, both public and private. There are a host of easy-to-find articles, books, online tutorials, etc., on how to profitably use git.
+
+
+6.2. Laerning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Understand how the RPM system is organized and what major operations the rpm program can accomplish.
+    Explain the naming conventions used for both binary and source rpm files.
+    Know how to query, verify, install, uninstall, upgrade and freshen packages.
+    Grasp why new kernels should be installed rather than upgraded.
+    Know how to use rpm2cpio to copy packaged files into a cpio archive, as well as to extract the files without installing them.
+
+
+6.3. RPM
+
+RPM (the Red Hat Package Manager) was developed (unsurprisingly) by Red Hat. All files related to a specific task are packaged into a single rpm file, which also contains information about how and where to install and uninstall the files. New versions of software lead to new rpm files which are then used for updating.
+
+rpm files also contain dependency information. Note that unless given a specific URL to draw from, rpm in itself does not retrieve packages over the network and installs only from the local machine using absolute or relative paths.
+
+rpm files are usually distribution-dependent; installing a package on a different distribution than it was created for can be difficult, if not impossible. 
+
+
+6.4. Advantages of Using RPM
+
+For system administrators, RPM makes it easy to:
+
+    Determine what package (if any) any file on the system is part of.
+    Determine what version is installed.
+    Install and uninstall (erase) packages without leaving debris behind.
+    Verify that a package was installed correctly; this is useful for both troubleshooting and system auditing.
+    Distinguish documentation files from the rest of the package and optionally decide not to install them to save space.
+    Use ftp or HTTP to install packages over the Internet.
+
+For developers RPM offers advantages as well:
+
+    Software often is made available on more than one operating system. With RPM the original full and unmodified source is used as the basis, but a developer can separate out the changes needed to build on Linux.
+    More than one architecture can be built using only one source package.
+
+6.5. Package File Names
+
+RPM package file names are based on fields that represent specific information, as documented in the RPM standard  (http://www.rpm.org/)
+
+    - The standard naming format for a binary package is:
+    <name>-<version>-<release>.<distro>.<architecture>.rpm
+    sed-4.2.1-10.el6.x86_64.rpm
+    - The standard naming format for a source package is:
+    <name>-<version>-<release>.<distro>.src.rpm
+    sed-4.2.1-10.el6.src.rpm
+
+Note that the distro field often actually specifies the repository that the package came from, as a given installation may use a number of different package repositories as we shall discuss when we discuss yum and zypper which work above RPM.
+
+6.6. Database Directory
+
+/var/lib/rpm is the default system directory which holds RPM database files in the form of  Berkeley DB hash files. The database files should not be manually modified; updates should be done only through use of the rpm program.
+
+An alternative database directory can be specified with the --dbpath option to the rpm program. One might do this, for example, to examine an RPM database copied from another system.
+
+You can use the --rebuilddb option to rebuild the database indices from the installed package headers; this is more of a repair, and not a rebuild from scratch.
+
+6.7. Helper Programs and Modifying Settings
+
+Helper programs and scripts used by RPM reside in /usr/lib/rpm. There are quite a few; for example on a RHEL 7 system: 
+
+$ ls /usr/lib/rpm | wc -l
+
+73
+
+where wc is reporting the number of lines of output.
+
+You can create an rpmrc file to specify default settings for rpm. By default, rpm looks for:
+
+    /usr/lib/rpm/rpmrc
+    /etc/rpmrc
+    ~/.rpmrc
+
+in the above order. Note all these files are read; rpm does not stop as soon as it finds that one exists. An alternative rpmrc file can be specified using the --rcfile option.
+
+6.8.a. Queries I
+
+All rpm inquiries include the -q option, which can be combined with numerous sub-options, as in:
+
+    Which version of a package is installed?
+    $ rpm -q bash
+    Which package did this file come from?
+    $ rpm -qf /bin/bash
+    What files were installed by this package?
+    $ rpm -ql bash
+    Show information about this package.
+    $ rpm -qi bash
+    Show information about this package from the package file, not the package database.
+    $ rpm -qip foo-1.0.0-1.noarch.rpm
+    List all installed packages on this system.
+    $ rpm -qa 
+
+6.8.b. Queries II
+
+A couple of other useful options are --requires and --whatprovides:
+
+    Return a list of prerequisites for a package:
+    $ rpm -qp --requires foo-1.0.0-1.noarch.rpm
+    Show what installed package provides a particular requisite package:
+    $ rpm -q --whatprovides libc.so.6 
+
+6.9.a. Verifying Pacakages I
+
+The -V option to rpm allows you to verify whether the files from a particular package are consistent with the system's RPM database. To verify all packages installed on the system:
+
+$ rpm -Va
+missing   /var/run/pluto
+....
+S.5....T. c /etc/hba.conf
+S.5....T. /usr/share/applications/defaults.list
+....L.... c /etc/pam.d/fingerprint-auth
+....L.... c /etc/pam.d/password-auth
+....
+.M....... /var/lib/nfs/rpc_pipefs
+....
+.....UG.. /usr/local/bin
+.....UG.. /usr/local/etc
+
+showing just a few items. (Note this command can take a long time, as it examines all files owned by all packages.)
+
+Output is generated only when there is a problem. 
+
+
+6.9.b. Verifying Packages II
+
+Each of the characters displayed on the previous page denotes the result of a comparison of attribute(s) of the file to the value of
+those attribute(s) recorded in the database. A single . (period) means the test passed, while a single ? (question mark) indicates the test could not be performed (e.g. file permissions prevent reading). Otherwise, the character denotes failure of the corresponding verification test:
+
+    S: file size differs
+    M: file permissions and/or type differs
+    5: MD5 checksum differs
+    D: device major/minor number mismatch
+    L: symbolic link path mismatch
+    U: user ownership differs
+    G: group ownership differs
+    T: modification time differs
+    P: capabilities differ
+
+Note that many of these verification tests do not indicate a problem. For example, many configuration files are modified as the system evolves.
+
+6.9.c. Verifying Packages III
+
+If you specify one or more package names as an argument, you examine only that package as in the following examples:
+
+    No output when everything is OK:
+    $ rpm -V bash
+    Output indicating that a file's size, checksum, and modification time have changed:
+    $ rpm -V talk
+    S.5....T in.ntalkd.8
+    Output indicating that a file is missing:
+    $ rpm -V talk
+    missing /usr/bin/talk
+
+6.10. Installing Packages
+
+Installing a package is as simple as:
+
+$ sudo rpm -ivh foo-1.0.0-1.noarch.rpm
+
+where the -i is for install, -v is for verbose, and -h just means print out hash marks while doing to show progress.
+
+RPM performs a number of tasks when installing a package:
+
+    Performs dependency checks:
+    Necessary because some packages will not operate properly unless one or more other packages are also installed.
+    Performs conflict checks:
+    Include attempts to install an already-installed package or to install an older version over a newer version.
+    Executes commands required before installation:
+    The developer building a package can specify that certain tasks be performed before or after the install.
+    Deals intelligently with configuration files:
+    When installing a configuration file, if the file exists and has been changed since the previous version of the package was installed, RPM saves the old version with the suffix .rpmsave. This allows you to integrate the changes you have made to the old configuration file into the new version of the file. This feature depends on properly created RPM packages.
+    Unpacks the files from packages and installs them with correct attributes:
+    In addition to installing files in the right place, RPM also sets attributes such as permissions, ownership, and modification (build) time.
+    Executes commands required after installation:
+    Performs any post-install tasks required for setup or initialization
+    Updates the system RPM database:
+    Every time RPM installs a package, it updates information in the system database. It uses this information when checking for conflicts.
+
+6.11.a. Uninstalling Packages I
+
+The -e option causes rpm to uninstall (erase) a package. Normally, rpm -e fails with an error message if the package you are attempting to uninstall is either not actually installed, or is required by other packages on the system. A successful uninstall produces no output.
+
+$ sudo rpm -e system-config-lvm
+
+package system-config-lvm is not installed
+
+
+6.11.b. Uninstalling Packages II
+
+You can use the --test option along with -e to determine whether the uninstall would succeed or fail, without actually doing the uninstall. If the operation would be successful, rpm prints no output. Add the -vv option to get more information.
+
+Remember the package argument for the erase is the package name, not the rpm file name.
+
+Important (but obvious) note: Never remove (erase/uninstall) the rpm package itself. The only way to fix this problem is to re-install the operating system, or by booting into a rescue environment.
+
+6.13. Upgrading Packages
+
+Upgrading replaces the original package (if installed) as in:
+
+$ sudo rpm -Uvh bash-4.2.45-5.el7_0.4.x86_64.rpm
+
+You can give a list of package names, not just one.
+
+When upgrading, the already installed package is removed after the newer version is installed. The one exception is the configuration files from the original installation, which are kept with a .rpmsave extension.
+
+If you use the -U option and the package is not already installed, it is simply installed and there is no error.
+
+The -i option is not designed for upgrades; attempting to install a new RPM package over an older one fails with error messages, because it tries to overwrite existing system files.
+
+However, different versions of the same package may be installed if each version of the package does not contain the same files: kernel packages and library packages from alternative architectures are typically the only packages that would be commonly installed multiple times.
+
+If you want to downgrade with rpm -U (that is, to replace the current version with an earlier version), you must add the --oldpackage option to the command line.
+
+6.14. Freshening Packages
+
+The command:
+
+$ sudo rpm -Fvh *.rpm
+
+will attempt to freshen all the packages in the current directory. The way this works is:
+
+    If an older version of a package is installed, it will be upgraded to the newer version in the directory.
+    If the version on the system is the same as the one in the directory, nothing happens.
+    If there is no version of a package installed, the package in the directory is ignored. 
+
+Freshening can be useful for applying a lot of patches (i.e., upgraded packages) at once.
+
+
+6.15. Upgrading the Kernel
+
+When you install a new kernel on your system, it requires a reboot (one of the few updates that do) to take effect. You should not do an upgrade (-U) of a kernel: an upgrade would remove the old currently running kernel.
+
+This in and of itself won't stop the system, but if, after a reboot, you have any problems, you will no longer be able to reboot into the old kernel, since it has been removed from the system. However, if you install (-i), both kernels coexist and you can choose to boot into either one; i.e., you can revert back to the old one if need be.
+
+To install a new kernel do:
+
+$ sudo rpm -ivh kernel-{version}.{arch}.rpm
+
+filling in the correct version and architecture names.
+
+When you do this, the GRUB configuration file will automatically be updated to include the new version; it will be the default choice at boot, unless you reconfigure the system to do something else.
+
+Once the new kernel version has been tested, you may remove the old version if you wish, though this is not necessary. Unless you are short on space, it is recommended that you keep one or more older kernels available.
+
+
+6.16. Using rpm2cpio
+
+Suppose you have a need to extract files from an rpm but do not want to actually install the package?
+
+The rpm2cpio program can be used to copy the files from an rpm to a cpio archive, and also extract the files if so desired.
+
+Create the cpio archive with:
+
+$ rpm2cpio foobar.rpm > foobar.cpio
+
+To list files in an rpm:
+
+$ rpm2cpio foobar.rpm | cpio -t
+
+but a better way is to do:
+
+$  rpm -qilp foobar.rpm
+
+To extract onto the system:
+
+$ rpm2cpio bash-4.2.45-5.el7_0.4.x86_64.rpm |  cpio -ivd bin/bash
+
+$ rpm2cpio foobar.rpm | cpio --extract --make-directories
+
+
+7.1. DPKG - Introduction
+
+The Debian Package Manager (DPKG) is used by all Debian-based distributions to control the installation, verification, upgrade, and removal of software on Linux systems. The low-level dpkg program can perform all these operations, either on just one package, or on a list of packages. Operations which would cause problems (such as removing a package that another package depends on, or installing a package when the system needs other software to be installed first) are blocked from completion.
+
+
+7.2. laerning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Discuss the DPKG packaging system and its uses.
+    Explain the naming conventions used for both binary and source deb files.
+    Know what source packages look like.
+    Use querying and verifying operations on packages.
+    Install, upgrade, and uninstall Debian packages.

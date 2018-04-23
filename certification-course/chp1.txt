@@ -23,9 +23,9 @@ OBJECTIVES:
                                                          Locates boot program in MBR(Master Boot Record)
                                                                                 |
                                                                                 V
-									                                            GRUB(GRand Unified Bootloader)
-											                                                          |
-							                                                                  V
+									                                 GRUB(GRand Unified Bootloader)
+											                                    |
+							                                                    V
                                                                              Kernel
                                                                                 |
                                                                           Hardware check
@@ -300,11 +300,11 @@ SYSTEMD(systemd)
 
      Runlevel    Target Units                          Description
      0           runlevel0.target, poweroff.target     Shut down and power off the system.
-     1           runlevel1.target, rescue.target       Set up a rescue shell.
-     2           runlevel2.target, multi-user.target   Set up a non-graphical multi-user system.
-     3           runlevel3.target, multi-user.target   Set up a non-graphical multi-user system.
-     4           runlevel4.target, multi-user.target   Set up a non-graphical multi-user system.
-     5           runlevel5.target, graphical.target    Set up a graphical multi-user system.
+     1           runlevel1.target, rescue.target       Set up a rescue shell, single user mode.
+     2           runlevel2.target, multi-user.target   Set up a non-graphical multi-user system - - Network, - GUI.
+     3           runlevel3.target, multi-user.target   Set up a non-graphical multi-user system - + Network, - GUI.
+     4           runlevel4.target, multi-user.target   Set up a non-graphical multi-user system - special purposes.
+     5           runlevel5.target, graphical.target    Set up a graphical multi-user system - + Network, + GUI.
      6           runlevel6.target, reboot.target       Shut down and reboot the system.
 
 NOTE:--------------------------------------------------------------
@@ -365,28 +365,29 @@ File systems are:
 
 File main directories present in FHS
 
-Directory       In FHS?         Purpose
-/		             Yes		         Primary directory of the entire file system hierarchy.
-/bin		         Yes		         Essential executable programs that must be available in 'single user mode'.
-/boot		         Yes		         Files neede to boot - kernel, initrd ot initramfs, images, boot configuration files and bootloader programs.
-/dev		         Yes		         Device nodes, used to interact with hardware devices.
-/etc		         Yes		         System wide configuration files.
-/home		         Yes		         User home directories including personal settings, files, etc.
-/lib		         Yes		         Libraries required bt executable binaries in .bin and /sbin.
-/lib64		       No		           64-bit libraries requires by executable binaries in /binand /sbin, for systems which can run both 32-bit and 64-bit programs.
-/media		      Yes		           Mount points for removable media such as CDs, DVDs, USB sticks etc.
-/mnt		        Yes		           Temporarily mounted filesystems.
-/opt		        Yes		           Optional application software packages.
-/proc		        Yes 		         Virtual pseudo-filesystem giving information about the system and processes running on it
+Directory            In FHS?             Purpose
+===============================================================================================================
+/		            Yes		         Primary directory of the entire file system hierarchy.
+/bin		        Yes		         Essential executable programs that must be available in 'single user mode'.
+/boot		        Yes		         Files neede to boot - kernel, initrd ot initramfs, images, boot configuration files and bootloader programs.
+/dev		        Yes		         Device nodes, used to interact with hardware devices.
+/etc		        Yes		         System wide configuration files.
+/home		        Yes		         User home directories including personal settings, files, etc.
+/lib		        Yes		         Libraries required bt executable binaries in .bin and /sbin.
+/lib64		        No		         64-bit libraries requires by executable binaries in /binand /sbin, for systems which can run both 32-bit and 64-bit programs.
+/media		        Yes		         Mount points for removable media such as CDs, DVDs, USB sticks etc.
+/mnt		        Yes		         Temporarily mounted filesystems.
+/opt		        Yes		         Optional application software packages.
+/proc		        Yes 		     Virtual pseudo-filesystem giving information about the system and processes running on it
 				                          Can be used to alter system parameters.
-/sys		         No		           Virtual psuedo-filesystem giving information about the system and processes running on it. Can be used to
+/sys		        No		         Virtual psuedo-filesystem giving information about the system and processes running on it. Can be used to
 				                          alter system parameters. Similar to a device tree and is part of the Unified Device Model.
-/root		       Yes		           Home directory of the root user.
-/sbin		       Yes		           Essential system binaries.
-/srv		       Yes		           Site-specific data served up by the system. Seldom used.
-/tmp		       Yes		           Temporary files; on many distributions lost across reboot and may be a ramdisk in memory.
-/usr		       Yes		           Multi-user applications, utilities and data; theoretically read-only.
-/var		       Yes		            Variable data that changes during system operation.
+/root		       Yes		         Home directory of the root user.
+/sbin		       Yes		         Essential system binaries.
+/srv		       Yes		         Site-specific data served up by the system. Seldom used.
+/tmp		       Yes		         Temporary files; on many distributions lost across reboot and may be a ramdisk in memory.
+/usr		       Yes		         Multi-user applications, utilities and data; theoretically read-only.
+/var		       Yes		         Variable data that changes during system operation.
 
 
  The three file associated with each 'bootable kernel' are:
@@ -548,7 +549,7 @@ Directory       In FHS?         Purpose
 		- Transient and temporary files
 
 
-		Directory       |         Purpose
+		Directory         |         Purpose
 		--------------------------------------------------------------------------------
 		/var/ftp	      | ftp server base
 		/var/lib	      | Persistent data modified by programs as they run.
@@ -556,7 +557,7 @@ Directory       In FHS?         Purpose
 		/var/log	      | Log files
 		/var/mail	      | User mailboxes
 		/var/run	      | Information about the running system since the last boot.
-		/var/spool	    | Tasks spooled or waiting to be processed, such as print queues.
+		/var/spool	      | Tasks spooled or waiting to be processed, such as print queues.
 		/var/tmp	      | Temporary files to be persisted across reboot, at times linked to /tmp
 		/var/www	      | Root for website hierarchies.
 
@@ -786,14 +787,14 @@ Objectives:
 								                  |
 								                  |
 								                  |
-						                   udevd
-						                   /  \
-						                  /    \
-						                 /      \
-						                /        \
-						               /          \
-	                        /		         \
-						       kernel module    Rules database
+						                        udevd
+						                        /  \
+						                       /    \
+						                      /      \
+						                     /        \
+						                    /          \
+	                                       /		    \
+						            kernel module    Rules database
 
 	Creating udev Rules
 		format: <match><op>value [, ...] <assignment><op>value [, ...]
@@ -860,31 +861,31 @@ Objectives:
 	                |    Platter                                                         Platter              |
 	                -------------------------------------------------------------------------------------------
 	                       / \                                                             / \
-	                        |								                                                |
-                          |								                                                |
-	                        |								                                                |
-	                        |								                                                |
-           --------------------------------------------------------------------------------------------
+	                        |								                                |
+                            |								                                |
+	                        |								                                |
+	                        |								                                |
+               --------------------------------------------------------------------------------------------
  		       |                   Cylinders(group of similar tracks on all platters )                    |
  		       --------------------------------------------------------------------------------------------
  		              /   \                                                           /    \
- 		             /     \							                                           /      \
+ 		             /     \							                             /      \
  		            /       \                                                       /        \
  		      circular  circular                                              circular   circular
 		       tracks    tracks                                                tracks     tracks
-		               |								                                               |
-		               |							                                                 |
-		               |								                                               |
+		               |								                               |
+		               |							                                   |
+		               |								                               |
 		       -------------------------------------------------------------------------------------------
 		       |                           Data Blocks (Sectors)                                         |
 		       -------------------------------------------------------------------------------------------
 		              / \							                                                 / \
-		               |                                                                |
-		               |                                                                |
-		               |                                                                |
+		               |                                                                              |
+		               |                                                                              |
+		               |                                                                              |
 		       -------------------------------------------------------------------------------------------
-          |                                 Read by Heads                                           |
-           -------------------------------------------------------------------------------------------
+               |                                 Read by Heads                                           |
+               -------------------------------------------------------------------------------------------
 
 
 	Partitioning:
@@ -899,20 +900,20 @@ Objectives:
 		-----------------------------------------------------------------
 		|                           Drives                              |
 		-----------------------------------------------------------------
-		              |			                  |			                  |
-		              |			                  |			                  |
-		              |			                  |			                  |
+		              |			         |			                  |
+		              |			         |			                  |
+		              |			         |			                  |
 	        -----------------------------------------------------------------
 	        |                        Partitions                             |
 	        -----------------------------------------------------------------
-	        	      |			                  |			                  |
-	        	      |			                  |			                  |
-	               sda                     sdb                     sdc
-	               /|\
-	              / | \
-	             /  |  \
-	            /   |   \
-	           /    |    \
+	        	      |			           |			                  |
+	        	      |			           |			                  |
+	                 sda                  sdb                            sdc
+	                 /|\
+	                / | \
+	               /  |  \
+	              /   |   \
+	             /    |    \
 	          sda1 sda2  sda3 ..
 
 
@@ -928,7 +929,7 @@ Objectives:
                   structure is defined by an operating system-independent convention.
                 - The parttion table is 64 bytes long and is placed after the 446 byte boot record
                 	-: structure -
-                	MBR
+             	MBR
           ---------  -----
           |          |
           |          |
@@ -1059,8 +1060,8 @@ Why use encryption:
 		LUKS is highly recommended for portable systems e.g. laptops, tablets, smartphones.
 
 		LUKS         plain dm-crypt volumes      loop-AES     TrueCrypt
-		 |	     	   	              |		           |              |
-		 |			                    |		           |		          |
+		 |	     	   	            |		       |              |
+		 |			                |		       |		      |
 		 |--------------------------|--------------|--------------|
 						|
 						|
@@ -1073,7 +1074,7 @@ Cryptsetup:
 	command format -
 		cryptsetup [option...] <action> <action-specific>
 		listing possibilities ->
-		cryptset --help
+		cryptsetup --help
     Using an Encrypted Partition:
     	if the LVM partition '/dev/VG/MYSECRETE already exists the following steps will setup encryption
 	--> 1. Make it available to LUKS
@@ -1082,10 +1083,10 @@ Cryptsetup:
 	    4. use it
 	    5. unmount it
         -->
-		sudo cryptsetup luksFormat /dev/VG/MYSECRET -- (if kernel doesn't support the default method used by 'cryptsetup' use sudo cat /proc/crypto to find out which your system supports)
-	    	 sudo cryptsetup luksFormat --cipher aes /dev/VG/MYSECRET
-	    	 sudo cryptsetup --verbose luksOpen /dev/VG/MYSECRET SECRET
-	    	 sudo mkfs.ext4 /dev/mapper/SECRET
+		      sudo cryptsetup luksFormat /dev/VG/MYSECRET -- (if kernel doesn't support the default method used by 'cryptsetup' use sudo cat /proc/crypto to find out which your system supports)
+	    	  sudo cryptsetup luksFormat --cipher aes /dev/VG/MYSECRET
+	    	  sudo cryptsetup --verbose luksOpen /dev/VG/MYSECRET SECRET
+	    	  sudo mkfs.ext4 /dev/mapper/SECRET
 	    mount it -->
 	    	 sudo mount /dev/mapper/SECRET /mnt
 	    unmount it -->
@@ -1128,17 +1129,17 @@ Filesystems can also be of a network nature and their true physical embodiment c
 
 VFS:
 	user software <---------> VFS <---------> actual filesystem
-	     	      		   |
-				             |
-				             |
-				             v
+	     	      		      |
+				              |
+				              |
+				              v
 			/dev, /sys, /temp, /proc, /run
 
 Journalling Filesystems:
 	    These recover from system crashes or ungraceful shutdowns with little or no corruption, and they do so very rapidly.
 	    Here operations are grouped into transactions, each must be completeed without error, atomically; otherwise the filesystem is not changed.
 	    Examples include:
-	    	     - ext3, extension of ext2
+	    	 - ext3, extension of ext2
 		     - ext4, enhanced ext3
 		     - reiserfs, formally for linux
 		     - JFS, IBM
@@ -1151,19 +1152,19 @@ Current Filesystem Types:
 Special Filesystems:
 	Filestsystem     |        Mount Point        |      Purpose
 	------------------------------------------------------------------------------------
-	rootfs			                  None			          During kernel load, provides an empty root directory.
-	hugtlbfs		                  Anywhere		        Provides extended page access (2 or 4 MB on x86)
-	bdev			                    None			          Used for block devices.
-	proc			                    /proc			          Pseudo filesystem access to many kernel structures and aubsystems.
-	sockfs			                  None			          Used by BSD Sockets.
-	tmpfs			                    Anywhere		        RAM disk with swapping, re-sizing.
-	shm			                      None			          Used by System C IPC Shared Memory.
-	pipefs			                  None			          Used for pipes.
-	binfmt_misc		                Anywhere		        Used by various executable formats.
-	devpts			                  /dev/pts		        Used by Unix98 pseudo-termionals.
-	usbfs			                    /proc/bus/usb		    Used ny USB sub-system for dynamical devices.
-	sysfs			                    /sys (or elsewhere)	Used as a device tree.
-	debugfs			                  /sys/kernel/debug (or	Used for simple debugging file access.elsewhere)
+	rootfs			             None			        During kernel load, provides an empty root directory.
+	hugtlbfs		             Anywhere		        Provides extended page access (2 or 4 MB on x86)
+	bdev		                 None			        Used for block devices.
+	proc			             /proc			        Pseudo filesystem access to many kernel structures and aubsystems.
+	sockfs			             None			        Used by BSD Sockets.
+	tmpfs			             Anywhere		        RAM disk with swapping, re-sizing.
+	shm			                 None			        Used by System C IPC Shared Memory.
+	pipefs			             None			        Used for pipes.
+	binfmt_misc		             Anywhere		        Used by various executable formats.
+	devpts			             /dev/pts		        Used by Unix98 pseudo-termionals.
+	usbfs			             /proc/bus/usb		    Used ny USB sub-system for dynamical devices.
+	sysfs			             /sys (or elsewhere)	Used as a device tree.
+	debugfs			             /sys/kernel/debug (or	Used for simple debugging file access.elsewhere)
 
 
 <---------------------------------------------------------------------------------------------------------------->
@@ -1194,10 +1195,10 @@ Special Filesystems:
 
 		  process references pathname ---> kernel [searches directories to find corresponding inode number]
 		  	  	     	      	   	  	    		|
-										|
-										|
-										v
-							converts name to inode number ---> loads into memory
+									             	|
+										            |
+									            	v
+							          converts name to inode number ---> loads into memory
 	Extended Attributes and lsattr/chattr:
 		 extended attributes associate not interpreted directly by the filesystem with files.
 		 Namespaces used in fileattributes:
@@ -1453,7 +1454,7 @@ unmount:
     Same as above
 
 
-  dumpefs:
+  dumpe2fs:
     - scan filesystem information
     $ sudo dumpe2fs /dev/sda2
 
@@ -1986,7 +1987,7 @@ Troubleshooting tools:
 		-- mv rootfile /var/www/html
 		-- wget -o - localhost/rootfile
 			--- access denied
-		-- check error log --> $ tail /var/log/messgaes
+		-- check error log --> $ tail /var/log/messages
 			-- sealert -l dskjk03-kjfklj-kkhh-euykj-3455
 			-- on rhel 7 --> grep httpd /var/log/audit/audit.log | audit2allow -m mypol
 				--->> audit2allow (generates selinux policies) and audit2why (translates selinux into a description of why the access was denied)
@@ -3688,7 +3689,7 @@ ip:
     - manipulate routing, policy based routing, and tunneling.
     - syntax:
       - ip [ OPTIONS ] OBJECT { COMMAND | help }
-      - ip [ -force ] -batch filename, this can read commands from a disgnated file
+      - ip [ -force ] -batch filename, this can read commands from a disignated file
     - it is a multiplex utility; the OBJECT argumant describe what kind of action is going to be
     performed.
       - Main ip OBJETS:
@@ -3848,7 +3849,7 @@ What is a Firewall:
      -- block anygthing that should not be part of the normal flow
 
 Firewall Interface and Tools:
-  - using low level tools from the command line, combined withediting various configuration files in /etc folder
+  - using low level tools from the command line, combined with editing various configuration files in /etc folder
     -- iptables
     -- firewall-cmd
     -- ufw
