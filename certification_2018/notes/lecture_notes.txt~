@@ -3437,6 +3437,547 @@ $ sudo edquota -t
 The df (disk free) utility examines filesystem capacity and usage. In the example we provided here the -h option means "human-readable" (i.e., in KB, MB, GB, not bytes) and -T shows the filesystem type. Using the -i option would show inode information instead of bytes.
 
 
-19.11. Disk Space Usage
+20.1. The Ext2/Ext3/Ext4 Filesystems - Introduction
+
+The ext family of filesystems have been native to Linux since its earliest days, and have been the most widely used of the choices available. Until very recently, ext4 was the most frequent default choice of Linux distributions, due to its excellent combination of performance, integrity, and stability.
+
+20.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Describe the main features of the ext4 filesystem and how it is laid out on disk.
+    Explain the concepts of block groups, superblock, data blocks and inodes.
+    Use the dumpe2fs and tune2fs utilities. 
+    List the ext4 filesystem enhancements.
+
+20.3. Ext4 History and Basics
+
+The ext2 filesystem was Linux's original native variety and is available on all Linux systems, but is rarely used today. 
+
+The ext3 filesystem was the first journalling extension of ext2. It had the same on-disk layout as ext2 except for the presence of a journal file.
+
+The ext4 filesystem first appeared in kernel version 2.6.19, and its experimental designation was removed in version 2.6.28. It included significant enhancements, such as the use of extents for large files, instead of lists of file blocks.
+
+An extent is simply a group of contiguous blocks. Using them can improve large file performance and reduce fragmentation.
+
+ext4 is the default filesystem on most enterprise Linux distributions, although RHEL 7 has adopted XFS as the default.
+
+20.4. Ext4 Features
+
+There is a close correspondence of features between the VFS and the ext2/3/4 filesystems, as each has been designed with the other in mind.
+
+Block size is selected when the filesystem is built; it can be 512, 1024, 2048, or 4096 bytes. By default, 4096 is usually used for hard disk systems, unless the partition is very small. Unless there are very many small files, larger block sizes can be more efficient in terms of minimizing hard disk access.
+
+The Linux kernel memory management system requires only an integral number of blocks must fit into a page of memory; thus, you cannot have 8 KB blocks on an x86 platform where pages of memory are 4 KB in size.
+
+The number of inodes on the filesystem can also be tuned, which may save disk space.
+
+A feature called inode reservation consists of reserving several inodes when a directory is created, expecting them to be used in the future. This improves performance, because, when new files are created, the directory already has inodes allocated.
+
+If the pathname of a symbolic link is less than 60 characters, a so-called fast symbolic link is created, which is stored directly in the inode, obviating the need to read a data block.
+
+
+20.5. Ext4 Layout
+
+All fields are written to disk in little-endian order, except the journal.
+
+Disk blocks are partitioned into block groups, each of which contains inode and data blocks stored adjacently, thereby lowering access time.
+
+The layout of a standard block group is simple. For block group 0, the first 1024 bytes are unused (to allow for boot sectors, etc). The superblock will start at the first block, except for block group 0. This is followed by the group descriptors and a number of GDT (Group Descriptor Table) blocks. These are followed by the data block bitmap, the inode bitmap, the inode table, and the data blocks.
+
+Data blocks are pre-allocated to files before they are actually used. Thus, when a file's size is increased, adjacent space has already been reserved and file fragmentation is reduced.
+
+The filesystem superblock contains bit-fields which are used to ascertain whether or not the filesystem requires checking when it is first mounted during system initialization. The status can be:
+
+    clean: filesystem cleanly unmounted previously
+    dirty: usually means mounted
+    unknown: not cleanly unmounted, such as when there is a system crash.
+
+In the latter two cases, fsck will be run to check the filesystem and fix any problems before it is mounted.
+
+Other fields in the superblock contain information about when the filesystem was last checked, both in date and number of mounts, and automatic checking is triggered when tunable limits are exceeded for these quantities.
+
+The first block on the filesystem is the so-called boot block, and is reserved for the partition boot sector.
+
+20.6.a. Block Groups I
+
+After the boot block there is a series of block groups, each of which is the same size. The layout of each block group is given in the following figure:  
+
+                ext2/3/4 Filesystem Layout
+
+=====================================================================================================
+|               |               |                   |               |               |               |
+|      Super    |      Group    |     Data Block    |    Inode      |   Inode Table |    Data       |
+|      Block    |   Descriptors |       Bitmap      |    Bitmap     |   (n Blocks)  |   Blokcs      |
+|               |               |                   |               |               |               |
+=====================================================================================================
+
+20.6.b. Block Groups II
+
+The first and second blocks are the same in every block group, and comprise the Superblock and the Group Descriptors. Under normal circumstances, only those in the first block group are used by the kernel; the duplicate copies are only referenced when the filesystem is being checked. If everything is OK, the kernel merely copies them over from the first block group. If there is a problem with the master copies, it goes to the next and so on until a healthy one is found and the filesystem structure is rebuilt. This redundancy makes it very difficult to thoroughly fry an ext2/3/4 filesystem, as long as the filesystem checks are run periodically.
+
+In the early incarnations of the ext filesystem family, each block group contained the group descriptors for every block group, as well as a copy of the superblock. As an optimization, however, today not all block groups have a copy of the superblock and group descriptors. To see what you have, you could examine it as in the accompanying screenshot, (putting in an appropriate device node) to see precise locations. This happens when the filesystem is created with the sparse_super option, which is the default.
+
+20.6.c. Block Groups III
+
+The number of block groups is constrained by the fact that the block bitmap, which identifies used and free blocks within the group, has to fit in a single block. Thus, if a block is 4096 bytes in size, a block group can contain no more than 32 K blocks, or 128 MB. If we take the largest possible block group size, a 10 GB partition would thus have to have at least 80 block groups.
+
+The block allocator tries to keep each file's blocks within the same block group to reduce seek times.
+
+20.7. dumpe2fs
+
+As we have just demonstrated, one can use the utility dumpe2fs to scan the filesystem information; doing so on a partition reveals:  
+
+$ sudo dumpe2fs /dev/sda1
+
+Filesystem volume name:  RHEL7
+Last mounted on:         /
+Filesystem UUID:         9d6b5801-9c7e-4c17-9068-49923952338e
+Filesystem magic number: 0xEF53
+Filesystem revision #:   1 (dynamic)
+Filesystem features:     has_journal ext_attr resize_inode dir_index filetype needs_recovery extent 64bit flex_bg sparse_super
+
+Filesystem flags:        signed_directory_hash
+Default mount options:   user_xattr acl
+Filesystem state:        clean
+Errors behavior:         Continue
+Filesystem OS type:      Linux
+Inode count:             1908736
+Block count:             7630592
+Reserved block count:    381529
+
+Free blocks:             5353383
+Free inodes:             1682479
+First block:             0
+Block size:              4096
+Fragment size:           4096
+Group descriptor size:   64
+Reserved GDT blocks:     1024
+Blocks per group:        32768
+Fragments per group:     32768
+Inodes per group:        8192
+Inode blocks per group:  512
+Flex block group size:   16
+Filesystem created:      Wed Sep 3 03:52:55 2014
+Last mount time:         Fri Oct 24 09:18:58 2014
+Last write time:         Fri Oct 24 09:18:58 2014
+Mount count:             89
+Maximum mount count:     -1
+Last checked:            Wed Sep 3 03:52:55 2014
+Check interval:          0 (<none>)
+Lifetime writes:         103 GB
+Reserved blocks uid:     0 (user root)
+Reserved blocks gid:     0 (group root)
+First inode:             11
+Inode size:              256
+Required extra isize:    28
+Desired extra isize:     28
+Journal inode:           8
+First orphan inode:      396118
+Default directory hash:  half_md4
+Directory Hash Seed:     e488c43e-241c-4014-91d8-6a9d3d6c7784
+Journal backup:          inode blocks
+Journal features:        journal_incompat_revoke journal_64bit
+Journal size:            128M
+Journal length:          32768
+Journal sequence:        0x00023592
+Journal start:           16394
+ 
+
+Group 0: (Blocks 0-32767) [ITABLE_ZEROED]
+    Checksum 0x2921, unused inodes 7738
+    Primary superblock at 0, Group descriptors at 1-4
+    Reserved GDT blocks at 5-1028
+    Block bitmap at 1029 (+1029), Inode bitmap at 1045 (+1045)
+    Inode table at 1061-1572 (+1061)
+    22880 free blocks, 8174 free inodes, 2 directories, 7738 unused inodes
+    Free blocks: 9381-9672, 10180-32767
+    Free inodes: 19-8192
+
+Group 1: (Blocks 32768-65535) [INODE_UNINIT, ITABLE_ZEROED]
+
+    Checksum 0x473e, unused inodes 8192
+    Backup superblock at 32768, Group descriptors at 32769-32772
+    Reserved GDT blocks at 32773-33796
+    Block bitmap at 1030 (bg #0 + 1030), Inode bitmap at 1046 (bg #0 + 1046)
+    Inode table at 1573-2084 (bg #0 + 1573)
+    14918 free blocks, 8192 free inodes, 0 directories, 8192 unused inodes
+    Free blocks: 33797, 33800-33919, 34108-34511, 34521-34559, 34784-34815, 37053-38015, 38039- 38040, 38080-38527, 38529-38911, Free inodes: 8193-16384
+.....
+Group 196: (Blocks 6422528-6455295) [INODE_UNINIT, ITABLE_ZEROED]
+    Checksum 0x946d, unused inodes 8192
+    Block bitmap at 6291460 (bg #192 + 4), Inode bitmap at 6291476 (bg #192 + 20)
+    Inode table at 6293536-6294047 (bg #192 + 2080)
+    32768 free blocks, 8192 free inodes, 0 directories, 8192 unused inodes
+    Free blocks: 6422528-6455295
+
+    Free inodes: 1605633-1613824
+    ....
+Group 232: (Blocks 7602176-7630591) [INODE_UNINIT, ITABLE_ZEROED]
+    Checksum 0xa174, unused inodes 8192
+    Block bitmap at 7340040 (bg #224 + 8), Inode bitmap at 7340056 (bg #224 + 24)
+    Inode table at 7344160-7344671 (bg #224 + 4128)
+    28416 free blocks, 8192 free inodes, 0 directories, 8192 unused inodes
+    Free blocks: 7602176-7630591
+    Free inodes: 1900545-1908736
+
+20.8. tunee2fs
+
+ tune2fs can be used to change filesystem parameters.
+
+To change the maximum number of mounts between filesystem checks (max-mount-count):
+
+$ sudo tune2fs -c 25 /dev/sda1
+
+To change the time interval between checks (interval-between-checks):
+
+$ sudo tune2fs -i 10 /dev/sda1
+
+To list the contents of the superblock including the current values of parameters which can be changed:
+
+$ sudo tune2fs -l /dev/sda1
+
+20.9. Superblock Information
+
+The superblock contains global information about the filesystem, including:
+
+    Mount count and maximum mount count (The mount count is incremented every time the disk is successfully mounted, and its value is the number of times this has been done since the last fsck.) One can also force a filesystem check after 180 days by default, or another time that can be changed by the tune2fs utility.\u200b
+    Block size (Cannot be greater than a page of memory, set by mkfs.)\u200b
+    Blocks per group
+    Free block count
+    Free inode count
+    Operating System ID.
+
+As we discussed earlier, the superblock is redundantly stored in several block groups.
+
+20.10. Data Blocks and Inodes
+
+The data block and inode bitmaps are blocks whose bits contain 0 for each free block or inode and 1 for each used one. There is only one of each of these bitmaps per block group.
+
+The inode table contains as many consecutive blocks as are necessary to cover the number of inodes in the block group. Each inode requires 128 bytes; thus, a 4 KB block can contain 32 inodes. 
+
+Note that there is space reserved for some operating system dependent information; different OSs could possibly mount an ext2/3/4 filesystem, much as Linux can mount many kinds of non-native filesystems.
+
+Note that the inode number itself is not stored on the disk in this structure; its value can be quickly calculated from the block group number and offset within the inode table.
+
+The ext2 and ext3 filesystems did not yet incorporate the use of extents to organize larger files. Instead, the i_block[] array of pointers to data blocks, of length EXT2_N_BLOCKS=15, is described by the inode. The way this is handled is somewhat complex:
+
+    The first 12 elements in this array simply point to the first 12 data blocks in the file.
+    The 13th element points to a block that represents a second-order array of block numbers; the 14th to a third-order array, and the 15th to a fourth-order array.
+
+This algorithm makes addressing small files go the fastest, as it should. For instance, with a 4 KB block size, a 48 KB file can be directly addressed, a 2 MB file requires a second-order process, a 1 GB a third-order, a 4 GB file a fourth-order.
+
+20.11. Ext4 Filesystem Enhancements
+
+The ext4 filesystem:
+
+    Is backwards-compatible with ext3 and ext2.
+    Increases the maximum filesytem size to 1 EB (from 16 TB), and the maximum file to 16 TB (from 2 TB). These limits arise from the 48-bit addressing that is used; full 64-bit addressing may be in the future, but not really needed at this point.
+    Increases without limit the maximum number of subdirectories, which was limited to 32 K in ext3.
+    Splits large files into the largest possible extents instead of using indirect block mapping. This can improve large file performance and reduce fragmentation.
+    Uses multiblock allocation which can allocate space all at once, instead of one block at a time. In addition, delayed allocation can also increase performance.
+    Can pre-allocate disk space for a file. The allocated space is usually both guaranteed and contiguous.
+    Uses allocate-on-flush, a performance technique which delays block allocation until data is written to disk.
+    Uses fast fsck which can make the speed of a filesystem check go up by an order of magnitude or more.
+    Uses checksums for the journal which improves reliability. This can also safely avoid a disk I/O wait during journalling, resulting in a slight performance boost.
+    Uses improved timestamps measured in nanoseconds.
+    Includes snapshot support.
+
+21.1. THe XFS and btrfs Filesystems - Introduction
+
+The XFS and btrfs filesystems have arisen as important challengers to the dominance of ext4 in Enterprise Linux distributions. These next generation filesystems have robust capabilities with respect to handling large sizes, spanning multiple physical and logical volumes and performance metrics.
+
+21.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Describe the XFS filesystem.
+    Maintain the XFS filesystem.
+    Describe the btrfs filesystem.
+
+21.2. XFS Features
+
+XFS was originally designed and created by SGI and used in the IRIX operating system and was subsequently ported to Linux. It was explicitly engineered to deal with large data sets, as well as handle parallel I/O tasks very effectively.
+
+It can handle:
+
+    Up to 16 EB (exabytes) for the total filesystem.
+    Up to 8 EB for an individual file.
+
+High performance is one of the key design elements of XFS, which implements methods for:
+
+    Employing DMA (Direct Memory Access) I/O
+    Guaranteeing an I/O rate
+    Adjusting stripe size to match underlying RAID or LVM devices.
+
+In contrast to traditional filesystems,  XFS  can also journal quota information. This leads to decreased recovery time when a quota-enabled filesystem is uncleanly unmounted. Furthermore, the journal can be on an external device.
+
+As with other UNIX and Linux filesystems, XFS supports extended attributes.
+
+21.4. XFS Filesystem Maintenance
+
+Maintaining an XFS filesystem is made easier by the fact that most of the maintenance tasks can be done on-line (i.e., while the filesystem is fully mounted). These include:
+
+    Defragmenting
+    Enlarging
+    Dumping/Restoring.
+
+Backup and restore can be done with the native XFS utilities:
+
+    xfsdump
+    xfsrestore
+
+which can be conveniently paused and then resumed at a later time. Because these utility programs are also multi-threaded, XFS dumps and restores can be accomplished very quickly.
+
+While XFS does not directly support hardware or software snapshots, the xfs-freeze utility can be used to quiesce the filesystem, thus allowing a snapshot tool to work on the underlying device. The Linux LVM tools will automatically use xfs-freeze to quiesce the filesystem for snapshots.
+
+XFS supports quotas and the traditional quota commands can be used to manipulate per-filesystem quotas on an XFS volume. However, if you use the xfs-quota command you can use the per-directory quotas that XFS supports.
+
+21.5. THe btrfs Filesystem
+
+Both Linux developers and Linux users with high performance and high capacity or specialized needs are following the development and gradual deployment of the btrfs filesytem, which was created by Chris Mason. The name stands for B-tree file system. Full documentation can be found at  http://btrfs.wiki.kernel.org/index.php/Main_Page .
+
+btrfs is intended to address the lack of pooling, snapshots, checksums, and integral multi-device spanning in other Linux filesystems such as ext4. Such features can be crucial for Linux to scale into larger enterprise storage configurations.
+
+While btrfs has been in the mainline kernel since 2.6.29 it has generally been viewed as experimental, although a few vendors have used it in new products. 
+
+One of the main features is the ability to take frequent snapshots of entire filesystems, or sub-volumes of entire filesystems in virtually no time. Because btrfs makes extensive use of COW techniques (Copy on Write), such a snapshot does not involve any more initial space for data blocks or any I/O activity except for some metadata updating.
+
+One can easily revert to the state described by earlier snapshots and even induce the kernel to reboot off an earlier root filesystem snapshot.
+
+btrfs maintains its own internal framework for adding or removing new partitions and/or physical media to existing filesystems, much as LVM (Logical Volume Management) does.
+
+Before btrfs becomes suitable for day-to-day use in critical filesystems, some tasks require finishing. For a review of the development history of btrfs and expected evolution see http://lwn.net/Articles/575841.
+
+22.1. Disk Encryption - Introduction
+
+Filesystems may be encrypted to protect them from both prying eyes and attempts to corrupt the data they contain. Encryption can be chosen at installation or incorporated later. Linux distributions most often use the LUKS method and perform encryption-related tasks using cryptsetup.
+
+22.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Provide sound reasons for using encryption and know when it is called for.
+    Understand how LUKS operates through the use of cryptsetup.
+    Be able to set up and use encrypted filesystems and partitions.
+    Know how to configure the system to mount encrypted partitions at boot. 
+
+22.3. Why Use Encryption?
+
+Encryption should be used wherever sensitive data is being stored and transmitted. Configuring and using block device level encryption provides one of the strongest protections against harm caused by loss or compromise of data contained in hard drives and other media. 
+
+Modern Linux distributions offer the choice of encrypting all or some of your disk partitions during installation. It is also straightforward to create and format encrypted partitions at a later time, but you cannot encrypt an already existing partition in place without a data copying operation. 
+
+22.4. LUKS 
+
+Modern Linux distributions provide block device level encryption mainly through the use of LUKS (Linux Unified Key Setup). Using block device encryption is highly recommended for portable systems such as laptops, tablets, and smart phones.
+
+LUKS is installed on top of cryptsetup, a powerful utility that can also use other methods such as plain dm-crypt volumes, loop-AES and TrueCrypt-compatible format. We won't discuss these alternatives, as LUKS (which was originally designed for Linux but has also been exported to other operating systems) is the standard method most often used in Linux.
+
+The dm-crypt kernel module uses the device mapper kernel infrastructure that is also heavily used by LVM, which we will discuss later.
+
+Because LUKS stores all necessary information in the partition header itself, it is rather easy to migrate partitions to other disks or systems.
+
+LUKS can also be used to transparently encrypt swap partitions. 
+
+22.5. cryptsetup
+
+Basically, everything is done with the Swiss army knife program cryptsetup. Once encrypted volumes have been set up, they can be mounted and unmounted with normal utilities.
+
+The general form of a command is:
+
+cryptsetup [OPTION...] <action> <action-specific>
+
+and a rather full listing of possibilities can be generated by:
+
+$ cryptsetup --help
+
+22.6.a. Using an Encrypted Partition I
+
+If the partition /dev/sda7 already exists, the following commands will set up encryption, make it available to LUKS, format it, mount it, use it, and unmount it.
+
+First, we need to give the partition to LUKS:
+
+$ sudo cryptsetup luksFormat /dev/sda7
+
+You will be prompted for a passphrase that will need to open use of the encrypted volume later. Note that you only have to do this step once, when setting up encryption.
+
+You may have trouble here if your kernel does not support the default encryption method used by cryptsetup. In that case, you can examine /proc/crypto to see the methods your system supports, and then you can supply a method, as in:
+
+$ sudo cryptsetup luksFormat --cipher aes /dev/sda7
+
+22.6.b. Using an Encrypted Partition II
+
+You can make the volume available at any time with:
+
+$ sudo cryptsetup --verbose luksOpen /dev/sda7
+
+where you will be prompted to supply the passphrase. You can format the partition:
+
+$ sudo mkfs.ext4  /dev/mapper/SECRET
+
+mount it:
+
+$ sudo mount /dev/mapper/SECRET /mnt
+
+and then use to your heart's content just as if it were an unencrypted partition mounted at /mnt.  When you are done, unmount with:
+
+$ sudo umount /mnt
+
+and then remove the mapper association for now, the partition will always be available for later use:
+
+$ sudo cryptsetup --verbose luksClose SECRET
+
+22.7. Mounting at Boot
+
+To mount an encrypted partition at boot, two conditions have to be satisfied: 
+
+    Make an appropriate entry in /etc/fstab. There is nothing special about this and it does not refer to encryption in any way.
+    Add an entry to /etc/crypttab. This can be as simple as:
+
+    SECRET /dev/mapper/MYSECRET
+
+    You can do more in this file, such as specifying the password if you don't want to be prompted at boot (which seems counterproductive security-wise). See man crypttab to find out what you can do with this file.
+
+22.9. KNowledge Check 22.1
+
+Steps to setup encryption with LUKS:
+
+- Create partition for encryted block device
+- Format with cryptsetup
+- Create the un-encrypted pass through device
+- Format with a standard fiesystem such as ext4
+- Mount the filesystem on the encrypted block device
+
+23.1. Logiacal Volume Management (LVM) - Introduction
+
+video
+
+23.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Explain the concepts behind LVM.
+    Create logical volumes.
+    Display logical volumes.
+    Resize logical volumes.
+    Use LVM snapshots.
+
+23.3. LVM
+
+LVM (Logical Volume Management) breaks up one virtual partition into multiple chunks, each of which can be on different partitions and/or disks.
+
+There are many advantages to using LVM; in particular, it becomes really easy to change the size of the logical partitions and filesystems, to add more storage space, rearrange things, etc.
+
+One or more physical volumes (disk partitions) are grouped together into a volume group. Then, the volume group is subdivided into logical volumes, which mimic to the system nominal physical disk partitions and can be formatted to contain mountable filesystems.
+
+There are a variety of command line utilities tasked to create, delete, resize, etc. physical and logical volumes. For a graphical tool, some Linux distributions use system-config-lvm. However, RHEL 7 does not support this tool and there is currently no graphical tool that works reliably with the most recent variations in filesystem types etc. Fortunately, the command line utilities are not hard to use and are more flexible anyway.
+
+LVM does impact performance. There is a definite additional cost that comes from the overhead of the LVM layer. However, even on non-RAID systems, if you use striping (splitting of data to more than one disk),  you can achieve some parallelization improvements.
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++                                                                                                                +
++                                                               LVM                                              +
++                         ======================================|============================================    +
++                         |                                     |                                           |    +
++         Filesystem      |             /home                   |                   /data                   |    +
++                         |             (ext3)                  |                   (xfs)                   |    +
++                         ======================================|============================================    +
++                                                                                                                +
++                         ======================================|============================================    +
++                         |                                     |                                           |    +
++ Logical Volumes (LV)    |      /dev/primary_vg/home_lv        |        /dev/primary_vg/data_lv            |    +
++                         |                                     |                                           |    +
++                         ======================================|============================================    +
++                                                                                                                +
++                         ===================================================================================    +
++                         |                                                                                 |    +
++ Volume Groups (VG)      |                                primary_vg                                       |    +
++                         |                                                                                 |    +
++                         ===================================================================================    +
++                                                                                                                +
++                         ====================  =================  ==================   =====================    +
++                         |                  |  |               |  |                |   |                   |    +
++  Physical Volumes       |   /dev/sdb1      |  |  /dev/sdb2    |  |  /dev/sda1     |   |  /dev/sda2        |    +
++                         |                  |  |               |  |                |   |                   |    +
++                         ====================  =================  ==================   =====================    +
++                                                                                                                +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+                          ====================  =================  ==================   =====================    
+                          |                  |  |               |  |                |   |                   |    
+  Partitions              |   /dev/sdb1      |  |  /dev/sdb2    |  |  /dev/sda1     |   |  /dev/sda2        |    
+                          |                  |  |               |  |                |   |                   |    
+                          ====================  =================  ==================   =====================    
+
+
+                          =====================================    ==========================================    
+                          |                                   |    |                                        |    
+  Physical Devices        |              /dev/sdb             |    |               /dev/sda                |    
+                          |                                   |    |                                        |    
+                          =====================================    ==========================================    
+
+
+23.4. LVM and RAID
+
+Like RAID (which we will discuss in the next chapter), the use of logical volumes is a mechanism for creating filesystems which can span more than one physical disk.
+
+Logical volumes are created by putting all the devices into a large pool of disk space (the volume group) and then allocating space from the pool to create a logical volume.
+
+Logical volumes have features similar to RAID devices. They can actually be built on top of a RAID device. This would give the logical volume the redundancy of a RAID device with the scalability of LVM.
+
+LVM has better scalability than RAID: logical volumes can easily be resized; i.e., enlarged or shrunk, as needs require. If more space is needed, additional devices can be added to the logical volume at any time. 
+
+
+23.5. Volumes and Volume Groups
+
+Partitions are converted to physical volumes and multiple physical volumes are grouped into volume groups; there can be more than one volume group on the system.
+
+Space in the volume group is divided into extents; these are 4 MB in size by default, but the size can easily be changed when being allocated.
+
+There are a number of command line utilities used to create and manipulate volume groups, whose name always start with vg including:
+
+    vgcreate:  Creates volume groups.
+    vgextend:  Adds to volume groups.
+    vgreduce:  Shrinks volume groups.
+
+Utilities that manipulate what physical partitions enter or leave volume groups start with pv and include:
+
+    pvcreate:  Converts a partition to a physical volume.
+    pvdisplay:  Shows the physical volumes being used.
+    pvmove:  Moves the data from one physical volume within the volume group to others; this might be required if a disk or partition is being removed for some reason. It would then be followed by:
+    pvremove:  Remove a partition from a physical volume.
+
+Typing man lvm will give a full list of LVM utilities.
+
+23.6. Logical Volumes Utilities
+
+There are a number of utilities that manipulate logical volumes. Unsurprisingly, they all begin with lv. We will discuss the most commonly used ones, but a short list can be obtained as in the screenshot provided.
+
+Note:
+
+    These utilities are in /sbin, not in /usr/sbin, as they may be needed either for boot or repair and recovery.
+    Most of them are symbolically linked to lvm, a Swiss army knife program that does all the work, but figures out what is being asked to do based on the name it is invoked with. This is also true for most of the pv* and vg* utilities, as you can verify easily enough.
+
+23.7.a. Creating Logical Volumes I
+
+lvcreate allocates logical volumes from within volume groups. The size can be specified either in bytes or number of extents (remember, they are 4 MB by default). Names can be anything desired.
+
+lvdisplay reports on available logical volumes.
+
+Filesystems are placed in logical volumes and are formatted with mkfs as usual.
+
+Starting with possibly creating a new volume group, the steps involved in setting up and using a new logical volume are:
+
+    Create partitions on disk drives (type 8e in fdisk) .
+    Create physical volumes from the partitions.
+    Create the volume group.
+    Allocate logical volumes from the volume group.
+    Format the logical volumes.
+    Mount the logical volumes (also update /etc/fstab as needed).
+
+
+23.7.b. Creating Logical Volumes II
 
 
