@@ -2888,4 +2888,878 @@ $ cat /proc/partitions
 
 to examine what partitions the operating system is currently aware of.
 
-17.15. 
+18.1. Filesystem Features: Attributes, Creating, Checking, Mounting - Introduction
+
+video
+
+18.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Explain concepts such as inodes, directory files and extended attributes.
+    Create and format filesystems.
+    Check and fix errors on filesystems.
+    Mount and unmount filesystems.
+
+18.3. Inodes
+
+An inode is a data structure on disk that describes and stores file attributes, including location. Every file is associated with its own inode. The information stored in the inode includes:
+
+    Permissions\u200b
+    User and group ownership\u200b
+    Size\u200b
+    Timestamps (nanosecond)
+    - \u200bLast access time
+    - Last modification time
+    - Change time
+
+Note: file names are not stored in a file's inode, but are instead stored in the directory file.
+
+All I/O activity concerning a file usually also involves the file's inode as information must be updated.
+
+18.4. Directory Files
+
+A directory file is a particular type of file that is used to associate file names and inodes. There are two ways to associate (or link) a file name with an inode:
+
+    Hard links point to an inode.\u200b
+    Soft (or symbolic) links point to a file name which has an associated inode.
+
+Each association of a directory file contents and an inode is known as a link. Additional links can be created using ln.
+
+Because it is possible (and quite common) for two or more directory entries to point to the same inode (hard links), a file can be known by multiple names, each of which has its own place in the directory structure. However, it can have only one inode no matter which name is being used.
+
+When a process refers to a pathname, the kernel searches directories to find the corresponding inode number. After the name has been converted to an inode number, the inode is loaded into memory and is used by subsequent requests.
+
+18.5.a. Extended Attributes and lsattr/chattr I
+
+ Extended Attributes associate metadata not interpreted directly by the filesystem with files. Four namespaces exist: user, trusted, security, and system. Later, we will see that the system namespace is used for Access Control Lists (ACLs), and the security namespace is used by SELinux.
+
+Flag values are stored in the file inode and may be modified and set only by the root user. They are viewed with lsattr and set with chattr.
+
+In the user namespace, flags may be set for files:
+
+    i: Immutable
+    A file with the immutable attribute cannot be modified (not even by root). It cannot be deleted or renamed. No hard link can be created to it, and no data can be written to the file. Only the superuser can set or clear this attribute.
+    a: Append-only
+    A file with the append-only attribute set can only be opened in append mode for writing. Only the superuser can set or clear this attribute.
+    d: No-dump
+    A file with the no-dump attribute set is ignored when the dump program is run. This is useful for swap and cache files that you don't want to waste time backing up.
+    A: No atime update
+    A file with the no-atime-update attribute set will not modify its atime (access time) record when the file is accessed but not otherwise modified. This can increase the performance on some systems because it reduces the amount of disk I/O on the system. 
+
+18.5.b. Extended Attributes and lsattr/chattr II
+
+Note that there are other flags that can be set; typing man chattr will show the whole list. The format for chattr is:
+
+$ chattr [+|-|=mode] filename
+
+lsattr is used to display attributes for a file:
+
+$ lsattr filename
+
+18.6.a. Creating and Formatting Filesystems I
+
+Every filesystem type has a utility for formatting (making) a filesystem on a partition. The generic name for these utilities is mkfs. However, this is just a frontend for filesystem-specific programs.
+
+$ ls -lh /sbin/mkfs*
+-rwxr-xr-x 1 root root  11K Feb 15 10:22 /sbin/mkfs
+-rwxr-xr-x 1 root root  27K Feb 15 10:22 /sbin/mkfs.bfs
+-rwxr-xr-x 1 root root  35K Feb 15 10:22 /sbin/mkfs.cramfs
+lrwxrwxrwx 1 root root    9 Dec 23  2015 /sbin/mkfs.exfat -> mkexfatfs
+lrwxrwxrwx 1 root root    6 Oct 30  2015 /sbin/mkfs.ext2 -> mke2fs
+lrwxrwxrwx 1 root root    6 Oct 30  2015 /sbin/mkfs.ext3 -> mke2fs
+lrwxrwxrwx 1 root root    6 Oct 30  2015 /sbin/mkfs.ext4 -> mke2fs
+lrwxrwxrwx 1 root root    6 Oct 30  2015 /sbin/mkfs.ext4dev -> mke2fs
+-rwxr-xr-x 1 root root  27K May 26  2016 /sbin/mkfs.fat
+-rwxr-xr-x 1 root root  76K Feb 15 10:22 /sbin/mkfs.minix
+lrwxrwxrwx 1 root root    8 May 26  2016 /sbin/mkfs.msdos -> mkfs.fat
+lrwxrwxrwx 1 root root    6 Jan 28  2017 /sbin/mkfs.ntfs -> mkntfs
+lrwxrwxrwx 1 root root   10 Nov  7  2015 /sbin/mkfs.reiserfs -> mkreiserfs
+lrwxrwxrwx 1 root root    8 May 26  2016 /sbin/mkfs.vfat -> mkfs.fat
+-rwxr-xr-x 1 root root 356K Sep  8  2017 /sbin/mkfs.xfs
+
+18.6.b. Creating and Formatting Filesystems II
+
+Thus, the following two commands are entirely equivalent:
+
+$ sudo mkfs -t ext4 /dev/sda10
+
+$ sudo mkfs.ext4 /dev/sda10
+
+The general format for mkfs is:
+
+mkfs [-t fstype] [options] [device-file]
+
+where [device-file] is usually a device name like /dev/sda3 or /dev/vg/lvm1.
+
+Each filesystem type has its own particular options that can be set when formatting. For example, when creating an ext4 filesystem, one thing to keep in mind are the journalling settings. These include defining the journal file size and whether or not to use an external journal file.
+
+One should look at the man page for each of the mkfs.* programs to see details.
+
+18.7.a. Checking and Fixing Filesystems I
+
+Every filesystem type has a utility designed to check for errors (and hopefully fix any that are found). The generic name for these utilities is fsck. However, this is just a frontend for filesystem-specific programs.
+
+
+$ ls -lh /sbin/fsck*
+-rwxr-xr-x 1 root root 44K Feb 15 10:22 /sbin/fsck
+-rwxr-xr-x 1 root root 35K Feb 15 10:22 /sbin/fsck.cramfs
+lrwxrwxrwx 1 root root   9 Dec 23  2015 /sbin/fsck.exfat -> exfatfsck
+lrwxrwxrwx 1 root root   6 Oct 30  2015 /sbin/fsck.ext2 -> e2fsck
+lrwxrwxrwx 1 root root   6 Oct 30  2015 /sbin/fsck.ext3 -> e2fsck
+lrwxrwxrwx 1 root root   6 Oct 30  2015 /sbin/fsck.ext4 -> e2fsck
+lrwxrwxrwx 1 root root   6 Oct 30  2015 /sbin/fsck.ext4dev -> e2fsck
+-rwxr-xr-x 1 root root 59K May 26  2016 /sbin/fsck.fat
+-rwxr-xr-x 1 root root 76K Feb 15 10:22 /sbin/fsck.minix
+lrwxrwxrwx 1 root root   8 May 26  2016 /sbin/fsck.msdos -> fsck.fat
+-rwxr-xr-x 1 root root 333 Feb  5  2016 /sbin/fsck.nfs
+-rwxr-xr-x 1 root root 282 Nov  7  2015 /sbin/fsck.reiserfs
+lrwxrwxrwx 1 root root   8 May 26  2016 /sbin/fsck.vfat -> fsck.fat
+-rwxr-xr-x 1 root root 433 Sep  8  2017 /sbin/fsck.xfs
+-rwxr-xr-x 1 root root 262 Mar 29 19:39 /sbin/fsck.zfs
+
+18.7.b. Checking and Fixing Filesystems II
+
+Thus, the following two commands are entirely equivalent:
+
+$ sudo fsck -t ext4 /dev/sda10
+$ sudo fsck.ext4 /dev/sda10
+
+If the filesystem is of a type understood by the operating system, you can almost always just do:
+
+$ sudo fsck -t ext4 /dev/sda10
+
+and the system will figure out the type by examining the first few bytes on the partition.
+
+fsck is run automatically after a set number of mounts or a set interval since the last time it was run or after an abnormal shutdown. It should only be run on unmounted filesystems. You can force a check of all mounted filesystems at boot by doing:
+
+$ sudo touch /forcefsck
+$ sudo reboot
+
+The file /forcefsck will disappear after the successful check. One reason this is a valuable trick is it can do a fsck on the root filesystem, which is hard to do on a running system.
+
+
+18.7.c. Checking and Fixing Filesystems III
+
+The general format for fsck is:
+
+fsck [-t fstype] [options] [device-file]
+
+where [device-file] is usually a device name like /dev/sda3 or /dev/vg/lvm1. Usually, one does not need to specify the filesystem type, as fsck can figure it out by examining the superblocks at the start of the partition.
+
+One can control whether any errors found should be fixed one by one manually with the -r option, or automatically, as best possible, by using the -a option, etc. In addition, each filesystem type may have its own particular options that can be set when checking.
+
+Note that journalling filesystems are much faster to check than older generation filesystems for two reasons:
+
+    One rarely needs to scan the entire partition for errors, as everything but the very last transaction has been logged and confirmed, so it takes almost no time to check.\u200b
+    Even if one does check the whole filesystem, newer filesystems have been designed with fast fsck in mind; older filesystems did not think much about this when they were designed as sizes were much smaller.
+
+One should look at the man page for each of the fsck.* programs to see details.
+
+18.8. Mounting and Unmounting Filesystems
+
+All accessible files in Linux are organized into one large hierarchical tree structure with the head of the tree being the root directory (/). However, it is common to have more than one partition (each of which can have its own filesystem type) joined together in the same filesystem tree. These partitions can also be on different physical devices, even on a network.
+
+The mount program allows attaching at any point in the tree structure; umount allows detaching them.
+
+The mount point is the directory where the filesystem is attached. It must exist before mount can use it; mkdir can be used to create an empty directory. If a pre-existing directory is used and it contains files prior to being used as a mount point, they will be hidden after mounting. These files are not deleted and will again be visible when the filesystem is unmounted.
+
+By default, only the superuser can mount and unmount filesystems.
+
+18.9. mount
+
+Each filesystem is mounted under a specific directory, as in:
+
+$ sudo mount -t ext /dev/sdb4 /home
+
+    Mounts an ext4 filesystem
+    The filesystem is located on a specific partition of a hard drive (/dev/sdb4)
+    The filesystem is mounted at the position /home in the current directory tree
+    Any files residing in the original /home directory are hidden until the partition is unmounted.
+
+Note that in this example the filesystem is mounted by using the device node it resides on. However, it is also possible to mount using a label or a UUID. Thus, the following are all equivalent:
+
+$ sudo mount /dev/sda2  /home
+$ sudo mount LABEL=home /home
+$ sudo mount    -L home /home
+$ sudo mount UUID=26d58ee2-9d20-4dc7-b6ab-aa87c3cfb69a /home
+$ sudo mount   -U 26d58ee2-9d20-4dc7-b6ab-aa87c3cfb69a /home
+
+Labels are assigned by filesystem type specific utilities, such as e2label, and UUIDs are assigned when partitions are created as containers for the filesystem.
+
+While any of these three methods for specifying the device can be used, modern systems deprecate using the device node form because the names can change according to how the system is booted, which hard drives are found first, etc. Labels are an improvement, but, on rare occasions, one could have two partitions that wind up with the same label. UUIDs, however, should always be unique, and are created when partitions are created.
+
+18.10.a. mount Options I
+
+mount takes many options, some generic like -a (mount all filesystems mentioned in /etc/fstab) and many filesystem specific; it has a very long man page. A common example would be:
+
+$ sudo mount -o remount,ro /myfs 
+
+which remounts a filesystem with a read-only attribute. 
+
+18.11. umount
+
+Filesystems can be unmounted, as in:
+
+$ umount [device-file | mount-point]
+
+Below are some examples of how to unmount a filesystem:
+
+    Unmount the /home filesystem:
+    $ sudo umount /home
+    Unmount the /dev/sda3 device:
+    $ sudo umount /dev/sda3
+
+Note that the command to unmount a filesystem is umount (not unmount!).
+
+Like mount, umount has many options, many of which are specific to filesystem type. Once again, the man pages are the best source for specific option information.
+
+The most common error encountered when unmounting a filesystem is trying to do this on a filesystem currently in use; i.e., there are current applications using files or other entries in the filesystem.
+
+This can be as simple as having a terminal window open in a directory on the mounted filesystem. Just using cd in that window, or killing it, will get rid of the device is busy error and allow unmounting.
+
+However, if there are other processes inducing this error, you must kill them before unmounting the filesystem. You can use fuser to find out which users are using the filesystem and kill them (be careful with this, you may also want to warn users first). You can also use lsof ("list open files") to try and see which files are being used and blocking unmounting.
+
+18.12. Network Shares (NFS)
+
+t is common to mount remote filesystems through network shares, so they appear as if they were on the local machine. Probably the most common method used historically has been NFS (Network File System).
+
+NFS was originally developed by Sun Microsystems in 1989, and has been continuously updated. Modern systems use NFSv4, which has been con\u200btinuously updated since 2000.
+
+Other network filesystems include AFS (Andrew File System), and SMB (Server Message Book), also termed CIFS (Common Internet File System).
+
+Because a network filesystem may be unavailable at any time, eith\u200ber because it is not present on the network share, or the network is unavailable, systems have to be prepared for this possibility.
+
+Thus, in such circumstances, a system should be instructed not to get hung, or blocked, while waiting longer than a specified period. These can be specified in the mount command:
+
+$ sudo mount -t nfs myserver.com:/sharedir /mnt/sharedir\u200b
+
+or in /etc/fstab. Put the following line in /etc/fstab to mount on boot or with mount -a:\u200b
+
+myserver.com:/sharedir /mnt/sharedir nfs rsize=8192,wsize=8192,timeo=14,intr 0 0
+
+The system may try to mount the NFS filesystem before the network is up. The _netdev and noauto options can be used. For more information, check man nfs, examine the mount options.
+
+It can also be solved using autofs or automount.
+
+Mount has a large amount of options, some of which are specific to nfs. See the man pages for both nfs and mount for \u200bmore details.
+
+18.13.a. Mounting Filesystems at Boot I
+
+During system boot, the command mount -a is executed. This mounts all filesystems listed in the /etc/fstab configuration file. Entries can refer to both local and remote network-mounted filesystems. Here is an example showing you how to mount all filesystems listed in the /etc/fstab configuration file during system boot.
+
+This file shows what filesystems may be automatically mounted at boot and where they may be found on the local machine or network. It can specify who may mount them and with what permissions, and other relevant options. Some of the lines refer to special pseudo-filesystems such as proc, sys, and devpts.
+
+18.13.b. Mounting Filesystems at Boot II
+
+Each record in the file contains fields separated by white space listing:
+
+    Device node, label, or UUID
+    For filesystems which do not have a device node, such as tmpfs, proc, and sysfs, this field is just a place holder; sometimes, you will see the word none in that column, or used on the command line.
+    Mount point
+    This can also be a place holder, like for swap, which is not mounted anywhere.
+    A comma-separated list of options
+    dump frequency (or a 0) 
+    This is used by the dump -w command.
+    fsck pass number (or 0, meaning do not check state at boot).
+
+18.13.c. Mounting Filesystems at Boot III
+
+The mount and umount utilities can use information in /etc/fstab; in such a case one could type
+
+$ sudo mount /usr/src    
+
+instead of
+
+$ sudo mount LABEL=src /usr/src
+
+in the above example.
+
+18.14. Automatic Filesystem Mounting
+
+Linux systems have long had the ability to mount a filesystem only when it is needed. Historically, this was done using autofs. This utility requires installation of the autofs package using the appropriate package manager and configuration of files in /etc.
+
+While autofs is very flexible and well understood, systemd-based systems (including all recent enterprise Linux distributions) come with automount facilities built into the systemd framework. Configuring this is as simple as adding a line in /etc/fstab specifying the proper device, mount point and mounting options, such as:
+
+LABEL=Sam128 /SAM ext4 noauto,x-systemd.automount,x-systemd.device-timeout=10,x-systemd.idle-timeout=30 0 0
+
+and then, either rebooting or issuing the command:
+
+$ sudo systemctl daemon-reload
+$ sudo systemctl restart local-fs.target
+
+Next, we will give an example and explain the options. 
+
+18.15. automount Example
+
+The example provided mounts a USB pen drive that is always plugged into the system, only when it is used. Options in /etc/fstab:
+
+    noauto
+    Do not mount at boot. Here, auto does not refer to automount.
+
+    x-systemd.automount
+    Use the systemd automount facility.
+
+    x-systemd.automount.device-timeout=10
+    If this device is not available, say it is a network device accessible through NFS, timeout after 10 seconds instead of getting hung.
+
+    x-systemd.automount.idle-timeout=30
+    If the device is not used for 30 seconds, unmount it. 
+
+Note that the device may be mounted during boot, but then it should be unmounted after the timeout specified.
+
+18.16. Listing Currently Mounted Filesystems
+
+The list of currently mounted filesystems can be seen by typing: $ mount
+
+19.1. Filesystem Features: Swap, Quotas, Usage - Introduction
+
+Linux uses a robust swap space implementation through which the virtual memory system permits the apparent use of more memory than is physically available. Filesystem quotas can be used to administer user account usage of disk space. Utilities such as df and du enable easy monitoring of filesystem usage and capacities. 
+
+19.1. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Explain the concepts of swap and quotas.
+    Use the utilities that help manage quotas: quotacheck, quotaon, quotaoff, edquota, and quota.
+    Use the utilities df and du.
+
+19.3.a. Swap I
+
+Linux employs a virtual memory system, in which the operating system can function as if it had more memory than it really does. This kind of memory overcommission functions in two ways:
+
+    Many programs do not actually use all the memory they are given permission to use. Sometimes, this is because child processes inherit a copy of the parent's memory regions utilizing a COW (Copy On Write) technique, in which the child only obtains a unique copy (on a page-by-page basis) when there is a change.
+    When memory pressure becomes important, less active memory regions may be swapped out to disk, to be recalled only when needed again.
+
+Such swapping is usually done to one or more dedicated partitions or files; Linux permits multiple swap areas, so the needs can be adjusted dynamically. Each area has a priority, and lower priority areas are not used until higher priority areas are filled.
+
+19.3.b. Swap II
+
+In most situations, the recommended swap size is the total RAM on the system. You can see what your system is currently using for swap areas by looking at /proc/swaps and get basic memory statistics with free:
+
+19.3.c. Swap III
+
+The only commands involving swap are:
+
+    mkswap: format a swap partition or file
+    swapon: activate a swap partition or file
+    swapoff: deactivate a swap partition or file.
+
+At any given time, most memory is in use for caching file contents to prevent actually going to the disk any more than necessary, or in a sub-optimal order or timing. Such pages of memory are never swapped out as the backing store is the files themselves, so writing out a swap would be pointless; instead, dirty pages (memory containing updated file contents that no longer reflect the stored data) are flushed out to disk.
+
+It is also worth pointing out that in Linux memory used by the kernel itself, as opposed to application memory, is never swapped out, in distinction to some other operating systems.
+
+19.4. Quotas
+
+Linux can use and enforce quotas on filesystems. Disk quotas allow administrators to control the maximum space particular users (or groups) are allowed. Considerable flexibility is allowed and quotas can be assigned on a per filesystem basis. Protection is provided against a subset of users exhausting collective resources.   
+
+These utilities help manage quotas:
+
+    quotacheck: generates and updates quota accounting files
+    quotaon: enables quota accounting
+    quotaoff: disables quota accounting
+    edquota: used for editing user or group quotas
+    quota: reports on usage and limits.
+
+Quota operations require the existence of the files aquota.user and aquota.group in the root directory of the filesystem using quotas.
+
+Quotas may be enabled or disabled on a per filesystem basis. In addition, Linux supports the use of quotas based on user and group IDs.
+
+Different filesystem types may have additional quota-related utilities, such as xfs_quota.
+
+19.5.a. Setting up Quotas I
+
+To create a filesystem quota, you must first make sure you have mounted the filesystem with the user and/or group quota mount options. Without these, nothing else will work. The basic steps are:
+
+    Mount the filesystem with user and/or group quota options:
+    - Add the usrquota and/or grpquota options to the filesystems entry in /etc/fstab
+    - Remount the filesystem (or mount it if new)
+    Run quotacheck on the filesystem to set up quotas
+    Enable quotas on the filesystem
+    Set quotas with the edquota program.
+
+
+19.5.b. Setting up Quotas II
+
+Thus, to create a filesystem quota you must first make sure that you have mounted the filesystem with the user and/or group quota mount options. Without these, nothing else will work.
+
+First, you need to put the right options in /etc/fstab as in:
+
+/dev/sda5 /home ext4 defaults,usrquota 1 1
+
+where we have assumed /home is on a dedicated partition.
+
+Then, test with the following commands:
+
+$ sudo mount -o remount /home
+
+$ sudo quotacheck -vu /home
+
+$ sudo quotaon -vu /home
+
+$ sudo edquota someusername
+
+You may also want to set up grace periods with edquota. The mount options that should be used in the /etc/fstab file are usrquota for user quotas and grpquota for group quotas.
+
+
+19.6. quotacheck
+
+The quotacheck utility creates/updates the quota accounting files (aquota.user and aquota.group) for the filesystem.
+
+To update user files for all filesystems in /etc/fstab with user quota options:
+
+$ sudo quotacheck -ua
+
+To update group files for all filesystems in /etc/fstab with group quota options:
+
+$ sudo quotacheck -ga
+
+To update the user file for a particular filesystem:
+
+$ sudo quotacheck -u [somefilesystem]
+
+To update the group file for a particular filesystem:
+
+$ sudo quotacheck -g [somefilesystem]
+
+Use the -v option to get more verbose output.
+
+quotacheck is generally only run when quotas are initially turned on (or need to be updated). The program may also be run when fsck reports errors in the filesystem when the system is starting up.
+
+19.7.a. Turning quotas on and off I
+
+quotaon is used to turn filesystem quotas on; quotaoff is used to turn them off. They are used as in:
+
+$ sudo quotaon  [flags] [filesystem]
+
+$ sudo quotaoff [flags] [filesystem]
+
+where the flags can be:
+
+-a, --all                               turn quotas off for all filesystems
+-f, --off                               turn quotas off
+-u, --user                              operate on user quotas
+-g, --group                             operate on group quotas
+-p, --print-state                       print whether quotas are on or off
+-x, --xfs-command=cmd                   perform XFS quota command
+-F, --format=formatname                 operate on specific quota format
+-v, --verbose                           print more messages
+-h, --help                              display this help text and exit
+-V, --version                           display version information and exit
+
+19.7.b. Turning quotas on and off II
+
+Note that quotaon and quotaoff programs are really one and the same and operate accordingly to which name they are called with.
+
+For example:
+
+$ sudo quotaon -av
+/dev/sda6 [/]: group quotas turned on
+/dev/sda5 [/home]: user quotas turned on
+
+$ sudo quotaoff -av
+/dev/sda6 [/]: group quotas turned off
+/dev/sda5 [/home]: user quotas turned off
+
+$ sudo quotaon -avu
+/dev/sda5 [/home]: user quotas turned on
+
+$ sudo quotaoff -avu
+/dev/sda5 [/home]: user quotas turned off
+
+$ sudo quotaon -avg
+/dev/sda6 [/]: group quotas turned on
+
+$ sudo quotaoff -avg
+/dev/sda6 [/]: group quotas turned off
+
+Note also that quota operations will fail if the files aquota.user or aquota.group do not exist.
+
+
+19.8. Examining Quotas
+
+The quota utility is used to generate reports on quotas:
+
+    quota (or quota -u) returns your current user quota.
+    quota -g returns your current group quota.
+    The superuser may look at quotas for any user or group by specifying a user or group name.
+
+For example:
+
+$ sudo quota george
+
+Disk quotas for user george (uid 1000):
+
+   Filesystem   blocks quota limit grace files quota limit grace
+
+      /dev/sda5 837572   500  1000        5804     0     0
+
+$ sudo quota gracie
+
+Disk quotas for user gracie (uid 1001):
+
+  Filesystem     blocks quota limit grace files quota limit grace
+
+    /dev/sda5     83757  5000 10000        5804     0     0
+
+19.9.a. Setting Quotas I
+
+Typing edquota brings up the quota editor. For the specified user or group, a temporary file is created with a text representation of the current disk quotas for that user or group.
+
+Then, an editor is invoked for that file, and quotas may then be modified. Once you leave the editor, the temporary file is read and the binary quota files adopt the changes.
+
+The only fields which can be edited in the quota are the soft and hard limits. The other fields are informational only.
+
+Below are examples of how to use edquota:
+
+    edquota -u [username] edits limits for username
+    edquota -g [groupname] edits limits for groupname
+    edquota -u -p [userproto] [username] copies userproto's user quota values to username
+    edquota -g -p [groupproto] [groupname] copies groupproto's group quota values to groupname
+    edquota -t to set grace periods
+
+The third and fourth commands are useful for including in scripts which might be used to create new accounts and set quotas for them.
+
+
+19.9.b. Setting Quotas II
+
+Quotas for users and groups may be set for disk blocks and/or inodes. In addition, soft and hard limits may be set as well as grace periods: Soft limits may be exceeded for a grace period. Hard limits may never be exceeded.
+
+The grace period is set on a per filesystem basis.
+
+$ sudo edquota gracie
+
+$ sudo edquota -t
+
+
+19.10. Filesystem Usage
+
+The df (disk free) utility examines filesystem capacity and usage. In the example we provided here the -h option means "human-readable" (i.e., in KB, MB, GB, not bytes) and -T shows the filesystem type. Using the -i option would show inode information instead of bytes.
+
+
+20.1. The Ext2/Ext3/Ext4 Filesystems - Introduction
+
+The ext family of filesystems have been native to Linux since its earliest days, and have been the most widely used of the choices available. Until very recently, ext4 was the most frequent default choice of Linux distributions, due to its excellent combination of performance, integrity, and stability.
+
+20.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Describe the main features of the ext4 filesystem and how it is laid out on disk.
+    Explain the concepts of block groups, superblock, data blocks and inodes.
+    Use the dumpe2fs and tune2fs utilities. 
+    List the ext4 filesystem enhancements.
+
+20.3. Ext4 History and Basics
+
+The ext2 filesystem was Linux's original native variety and is available on all Linux systems, but is rarely used today. 
+
+The ext3 filesystem was the first journalling extension of ext2. It had the same on-disk layout as ext2 except for the presence of a journal file.
+
+The ext4 filesystem first appeared in kernel version 2.6.19, and its experimental designation was removed in version 2.6.28. It included significant enhancements, such as the use of extents for large files, instead of lists of file blocks.
+
+An extent is simply a group of contiguous blocks. Using them can improve large file performance and reduce fragmentation.
+
+ext4 is the default filesystem on most enterprise Linux distributions, although RHEL 7 has adopted XFS as the default.
+
+20.4. Ext4 Features
+
+There is a close correspondence of features between the VFS and the ext2/3/4 filesystems, as each has been designed with the other in mind.
+
+Block size is selected when the filesystem is built; it can be 512, 1024, 2048, or 4096 bytes. By default, 4096 is usually used for hard disk systems, unless the partition is very small. Unless there are very many small files, larger block sizes can be more efficient in terms of minimizing hard disk access.
+
+The Linux kernel memory management system requires only an integral number of blocks must fit into a page of memory; thus, you cannot have 8 KB blocks on an x86 platform where pages of memory are 4 KB in size.
+
+The number of inodes on the filesystem can also be tuned, which may save disk space.
+
+A feature called inode reservation consists of reserving several inodes when a directory is created, expecting them to be used in the future. This improves performance, because, when new files are created, the directory already has inodes allocated.
+
+If the pathname of a symbolic link is less than 60 characters, a so-called fast symbolic link is created, which is stored directly in the inode, obviating the need to read a data block.
+
+
+20.5. Ext4 Layout
+
+All fields are written to disk in little-endian order, except the journal.
+
+Disk blocks are partitioned into block groups, each of which contains inode and data blocks stored adjacently, thereby lowering access time.
+
+The layout of a standard block group is simple. For block group 0, the first 1024 bytes are unused (to allow for boot sectors, etc). The superblock will start at the first block, except for block group 0. This is followed by the group descriptors and a number of GDT (Group Descriptor Table) blocks. These are followed by the data block bitmap, the inode bitmap, the inode table, and the data blocks.
+
+Data blocks are pre-allocated to files before they are actually used. Thus, when a file's size is increased, adjacent space has already been reserved and file fragmentation is reduced.
+
+The filesystem superblock contains bit-fields which are used to ascertain whether or not the filesystem requires checking when it is first mounted during system initialization. The status can be:
+
+    clean: filesystem cleanly unmounted previously
+    dirty: usually means mounted
+    unknown: not cleanly unmounted, such as when there is a system crash.
+
+In the latter two cases, fsck will be run to check the filesystem and fix any problems before it is mounted.
+
+Other fields in the superblock contain information about when the filesystem was last checked, both in date and number of mounts, and automatic checking is triggered when tunable limits are exceeded for these quantities.
+
+The first block on the filesystem is the so-called boot block, and is reserved for the partition boot sector.
+
+20.6.a. Block Groups I
+
+After the boot block there is a series of block groups, each of which is the same size. The layout of each block group is given in the following figure:  
+
+                ext2/3/4 Filesystem Layout
+
+=====================================================================================================
+|               |               |                   |               |               |               |
+|      Super    |      Group    |     Data Block    |    Inode      |   Inode Table |    Data       |
+|      Block    |   Descriptors |       Bitmap      |    Bitmap     |   (n Blocks)  |   Blokcs      |
+|               |               |                   |               |               |               |
+=====================================================================================================
+
+20.6.b. Block Groups II
+
+The first and second blocks are the same in every block group, and comprise the Superblock and the Group Descriptors. Under normal circumstances, only those in the first block group are used by the kernel; the duplicate copies are only referenced when the filesystem is being checked. If everything is OK, the kernel merely copies them over from the first block group. If there is a problem with the master copies, it goes to the next and so on until a healthy one is found and the filesystem structure is rebuilt. This redundancy makes it very difficult to thoroughly fry an ext2/3/4 filesystem, as long as the filesystem checks are run periodically.
+
+In the early incarnations of the ext filesystem family, each block group contained the group descriptors for every block group, as well as a copy of the superblock. As an optimization, however, today not all block groups have a copy of the superblock and group descriptors. To see what you have, you could examine it as in the accompanying screenshot, (putting in an appropriate device node) to see precise locations. This happens when the filesystem is created with the sparse_super option, which is the default.
+
+20.6.c. Block Groups III
+
+The number of block groups is constrained by the fact that the block bitmap, which identifies used and free blocks within the group, has to fit in a single block. Thus, if a block is 4096 bytes in size, a block group can contain no more than 32 K blocks, or 128 MB. If we take the largest possible block group size, a 10 GB partition would thus have to have at least 80 block groups.
+
+The block allocator tries to keep each file's blocks within the same block group to reduce seek times.
+
+20.7. dumpe2fs
+
+As we have just demonstrated, one can use the utility dumpe2fs to scan the filesystem information; doing so on a partition reveals:  
+
+$ sudo dumpe2fs /dev/sda1
+
+Filesystem volume name:  RHEL7
+Last mounted on:         /
+Filesystem UUID:         9d6b5801-9c7e-4c17-9068-49923952338e
+Filesystem magic number: 0xEF53
+Filesystem revision #:   1 (dynamic)
+Filesystem features:     has_journal ext_attr resize_inode dir_index filetype needs_recovery extent 64bit flex_bg sparse_super
+
+Filesystem flags:        signed_directory_hash
+Default mount options:   user_xattr acl
+Filesystem state:        clean
+Errors behavior:         Continue
+Filesystem OS type:      Linux
+Inode count:             1908736
+Block count:             7630592
+Reserved block count:    381529
+
+Free blocks:             5353383
+Free inodes:             1682479
+First block:             0
+Block size:              4096
+Fragment size:           4096
+Group descriptor size:   64
+Reserved GDT blocks:     1024
+Blocks per group:        32768
+Fragments per group:     32768
+Inodes per group:        8192
+Inode blocks per group:  512
+Flex block group size:   16
+Filesystem created:      Wed Sep 3 03:52:55 2014
+Last mount time:         Fri Oct 24 09:18:58 2014
+Last write time:         Fri Oct 24 09:18:58 2014
+Mount count:             89
+Maximum mount count:     -1
+Last checked:            Wed Sep 3 03:52:55 2014
+Check interval:          0 (<none>)
+Lifetime writes:         103 GB
+Reserved blocks uid:     0 (user root)
+Reserved blocks gid:     0 (group root)
+First inode:             11
+Inode size:              256
+Required extra isize:    28
+Desired extra isize:     28
+Journal inode:           8
+First orphan inode:      396118
+Default directory hash:  half_md4
+Directory Hash Seed:     e488c43e-241c-4014-91d8-6a9d3d6c7784
+Journal backup:          inode blocks
+Journal features:        journal_incompat_revoke journal_64bit
+Journal size:            128M
+Journal length:          32768
+Journal sequence:        0x00023592
+Journal start:           16394
+ 
+
+Group 0: (Blocks 0-32767) [ITABLE_ZEROED]
+    Checksum 0x2921, unused inodes 7738
+    Primary superblock at 0, Group descriptors at 1-4
+    Reserved GDT blocks at 5-1028
+    Block bitmap at 1029 (+1029), Inode bitmap at 1045 (+1045)
+    Inode table at 1061-1572 (+1061)
+    22880 free blocks, 8174 free inodes, 2 directories, 7738 unused inodes
+    Free blocks: 9381-9672, 10180-32767
+    Free inodes: 19-8192
+
+Group 1: (Blocks 32768-65535) [INODE_UNINIT, ITABLE_ZEROED]
+
+    Checksum 0x473e, unused inodes 8192
+    Backup superblock at 32768, Group descriptors at 32769-32772
+    Reserved GDT blocks at 32773-33796
+    Block bitmap at 1030 (bg #0 + 1030), Inode bitmap at 1046 (bg #0 + 1046)
+    Inode table at 1573-2084 (bg #0 + 1573)
+    14918 free blocks, 8192 free inodes, 0 directories, 8192 unused inodes
+    Free blocks: 33797, 33800-33919, 34108-34511, 34521-34559, 34784-34815, 37053-38015, 38039- 38040, 38080-38527, 38529-38911, Free inodes: 8193-16384
+.....
+Group 196: (Blocks 6422528-6455295) [INODE_UNINIT, ITABLE_ZEROED]
+    Checksum 0x946d, unused inodes 8192
+    Block bitmap at 6291460 (bg #192 + 4), Inode bitmap at 6291476 (bg #192 + 20)
+    Inode table at 6293536-6294047 (bg #192 + 2080)
+    32768 free blocks, 8192 free inodes, 0 directories, 8192 unused inodes
+    Free blocks: 6422528-6455295
+
+    Free inodes: 1605633-1613824
+    ....
+Group 232: (Blocks 7602176-7630591) [INODE_UNINIT, ITABLE_ZEROED]
+    Checksum 0xa174, unused inodes 8192
+    Block bitmap at 7340040 (bg #224 + 8), Inode bitmap at 7340056 (bg #224 + 24)
+    Inode table at 7344160-7344671 (bg #224 + 4128)
+    28416 free blocks, 8192 free inodes, 0 directories, 8192 unused inodes
+    Free blocks: 7602176-7630591
+    Free inodes: 1900545-1908736
+
+20.8. tunee2fs
+
+ tune2fs can be used to change filesystem parameters.
+
+To change the maximum number of mounts between filesystem checks (max-mount-count):
+
+$ sudo tune2fs -c 25 /dev/sda1
+
+To change the time interval between checks (interval-between-checks):
+
+$ sudo tune2fs -i 10 /dev/sda1
+
+To list the contents of the superblock including the current values of parameters which can be changed:
+
+$ sudo tune2fs -l /dev/sda1
+
+20.9. Superblock Information
+
+The superblock contains global information about the filesystem, including:
+
+    Mount count and maximum mount count (The mount count is incremented every time the disk is successfully mounted, and its value is the number of times this has been done since the last fsck.) One can also force a filesystem check after 180 days by default, or another time that can be changed by the tune2fs utility.\u200b
+    Block size (Cannot be greater than a page of memory, set by mkfs.)\u200b
+    Blocks per group
+    Free block count
+    Free inode count
+    Operating System ID.
+
+As we discussed earlier, the superblock is redundantly stored in several block groups.
+
+20.10. Data Blocks and Inodes
+
+The data block and inode bitmaps are blocks whose bits contain 0 for each free block or inode and 1 for each used one. There is only one of each of these bitmaps per block group.
+
+The inode table contains as many consecutive blocks as are necessary to cover the number of inodes in the block group. Each inode requires 128 bytes; thus, a 4 KB block can contain 32 inodes. 
+
+Note that there is space reserved for some operating system dependent information; different OSs could possibly mount an ext2/3/4 filesystem, much as Linux can mount many kinds of non-native filesystems.
+
+Note that the inode number itself is not stored on the disk in this structure; its value can be quickly calculated from the block group number and offset within the inode table.
+
+The ext2 and ext3 filesystems did not yet incorporate the use of extents to organize larger files. Instead, the i_block[] array of pointers to data blocks, of length EXT2_N_BLOCKS=15, is described by the inode. The way this is handled is somewhat complex:
+
+    The first 12 elements in this array simply point to the first 12 data blocks in the file.
+    The 13th element points to a block that represents a second-order array of block numbers; the 14th to a third-order array, and the 15th to a fourth-order array.
+
+This algorithm makes addressing small files go the fastest, as it should. For instance, with a 4 KB block size, a 48 KB file can be directly addressed, a 2 MB file requires a second-order process, a 1 GB a third-order, a 4 GB file a fourth-order.
+
+20.11. Ext4 Filesystem Enhancements
+
+The ext4 filesystem:
+
+    Is backwards-compatible with ext3 and ext2.
+    Increases the maximum filesytem size to 1 EB (from 16 TB), and the maximum file to 16 TB (from 2 TB). These limits arise from the 48-bit addressing that is used; full 64-bit addressing may be in the future, but not really needed at this point.
+    Increases without limit the maximum number of subdirectories, which was limited to 32 K in ext3.
+    Splits large files into the largest possible extents instead of using indirect block mapping. This can improve large file performance and reduce fragmentation.
+    Uses multiblock allocation which can allocate space all at once, instead of one block at a time. In addition, delayed allocation can also increase performance.
+    Can pre-allocate disk space for a file. The allocated space is usually both guaranteed and contiguous.
+    Uses allocate-on-flush, a performance technique which delays block allocation until data is written to disk.
+    Uses fast fsck which can make the speed of a filesystem check go up by an order of magnitude or more.
+    Uses checksums for the journal which improves reliability. This can also safely avoid a disk I/O wait during journalling, resulting in a slight performance boost.
+    Uses improved timestamps measured in nanoseconds.
+    Includes snapshot support.
+
+21.1. THe XFS and btrfs Filesystems - Introduction
+
+The XFS and btrfs filesystems have arisen as important challengers to the dominance of ext4 in Enterprise Linux distributions. These next generation filesystems have robust capabilities with respect to handling large sizes, spanning multiple physical and logical volumes and performance metrics.
+
+21.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Describe the XFS filesystem.
+    Maintain the XFS filesystem.
+    Describe the btrfs filesystem.
+
+21.2. XFS Features
+
+XFS was originally designed and created by SGI and used in the IRIX operating system and was subsequently ported to Linux. It was explicitly engineered to deal with large data sets, as well as handle parallel I/O tasks very effectively.
+
+It can handle:
+
+    Up to 16 EB (exabytes) for the total filesystem.
+    Up to 8 EB for an individual file.
+
+High performance is one of the key design elements of XFS, which implements methods for:
+
+    Employing DMA (Direct Memory Access) I/O
+    Guaranteeing an I/O rate
+    Adjusting stripe size to match underlying RAID or LVM devices.
+
+In contrast to traditional filesystems,  XFS  can also journal quota information. This leads to decreased recovery time when a quota-enabled filesystem is uncleanly unmounted. Furthermore, the journal can be on an external device.
+
+As with other UNIX and Linux filesystems, XFS supports extended attributes.
+
+21.4. XFS Filesystem Maintenance
+
+Maintaining an XFS filesystem is made easier by the fact that most of the maintenance tasks can be done on-line (i.e., while the filesystem is fully mounted). These include:
+
+    Defragmenting
+    Enlarging
+    Dumping/Restoring.
+
+Backup and restore can be done with the native XFS utilities:
+
+    xfsdump
+    xfsrestore
+
+which can be conveniently paused and then resumed at a later time. Because these utility programs are also multi-threaded, XFS dumps and restores can be accomplished very quickly.
+
+While XFS does not directly support hardware or software snapshots, the xfs-freeze utility can be used to quiesce the filesystem, thus allowing a snapshot tool to work on the underlying device. The Linux LVM tools will automatically use xfs-freeze to quiesce the filesystem for snapshots.
+
+XFS supports quotas and the traditional quota commands can be used to manipulate per-filesystem quotas on an XFS volume. However, if you use the xfs-quota command you can use the per-directory quotas that XFS supports.
+
+21.5. THe btrfs Filesystem
+
+Both Linux developers and Linux users with high performance and high capacity or specialized needs are following the development and gradual deployment of the btrfs filesytem, which was created by Chris Mason. The name stands for B-tree file system. Full documentation can be found at  http://btrfs.wiki.kernel.org/index.php/Main_Page .
+
+btrfs is intended to address the lack of pooling, snapshots, checksums, and integral multi-device spanning in other Linux filesystems such as ext4. Such features can be crucial for Linux to scale into larger enterprise storage configurations.
+
+While btrfs has been in the mainline kernel since 2.6.29 it has generally been viewed as experimental, although a few vendors have used it in new products. 
+
+One of the main features is the ability to take frequent snapshots of entire filesystems, or sub-volumes of entire filesystems in virtually no time. Because btrfs makes extensive use of COW techniques (Copy on Write), such a snapshot does not involve any more initial space for data blocks or any I/O activity except for some metadata updating.
+
+One can easily revert to the state described by earlier snapshots and even induce the kernel to reboot off an earlier root filesystem snapshot.
+
+btrfs maintains its own internal framework for adding or removing new partitions and/or physical media to existing filesystems, much as LVM (Logical Volume Management) does.
+
+Before btrfs becomes suitable for day-to-day use in critical filesystems, some tasks require finishing. For a review of the development history of btrfs and expected evolution see http://lwn.net/Articles/575841.
+
+22.1. Disk Encryption - Introduction
+
+Filesystems may be encrypted to protect them from both prying eyes and attempts to corrupt the data they contain. Encryption can be chosen at installation or incorporated later. Linux distributions most often use the LUKS method and perform encryption-related tasks using cryptsetup.
+
+22.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Provide sound reasons for using encryption and know when it is called for.
+    Understand how LUKS operates through the use of cryptsetup.
+    Be able to set up and use encrypted filesystems and partitions.
+    Know how to configure the system to mount encrypted partitions at boot. 
+
+22.3.

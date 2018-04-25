@@ -2631,4 +2631,812 @@ By the end of this chapter, you should be able to:
     Use utilities such as blkid and fdisk.
     Back up and restore partition tables.
 
+17.3.a. Common Disk Types I
+
+There are a number of different hard disk types, each of which is characterized by the type of data bus they are attached to, and other factors, such as speed, capacity, how well multiple drives work simultaneously, etc.:
+
+    SATA (Serial Advanced Technology  Attachment)
+    These were designed to replace Parallel ATA (PATA), as IDE came to be called. They had faster data transfer, smaller cables and were seen by the operating system as SCSI devices, simplifying the writing of device drivers etc., even though the hardware is not real SCSI.
+    Compared to PATA, SATA offers a smaller cable size (7 pins), native hot swapping, and faster and more efficient data transfer. The newest drives can handle 16 GB/s, but 3 GB/s and 6 GB/s are more common in consumer grade devices.
+    SCSI (Small Computer Systems Interface)
+    These have been the mainstay of Enterprise servers for decades. While they may have lower capacity than that of SATA drives, they tend to be much faster and work in parallel much better, such as is needed for RAID configurations. There are numerous SCSI versions, such as Fast, Wide, Ultra and UltraWide just to make things confusing, and there are many different device drivers depending on the hardware, unlike for SATA, where standardized drivers can fit a large variety of hardware. 
+    SCSI disks range from narrow (8 bit bus) to wide (16 bit bus) with a transfer rate of from about 5 MB per second (narrow, standard SCSI) to about 160 MB per second (Ultra-Wide SCSI-3). Most PCs use single-ended or differential SCSI drives. Unfortunately, the two types are not compatible with each other. Fortunately, the two types of devices may coexist on the same controller. Single-ended device controllers may host up to 7 devices and use a maximum cable length of about 6 meters. Differential controllers may host up to 15 devices and have a maximum cable length of about 12 meters.
+
+17.3.b. Common DIsk Types II
+
+Other types of hard disk, besides the ones just mentioned, are:
+
+    SAS
+    Serial Attached SCSI is a newer point-to-point serial protocol replacing the earlier Parallel SCSI interface. Data transfer rates are similar to SATA, but overall performance is better.
+    USB
+    Universal Serial Bus devices include pen drives and external USB drives. The operating system sees them as SCSI devices.
+    SSD
+    Solid State Drives have come down in price, have no moving parts, use less power than drives with rotational media, and have faster transfer speeds. Internal SSDs are even installed with the same form factor and in the same enclosures as conventional drives. SSDs still cost quite a bit more, but price is decreasing. It is common to have both SSDs and rotational drives in the same machines, with frequently accessed and performance critical data transfers taking place on the SSDs.
+    IDE and EIDE (Integrated Drive Electronics, and Enhanced IDE) 
+    These were the standard in consumer laptops and desktops for years. However, they are small and slow when compared to more modern hardware and they have therefore become obsolete; controllers can no longer be found in current machines.
+
+
+17.4.a. Disk Geometry I
+
+Disk Geometry is a concept with a long history for rotational media; one talks of heads, cylinders, tracks and sectors. The below screenshot shows how to view the geometry with fdisk, which we will explore shortly.
+
+
+17.4.b. DIsk Geomatry II
+
+Rotational disks are composed of one or more platters, each of which is read by one more heads. The heads read a circular track off a platter as the disk spins.
+
+These circular tracks are divided into data blocks called sectors, typically 512 bytes in size. A cylinder is a group which consists of the same track on all platters.
+
+For a long time, this physical structural image has been less and less relevant as internal electronics on the drive actually obscure much of it. Furthermore, SSDs have no moving parts or anything like the above ingredients.
+
+Currently, disks are starting to be manufactured with sectors larger than 512 bytes; 4 KB is becoming available. While larger sector sizes can lead to faster transfer speeds, operating system support is not yet mature in dealing with the larger sizes. 
+
+17.5. Partitioning
+
+Disks are divided into partitions. In geometrical terms, these consist of physically contiguous groups of sectors or cylinders.
+
+A disk may have up to four primary partitions. One of the primary partitions can be designated as an extended partition, which can be subdivided further into logical partitions. 
+
+SCSI and related standards, such as SATA, support up to 15 partitions on the disk. Partitions 1-4 are primary or extended partitions; partitions 5-15 are logical partitions. There can only be one extended partition, but it can be divided into as many logical partitions as needed, until one hits the maximum number of partitions allowed.
+
+For example, the first SCSI or SATA drive is called sda, the second sdb and so on. On the first drive, /dev/sda1 is the first primary partition and /dev/sda2 is the second, etc.
+
+If we created an extended partition as /dev/sda3 it could then be divided into logical partitions, with number designations like /dev/sda5, /dev/sda6 etc.
+
+Note: Linux doesn't require partitions to begin or end on cylinder boundaries, but other operating systems might complain if they don't. For this reason, the widely deployed Linux partitioning utilities try to play nice and end on boundaries. Obviously, partitions should not overlap either. 
+
+
+17.6.a. Why Partition? I
+
+There are multiple reasons as to why it makes sense to divide your system data into multiple partitions, including:
+
+    Separation
+    It is desirable to isolate user and application data from operating system files, most of which are only read except during installation and upgrades. For example, /home, which contains user-specific files is often put on a separate partition. 
+    Sharing
+    Multiple operating systems or machines may use the same filesystems. For example, /home might be mounted as an NFS share across a network. Or one might have a multi-boot system, even with just different Linux versions and you might want to share something like /usr/local or /home.
+    Security
+    It may be desirable to impose different quotas, permissions and settings for different parts of the system.
+    Size
+    Some data is rather constant and some is rather variable or volatile and changes often and can grow quite a bit in size. For example, such variable data is often placed in a /var partition. If the partition gets filled up, it will be less likely to crash the system if one is not filling up a more critical space.
+
+
+17.4.b. Why Partition? II
+
+Other reasons are:
+
+    Performance
+    Data which has to be read often, especially in large chunks, will be accessed more rapidly if it is either placed in a partition on a quicker disk (such as an SSD) or in old-fashioned terms, close to the center of the disk where seek times are shorter.
+    Swap
+    Linux systems prefer to have swap space placed in a separate partition rather than a file on another partition. This has a secondary advantage that hibernation schemes exploit the space in the swap partition.
+
+A common partition layout contains a /boot partition, a partition for the root filesystem /, a swap partition, and a partition for the /home directory tree.
+
+Keep in mind that it is more difficult to re-size a partition after the fact than during install/creation time. Plan accordingly.
+
+We will discuss filesystem layouts and partitioning impact on them in a later section.
+
+
+17.7.a. Partition Table I
+
+The disk partition table is contained within the disk's Master Boot Record (MBR), which is 512 bytes in length and whose structure is defined by an operating system-independent convention.
+
+The partition table is 64 bytes long and is placed after the 446 byte boot record. (Note for the curious, there are 2 more bytes at the end of the MBR known as the magic number, signature word, or end of sector marker, which always have the value 0x55AA.)
+
+The first 446 bytes are reserved for program code. They typically hold part of a boot loader program such as GRUB.
+
+Only one partition on a given disk may be marked active. When the system boots, that partition is where the master boot loader looks for items to load. 
+
+17.7.b. Partition Table II
+
+Each entry in the partition table is 16 bytes long, and describes one of the four possible primary partitions. The information for each is:
+
+    Active bit
+    Beginning address in cylinder/head/sectors (CHS) format (ignored by Linux)
+    Partition type code, indicating: xfs, LVM, ntfs, ext4, swap, etc.
+    Ending address in CHS (also ignored by Linux)
+    Start sector, counting linearly from 0
+    Number of sectors in partition.
+
+Linux only uses the last two fields for addressing using the linear block addressing (LBA) method.
+
+17.8. Naming Disk Devices and Nodes
+
+The Linux kernel interacts at a low level with disks through device nodes normally found in the /dev directory. Normally, device nodes are accessed only through the infrastructure of the kernel's Virtual File System; raw access through the device nodes is an extremely efficient way to destroy a filesystem. For example, you do this when formatting a partition, as in:
+
+$ sudo mkfs.ext4 /dev/sda9
+
+Device nodes for SCSI and SATA disks follow a simple naming convention:
+
+    The first hard disk is /dev/sda
+    The second hard disk is /dev/sdb
+    Etc.
+
+Partitions are also easily enumerated, as in:
+
+    /dev/sdb1 is the first partition on the second disk
+    /dev/sdc4 is the fourth partition on the third disk.
+
+In the above, sd means SCSI or SATA disk. Back in the days where IDE disks could be found, they would have been /dev/hda3, /dev/hdb etc. 
+
+Doing ls -l /dev will show you the current available disk device nodes.
+
+17.9. More on SCSI Device Names
+
+For SCSI devices we need to elaborate a little more on what we mean by first, second hard disk etc. These are determined by the controller number/ID number combination.
+
+The drive designation (a, b, c, etc.) is primarily based on the ID number of the SCSI device rather than its position on the bus itself.
+
+For example, if we had two SCSI controllers with target ID number 1 and 3 on controller 0 and target ID number 2 and 5 on controller 1 (with ID 2 as the last drive):
+
+    ID 1 would be /dev/sda
+    ID 3 would be /dev/sdb
+    ID 2 (on controller 1) would be /dev/sdc
+    ID 5 would be /dev/sdd
+
+17.10.a. blkid and lsblk I
+
+blkid is a utility to locate block devices and report on their attributes. It works with the libblkid library. It can take as an argument a particular device or list of devices. The screenshot below shows a use of blkid with arguments. 
+
+blkid will only work on devices which contain data that is finger-printable; e.g., an empty partition will not generate a block-identifying UUID. blkid has two main forms of operation: either searching for a device with a specific NAME=value pair, or displaying NAME=value pairs for one or more devices. Without arguments, it will report on all devices. There are quite a few options designating how to specify devices and what attributes to report on.
+
+17.10.b. blkid and lsblk II
+
+A related utility is lsblk which presents results in a tree format
+
+
+NAME   MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
+sda      8:0    0 931.5G  0 disk 
+\u251c\u2500sda1   8:1    0   512M  0 part /boot/efi
+\u251c\u2500sda2   8:2    0 923.1G  0 part /
+\u2514\u2500sda3   8:3    0     8G  0 part [SWAP]
+sr0     11:0    1  1024M  0 rom  
+loop0    7:0    0   4.9M  1 loop /snap/canonical-livepatch/38
+loop1    7:1    0  93.5M  1 loop /snap/ao/9
+loop2    7:2    0   4.4M  1 loop /snap/canonical-livepatch/26
+loop3    7:3    0  81.7M  1 loop /snap/core/4206
+loop4    7:4    0  86.6M  1 loop /snap/core/4486
+loop5    7:5    0  38.9M  1 loop /snap/telegram-sergiusens/68
+loop6    7:6    0  35.8M  1 loop /snap/telegram-sergiusens/53
+loop7    7:7    0  86.5M  1 loop /snap/core/4407
+loop8    7:8    0     4K  1 loop /snap/anbox-installer/17
+loop9    7:9    0   4.9M  1 loop /snap/canonical-livepatch/39
+loop10   7:10   0  38.9M  1 loop /snap/telegram-sergiusens/55
+loop11   7:11   0   512M  0 loop /mnt
+
+17.11. Sizing Up Partitions
+
+Linux systems should use a minimum of two partitions:
+
+    /(root): used for the entire logical filesystem
+    - In practice, most installations will have more than one filesystem on more than one partition, which are joined together at mount points.
+    - It is difficult with most filesystem types to resize the root partition; using LVM, which we will discuss later, can make this easier.
+    While it is certainly possible to run Linux with just the root partition, most systems use more partitions to allow for easier backups, more efficient use of disk drives, and better security.
+    Swap: used as an extension of physical memory; pages of memory which are not file-backed can be moved to disk until needed again.
+    - The usual recommendation is swap size should be equal to physical memory in size; sometimes, twice that is recommended. However, the correct choice depends on the related issues of system use scenarios, as well as hardware capabilities. Examples of thinking on this subject can be found at https://help.ubuntu.com/  community/SwapFaq and http://www.novell.com/support/kb/doc.php?id=7010157.
+    - The system may have multiple swap partitions and/or swap files.
+    - On a single disk system, try to center the swap partition; on multiple disk systems, try to spread swap over disks.
+    - Adding more and more swap will not necessarily help because, at a certain point, it becomes useless. One will need to either add more memory or re-evaluate the system setup.
+
+Swap is used as virtual memory: Any time pages from processes are moved out of physical memory, they are generally stored on the swap device.
+
+17.12. Backing Up and Restoring Partition Tables
+
+Partitioning and re-partitioning disks are dangerous operations. In order to be able to restore the situation if something goes wrong, one needs to know how to backup and restore partition tables.
+
+Backing up can be easily done with dd, as in:
+
+$ sudo dd if=/dev/sda of=mbrbackup bs=512 count=1
+
+which will back up the MBR on the first disk, including the 64-bit partition table which is part of it.
+
+The MBR can then be restored, if necessary, by doing:
+
+$ sudo dd if=mbrbackup of=/dev/sda bs=512 count=1
+
+Note that the above commands only copy the primary partition table; they do not deal with any partition tables stored in the other partitions (for extended partitions, etc.)
+
+Note: You should always assume that changing the disk partition table might eliminate all data in all filesystems on the disk (It should not, but be cautious!). Therefore, it is always prudent to make a backup of all data (that is not already backed up) before doing any of this type of work.
+
+In particular, one must be careful in using dd: A simple typing error or misused option could destroy your entire disk; hence, do backups! 
+
+17.13. Partition Table Editors
+
+There are a number of utilities which can be used to manage partition tables:
+
+    fdisk is a menu driven partition table editor. It is the most standard and one of the most flexible of the partition table editors. It is the only one of these utilities we will discuss.
+    sfdisk is a non-interactive partition editor program, making it useful for scripting. Use the sfdisk tool with care!
+    parted is the GNU partition manipulation program. It can create, remove, resize, and move partitions (including certain filesystems).
+    gparted is a widely-used graphical interface to parted.
+
+Many Linux distributions have a live/installation version which can be run off either a CDROM or USB stick. These media usually include a copy of gparted, so they can easily be used as a graphical partitioning tool on disks which are not actually being used while the partitioning program is run.
+
+Note that gparted can do a lot of operations besides just adding and deleting partitions and the other operations fdisk can do, like designating the partition type. One can move and resize partitions and format them as well, which implies it has to understand the details of many filesystem types; this goes far beyond a partition editor's essential functions.
+
+While this is convenient, it is difficult to get right and errors can have serious consequences. Thus, it is often good to drop down to the command line and do each of these operations separately with lower-level tools. In fact, Red Hat Enterprise Linux no longer supports gparted.
+
+17.14.a. Using fdisk I
+
+fdisk will always be included in any Linux installation, so it is a good idea to learn how to use it. You must be root to run fdisk. It can be somewhat complex to handle, and caution is advised.
+
+The fdisk interface is simple and text-menu driven. After starting on a particular disk, as in:
+
+$ sudo fdisk /dev/sdb
+
+the main (one letter) commands are:
+
+    m: Display the menu
+    p: List the partition table
+    n: Create a new partition
+    d: Delete a partition
+    t: Change a partition type
+    w: Write the new partition table information and exit
+    q: Quit without making changes.
+
+Fortunately, no actual changes are made until you write the partition table to the disk by entering w. It is therefore important to verify your partition table is correct (with p) before writing to disk with w. If something is wrong, you can jump out safely with q.
+
+17.14.b. Using fdisk II
+
+The system will not use the new partition table until you reboot. However, you can use the following command:
+
+$ sudo partprobe -s
+
+to try and read in the revised partition table. However, this doesn't always work reliably and it is best to reboot before doing things like formatting new partitions, etc., as mixing up partitions can be catastrophic.
+
+At any time you can do:
+
+$ cat /proc/partitions
+
+to examine what partitions the operating system is currently aware of.
+
+18.1. Filesystem Features: Attributes, Creating, Checking, Mounting - Introduction
+
+video
+
+18.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Explain concepts such as inodes, directory files and extended attributes.
+    Create and format filesystems.
+    Check and fix errors on filesystems.
+    Mount and unmount filesystems.
+
+18.3. Inodes
+
+An inode is a data structure on disk that describes and stores file attributes, including location. Every file is associated with its own inode. The information stored in the inode includes:
+
+    Permissions\u200b
+    User and group ownership\u200b
+    Size\u200b
+    Timestamps (nanosecond)
+    - \u200bLast access time
+    - Last modification time
+    - Change time
+
+Note: file names are not stored in a file's inode, but are instead stored in the directory file.
+
+All I/O activity concerning a file usually also involves the file's inode as information must be updated.
+
+18.4. Directory Files
+
+A directory file is a particular type of file that is used to associate file names and inodes. There are two ways to associate (or link) a file name with an inode:
+
+    Hard links point to an inode.\u200b
+    Soft (or symbolic) links point to a file name which has an associated inode.
+
+Each association of a directory file contents and an inode is known as a link. Additional links can be created using ln.
+
+Because it is possible (and quite common) for two or more directory entries to point to the same inode (hard links), a file can be known by multiple names, each of which has its own place in the directory structure. However, it can have only one inode no matter which name is being used.
+
+When a process refers to a pathname, the kernel searches directories to find the corresponding inode number. After the name has been converted to an inode number, the inode is loaded into memory and is used by subsequent requests.
+
+18.5.a. Extended Attributes and lsattr/chattr I
+
+ Extended Attributes associate metadata not interpreted directly by the filesystem with files. Four namespaces exist: user, trusted, security, and system. Later, we will see that the system namespace is used for Access Control Lists (ACLs), and the security namespace is used by SELinux.
+
+Flag values are stored in the file inode and may be modified and set only by the root user. They are viewed with lsattr and set with chattr.
+
+In the user namespace, flags may be set for files:
+
+    i: Immutable
+    A file with the immutable attribute cannot be modified (not even by root). It cannot be deleted or renamed. No hard link can be created to it, and no data can be written to the file. Only the superuser can set or clear this attribute.
+    a: Append-only
+    A file with the append-only attribute set can only be opened in append mode for writing. Only the superuser can set or clear this attribute.
+    d: No-dump
+    A file with the no-dump attribute set is ignored when the dump program is run. This is useful for swap and cache files that you don't want to waste time backing up.
+    A: No atime update
+    A file with the no-atime-update attribute set will not modify its atime (access time) record when the file is accessed but not otherwise modified. This can increase the performance on some systems because it reduces the amount of disk I/O on the system. 
+
+18.5.b. Extended Attributes and lsattr/chattr II
+
+Note that there are other flags that can be set; typing man chattr will show the whole list. The format for chattr is:
+
+$ chattr [+|-|=mode] filename
+
+lsattr is used to display attributes for a file:
+
+$ lsattr filename
+
+18.6.a. Creating and Formatting Filesystems I
+
+Every filesystem type has a utility for formatting (making) a filesystem on a partition. The generic name for these utilities is mkfs. However, this is just a frontend for filesystem-specific programs.
+
+$ ls -lh /sbin/mkfs*
+-rwxr-xr-x 1 root root  11K Feb 15 10:22 /sbin/mkfs
+-rwxr-xr-x 1 root root  27K Feb 15 10:22 /sbin/mkfs.bfs
+-rwxr-xr-x 1 root root  35K Feb 15 10:22 /sbin/mkfs.cramfs
+lrwxrwxrwx 1 root root    9 Dec 23  2015 /sbin/mkfs.exfat -> mkexfatfs
+lrwxrwxrwx 1 root root    6 Oct 30  2015 /sbin/mkfs.ext2 -> mke2fs
+lrwxrwxrwx 1 root root    6 Oct 30  2015 /sbin/mkfs.ext3 -> mke2fs
+lrwxrwxrwx 1 root root    6 Oct 30  2015 /sbin/mkfs.ext4 -> mke2fs
+lrwxrwxrwx 1 root root    6 Oct 30  2015 /sbin/mkfs.ext4dev -> mke2fs
+-rwxr-xr-x 1 root root  27K May 26  2016 /sbin/mkfs.fat
+-rwxr-xr-x 1 root root  76K Feb 15 10:22 /sbin/mkfs.minix
+lrwxrwxrwx 1 root root    8 May 26  2016 /sbin/mkfs.msdos -> mkfs.fat
+lrwxrwxrwx 1 root root    6 Jan 28  2017 /sbin/mkfs.ntfs -> mkntfs
+lrwxrwxrwx 1 root root   10 Nov  7  2015 /sbin/mkfs.reiserfs -> mkreiserfs
+lrwxrwxrwx 1 root root    8 May 26  2016 /sbin/mkfs.vfat -> mkfs.fat
+-rwxr-xr-x 1 root root 356K Sep  8  2017 /sbin/mkfs.xfs
+
+18.6.b. Creating and Formatting Filesystems II
+
+Thus, the following two commands are entirely equivalent:
+
+$ sudo mkfs -t ext4 /dev/sda10
+
+$ sudo mkfs.ext4 /dev/sda10
+
+The general format for mkfs is:
+
+mkfs [-t fstype] [options] [device-file]
+
+where [device-file] is usually a device name like /dev/sda3 or /dev/vg/lvm1.
+
+Each filesystem type has its own particular options that can be set when formatting. For example, when creating an ext4 filesystem, one thing to keep in mind are the journalling settings. These include defining the journal file size and whether or not to use an external journal file.
+
+One should look at the man page for each of the mkfs.* programs to see details.
+
+18.7.a. Checking and Fixing Filesystems I
+
+Every filesystem type has a utility designed to check for errors (and hopefully fix any that are found). The generic name for these utilities is fsck. However, this is just a frontend for filesystem-specific programs.
+
+
+$ ls -lh /sbin/fsck*
+-rwxr-xr-x 1 root root 44K Feb 15 10:22 /sbin/fsck
+-rwxr-xr-x 1 root root 35K Feb 15 10:22 /sbin/fsck.cramfs
+lrwxrwxrwx 1 root root   9 Dec 23  2015 /sbin/fsck.exfat -> exfatfsck
+lrwxrwxrwx 1 root root   6 Oct 30  2015 /sbin/fsck.ext2 -> e2fsck
+lrwxrwxrwx 1 root root   6 Oct 30  2015 /sbin/fsck.ext3 -> e2fsck
+lrwxrwxrwx 1 root root   6 Oct 30  2015 /sbin/fsck.ext4 -> e2fsck
+lrwxrwxrwx 1 root root   6 Oct 30  2015 /sbin/fsck.ext4dev -> e2fsck
+-rwxr-xr-x 1 root root 59K May 26  2016 /sbin/fsck.fat
+-rwxr-xr-x 1 root root 76K Feb 15 10:22 /sbin/fsck.minix
+lrwxrwxrwx 1 root root   8 May 26  2016 /sbin/fsck.msdos -> fsck.fat
+-rwxr-xr-x 1 root root 333 Feb  5  2016 /sbin/fsck.nfs
+-rwxr-xr-x 1 root root 282 Nov  7  2015 /sbin/fsck.reiserfs
+lrwxrwxrwx 1 root root   8 May 26  2016 /sbin/fsck.vfat -> fsck.fat
+-rwxr-xr-x 1 root root 433 Sep  8  2017 /sbin/fsck.xfs
+-rwxr-xr-x 1 root root 262 Mar 29 19:39 /sbin/fsck.zfs
+
+18.7.b. Checking and Fixing Filesystems II
+
+Thus, the following two commands are entirely equivalent:
+
+$ sudo fsck -t ext4 /dev/sda10
+$ sudo fsck.ext4 /dev/sda10
+
+If the filesystem is of a type understood by the operating system, you can almost always just do:
+
+$ sudo fsck -t ext4 /dev/sda10
+
+and the system will figure out the type by examining the first few bytes on the partition.
+
+fsck is run automatically after a set number of mounts or a set interval since the last time it was run or after an abnormal shutdown. It should only be run on unmounted filesystems. You can force a check of all mounted filesystems at boot by doing:
+
+$ sudo touch /forcefsck
+$ sudo reboot
+
+The file /forcefsck will disappear after the successful check. One reason this is a valuable trick is it can do a fsck on the root filesystem, which is hard to do on a running system.
+
+
+18.7.c. Checking and Fixing Filesystems III
+
+The general format for fsck is:
+
+fsck [-t fstype] [options] [device-file]
+
+where [device-file] is usually a device name like /dev/sda3 or /dev/vg/lvm1. Usually, one does not need to specify the filesystem type, as fsck can figure it out by examining the superblocks at the start of the partition.
+
+One can control whether any errors found should be fixed one by one manually with the -r option, or automatically, as best possible, by using the -a option, etc. In addition, each filesystem type may have its own particular options that can be set when checking.
+
+Note that journalling filesystems are much faster to check than older generation filesystems for two reasons:
+
+    One rarely needs to scan the entire partition for errors, as everything but the very last transaction has been logged and confirmed, so it takes almost no time to check.\u200b
+    Even if one does check the whole filesystem, newer filesystems have been designed with fast fsck in mind; older filesystems did not think much about this when they were designed as sizes were much smaller.
+
+One should look at the man page for each of the fsck.* programs to see details.
+
+18.8. Mounting and Unmounting Filesystems
+
+All accessible files in Linux are organized into one large hierarchical tree structure with the head of the tree being the root directory (/). However, it is common to have more than one partition (each of which can have its own filesystem type) joined together in the same filesystem tree. These partitions can also be on different physical devices, even on a network.
+
+The mount program allows attaching at any point in the tree structure; umount allows detaching them.
+
+The mount point is the directory where the filesystem is attached. It must exist before mount can use it; mkdir can be used to create an empty directory. If a pre-existing directory is used and it contains files prior to being used as a mount point, they will be hidden after mounting. These files are not deleted and will again be visible when the filesystem is unmounted.
+
+By default, only the superuser can mount and unmount filesystems.
+
+18.9. mount
+
+Each filesystem is mounted under a specific directory, as in:
+
+$ sudo mount -t ext /dev/sdb4 /home
+
+    Mounts an ext4 filesystem
+    The filesystem is located on a specific partition of a hard drive (/dev/sdb4)
+    The filesystem is mounted at the position /home in the current directory tree
+    Any files residing in the original /home directory are hidden until the partition is unmounted.
+
+Note that in this example the filesystem is mounted by using the device node it resides on. However, it is also possible to mount using a label or a UUID. Thus, the following are all equivalent:
+
+$ sudo mount /dev/sda2  /home
+$ sudo mount LABEL=home /home
+$ sudo mount    -L home /home
+$ sudo mount UUID=26d58ee2-9d20-4dc7-b6ab-aa87c3cfb69a /home
+$ sudo mount   -U 26d58ee2-9d20-4dc7-b6ab-aa87c3cfb69a /home
+
+Labels are assigned by filesystem type specific utilities, such as e2label, and UUIDs are assigned when partitions are created as containers for the filesystem.
+
+While any of these three methods for specifying the device can be used, modern systems deprecate using the device node form because the names can change according to how the system is booted, which hard drives are found first, etc. Labels are an improvement, but, on rare occasions, one could have two partitions that wind up with the same label. UUIDs, however, should always be unique, and are created when partitions are created.
+
+18.10.a. mount Options I
+
+mount takes many options, some generic like -a (mount all filesystems mentioned in /etc/fstab) and many filesystem specific; it has a very long man page. A common example would be:
+
+$ sudo mount -o remount,ro /myfs 
+
+which remounts a filesystem with a read-only attribute. 
+
+18.11. umount
+
+Filesystems can be unmounted, as in:
+
+$ umount [device-file | mount-point]
+
+Below are some examples of how to unmount a filesystem:
+
+    Unmount the /home filesystem:
+    $ sudo umount /home
+    Unmount the /dev/sda3 device:
+    $ sudo umount /dev/sda3
+
+Note that the command to unmount a filesystem is umount (not unmount!).
+
+Like mount, umount has many options, many of which are specific to filesystem type. Once again, the man pages are the best source for specific option information.
+
+The most common error encountered when unmounting a filesystem is trying to do this on a filesystem currently in use; i.e., there are current applications using files or other entries in the filesystem.
+
+This can be as simple as having a terminal window open in a directory on the mounted filesystem. Just using cd in that window, or killing it, will get rid of the device is busy error and allow unmounting.
+
+However, if there are other processes inducing this error, you must kill them before unmounting the filesystem. You can use fuser to find out which users are using the filesystem and kill them (be careful with this, you may also want to warn users first). You can also use lsof ("list open files") to try and see which files are being used and blocking unmounting.
+
+18.12. Network Shares (NFS)
+
+t is common to mount remote filesystems through network shares, so they appear as if they were on the local machine. Probably the most common method used historically has been NFS (Network File System).
+
+NFS was originally developed by Sun Microsystems in 1989, and has been continuously updated. Modern systems use NFSv4, which has been con\u200btinuously updated since 2000.
+
+Other network filesystems include AFS (Andrew File System), and SMB (Server Message Book), also termed CIFS (Common Internet File System).
+
+Because a network filesystem may be unavailable at any time, eith\u200ber because it is not present on the network share, or the network is unavailable, systems have to be prepared for this possibility.
+
+Thus, in such circumstances, a system should be instructed not to get hung, or blocked, while waiting longer than a specified period. These can be specified in the mount command:
+
+$ sudo mount -t nfs myserver.com:/sharedir /mnt/sharedir\u200b
+
+or in /etc/fstab. Put the following line in /etc/fstab to mount on boot or with mount -a:\u200b
+
+myserver.com:/sharedir /mnt/sharedir nfs rsize=8192,wsize=8192,timeo=14,intr 0 0
+
+The system may try to mount the NFS filesystem before the network is up. The _netdev and noauto options can be used. For more information, check man nfs, examine the mount options.
+
+It can also be solved using autofs or automount.
+
+Mount has a large amount of options, some of which are specific to nfs. See the man pages for both nfs and mount for \u200bmore details.
+
+18.13.a. Mounting Filesystems at Boot I
+
+During system boot, the command mount -a is executed. This mounts all filesystems listed in the /etc/fstab configuration file. Entries can refer to both local and remote network-mounted filesystems. Here is an example showing you how to mount all filesystems listed in the /etc/fstab configuration file during system boot.
+
+This file shows what filesystems may be automatically mounted at boot and where they may be found on the local machine or network. It can specify who may mount them and with what permissions, and other relevant options. Some of the lines refer to special pseudo-filesystems such as proc, sys, and devpts.
+
+18.13.b. Mounting Filesystems at Boot II
+
+Each record in the file contains fields separated by white space listing:
+
+    Device node, label, or UUID
+    For filesystems which do not have a device node, such as tmpfs, proc, and sysfs, this field is just a place holder; sometimes, you will see the word none in that column, or used on the command line.
+    Mount point
+    This can also be a place holder, like for swap, which is not mounted anywhere.
+    A comma-separated list of options
+    dump frequency (or a 0) 
+    This is used by the dump -w command.
+    fsck pass number (or 0, meaning do not check state at boot).
+
+18.13.c. Mounting Filesystems at Boot III
+
+The mount and umount utilities can use information in /etc/fstab; in such a case one could type
+
+$ sudo mount /usr/src    
+
+instead of
+
+$ sudo mount LABEL=src /usr/src
+
+in the above example.
+
+18.14. Automatic Filesystem Mounting
+
+Linux systems have long had the ability to mount a filesystem only when it is needed. Historically, this was done using autofs. This utility requires installation of the autofs package using the appropriate package manager and configuration of files in /etc.
+
+While autofs is very flexible and well understood, systemd-based systems (including all recent enterprise Linux distributions) come with automount facilities built into the systemd framework. Configuring this is as simple as adding a line in /etc/fstab specifying the proper device, mount point and mounting options, such as:
+
+LABEL=Sam128 /SAM ext4 noauto,x-systemd.automount,x-systemd.device-timeout=10,x-systemd.idle-timeout=30 0 0
+
+and then, either rebooting or issuing the command:
+
+$ sudo systemctl daemon-reload
+$ sudo systemctl restart local-fs.target
+
+Next, we will give an example and explain the options. 
+
+18.15. automount Example
+
+The example provided mounts a USB pen drive that is always plugged into the system, only when it is used. Options in /etc/fstab:
+
+    noauto
+    Do not mount at boot. Here, auto does not refer to automount.
+
+    x-systemd.automount
+    Use the systemd automount facility.
+
+    x-systemd.automount.device-timeout=10
+    If this device is not available, say it is a network device accessible through NFS, timeout after 10 seconds instead of getting hung.
+
+    x-systemd.automount.idle-timeout=30
+    If the device is not used for 30 seconds, unmount it. 
+
+Note that the device may be mounted during boot, but then it should be unmounted after the timeout specified.
+
+18.16. Listing Currently Mounted Filesystems
+
+The list of currently mounted filesystems can be seen by typing: $ mount
+
+19.1. Filesystem Features: Swap, Quotas, Usage - Introduction
+
+Linux uses a robust swap space implementation through which the virtual memory system permits the apparent use of more memory than is physically available. Filesystem quotas can be used to administer user account usage of disk space. Utilities such as df and du enable easy monitoring of filesystem usage and capacities. 
+
+19.1. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Explain the concepts of swap and quotas.
+    Use the utilities that help manage quotas: quotacheck, quotaon, quotaoff, edquota, and quota.
+    Use the utilities df and du.
+
+19.3.a. Swap I
+
+Linux employs a virtual memory system, in which the operating system can function as if it had more memory than it really does. This kind of memory overcommission functions in two ways:
+
+    Many programs do not actually use all the memory they are given permission to use. Sometimes, this is because child processes inherit a copy of the parent's memory regions utilizing a COW (Copy On Write) technique, in which the child only obtains a unique copy (on a page-by-page basis) when there is a change.
+    When memory pressure becomes important, less active memory regions may be swapped out to disk, to be recalled only when needed again.
+
+Such swapping is usually done to one or more dedicated partitions or files; Linux permits multiple swap areas, so the needs can be adjusted dynamically. Each area has a priority, and lower priority areas are not used until higher priority areas are filled.
+
+19.3.b. Swap II
+
+In most situations, the recommended swap size is the total RAM on the system. You can see what your system is currently using for swap areas by looking at /proc/swaps and get basic memory statistics with free:
+
+19.3.c. Swap III
+
+The only commands involving swap are:
+
+    mkswap: format a swap partition or file
+    swapon: activate a swap partition or file
+    swapoff: deactivate a swap partition or file.
+
+At any given time, most memory is in use for caching file contents to prevent actually going to the disk any more than necessary, or in a sub-optimal order or timing. Such pages of memory are never swapped out as the backing store is the files themselves, so writing out a swap would be pointless; instead, dirty pages (memory containing updated file contents that no longer reflect the stored data) are flushed out to disk.
+
+It is also worth pointing out that in Linux memory used by the kernel itself, as opposed to application memory, is never swapped out, in distinction to some other operating systems.
+
+19.4. Quotas
+
+Linux can use and enforce quotas on filesystems. Disk quotas allow administrators to control the maximum space particular users (or groups) are allowed. Considerable flexibility is allowed and quotas can be assigned on a per filesystem basis. Protection is provided against a subset of users exhausting collective resources.   
+
+These utilities help manage quotas:
+
+    quotacheck: generates and updates quota accounting files
+    quotaon: enables quota accounting
+    quotaoff: disables quota accounting
+    edquota: used for editing user or group quotas
+    quota: reports on usage and limits.
+
+Quota operations require the existence of the files aquota.user and aquota.group in the root directory of the filesystem using quotas.
+
+Quotas may be enabled or disabled on a per filesystem basis. In addition, Linux supports the use of quotas based on user and group IDs.
+
+Different filesystem types may have additional quota-related utilities, such as xfs_quota.
+
+19.5.a. Setting up Quotas I
+
+To create a filesystem quota, you must first make sure you have mounted the filesystem with the user and/or group quota mount options. Without these, nothing else will work. The basic steps are:
+
+    Mount the filesystem with user and/or group quota options:
+    - Add the usrquota and/or grpquota options to the filesystems entry in /etc/fstab
+    - Remount the filesystem (or mount it if new)
+    Run quotacheck on the filesystem to set up quotas
+    Enable quotas on the filesystem
+    Set quotas with the edquota program.
+
+
+19.5.b. Setting up Quotas II
+
+Thus, to create a filesystem quota you must first make sure that you have mounted the filesystem with the user and/or group quota mount options. Without these, nothing else will work.
+
+First, you need to put the right options in /etc/fstab as in:
+
+/dev/sda5 /home ext4 defaults,usrquota 1 1
+
+where we have assumed /home is on a dedicated partition.
+
+Then, test with the following commands:
+
+$ sudo mount -o remount /home
+
+$ sudo quotacheck -vu /home
+
+$ sudo quotaon -vu /home
+
+$ sudo edquota someusername
+
+You may also want to set up grace periods with edquota. The mount options that should be used in the /etc/fstab file are usrquota for user quotas and grpquota for group quotas.
+
+
+19.6. quotacheck
+
+The quotacheck utility creates/updates the quota accounting files (aquota.user and aquota.group) for the filesystem.
+
+To update user files for all filesystems in /etc/fstab with user quota options:
+
+$ sudo quotacheck -ua
+
+To update group files for all filesystems in /etc/fstab with group quota options:
+
+$ sudo quotacheck -ga
+
+To update the user file for a particular filesystem:
+
+$ sudo quotacheck -u [somefilesystem]
+
+To update the group file for a particular filesystem:
+
+$ sudo quotacheck -g [somefilesystem]
+
+Use the -v option to get more verbose output.
+
+quotacheck is generally only run when quotas are initially turned on (or need to be updated). The program may also be run when fsck reports errors in the filesystem when the system is starting up.
+
+19.7.a. Turning quotas on and off I
+
+quotaon is used to turn filesystem quotas on; quotaoff is used to turn them off. They are used as in:
+
+$ sudo quotaon  [flags] [filesystem]
+
+$ sudo quotaoff [flags] [filesystem]
+
+where the flags can be:
+
+-a, --all                               turn quotas off for all filesystems
+-f, --off                               turn quotas off
+-u, --user                              operate on user quotas
+-g, --group                             operate on group quotas
+-p, --print-state                       print whether quotas are on or off
+-x, --xfs-command=cmd                   perform XFS quota command
+-F, --format=formatname                 operate on specific quota format
+-v, --verbose                           print more messages
+-h, --help                              display this help text and exit
+-V, --version                           display version information and exit
+
+19.7.b. Turning quotas on and off II
+
+Note that quotaon and quotaoff programs are really one and the same and operate accordingly to which name they are called with.
+
+For example:
+
+$ sudo quotaon -av
+/dev/sda6 [/]: group quotas turned on
+/dev/sda5 [/home]: user quotas turned on
+
+$ sudo quotaoff -av
+/dev/sda6 [/]: group quotas turned off
+/dev/sda5 [/home]: user quotas turned off
+
+$ sudo quotaon -avu
+/dev/sda5 [/home]: user quotas turned on
+
+$ sudo quotaoff -avu
+/dev/sda5 [/home]: user quotas turned off
+
+$ sudo quotaon -avg
+/dev/sda6 [/]: group quotas turned on
+
+$ sudo quotaoff -avg
+/dev/sda6 [/]: group quotas turned off
+
+Note also that quota operations will fail if the files aquota.user or aquota.group do not exist.
+
+
+19.8. Examining Quotas
+
+The quota utility is used to generate reports on quotas:
+
+    quota (or quota -u) returns your current user quota.
+    quota -g returns your current group quota.
+    The superuser may look at quotas for any user or group by specifying a user or group name.
+
+For example:
+
+$ sudo quota george
+
+Disk quotas for user george (uid 1000):
+
+   Filesystem   blocks quota limit grace files quota limit grace
+
+      /dev/sda5 837572   500  1000        5804     0     0
+
+$ sudo quota gracie
+
+Disk quotas for user gracie (uid 1001):
+
+  Filesystem     blocks quota limit grace files quota limit grace
+
+    /dev/sda5     83757  5000 10000        5804     0     0
+
+19.9.a. Setting Quotas I
+
+Typing edquota brings up the quota editor. For the specified user or group, a temporary file is created with a text representation of the current disk quotas for that user or group.
+
+Then, an editor is invoked for that file, and quotas may then be modified. Once you leave the editor, the temporary file is read and the binary quota files adopt the changes.
+
+The only fields which can be edited in the quota are the soft and hard limits. The other fields are informational only.
+
+Below are examples of how to use edquota:
+
+    edquota -u [username] edits limits for username
+    edquota -g [groupname] edits limits for groupname
+    edquota -u -p [userproto] [username] copies userproto's user quota values to username
+    edquota -g -p [groupproto] [groupname] copies groupproto's group quota values to groupname
+    edquota -t to set grace periods
+
+The third and fourth commands are useful for including in scripts which might be used to create new accounts and set quotas for them.
+
+
+19.9.b. Setting Quotas II
+
+Quotas for users and groups may be set for disk blocks and/or inodes. In addition, soft and hard limits may be set as well as grace periods: Soft limits may be exceeded for a grace period. Hard limits may never be exceeded.
+
+The grace period is set on a per filesystem basis.
+
+$ sudo edquota gracie
+
+$ sudo edquota -t
+
+
+19.10. Filesystem Usage
+
+The df (disk free) utility examines filesystem capacity and usage. In the example we provided here the -h option means "human-readable" (i.e., in KB, MB, GB, not bytes) and -T shows the filesystem type. Using the -i option would show inode information instead of bytes.
+
+
+19.11. Disk Space Usage
+
 
