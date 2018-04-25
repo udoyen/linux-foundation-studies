@@ -1554,5 +1554,1338 @@ The apt-get program is the work horse of installing, removing and upgrading pack
 
     This can save a lot of space.
 
+11.1. System Monitoring - Introduction
+
+11.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Recognize and use available system monitoring tools.
+    Use the /proc and /sys pseudo-filesystems.
+    Use sar to gather system activity and performance data and create reports that are readable by humans.
+
+11.3.a. Available Monitoring Tools I
+
+Linux distributions come with many standard performance and profiling tools already installed. Many of them are familiar from other UNIX-like operating systems, while some were developed specifically for Linux.
+
+Most of these tools make use of mounted pseudo-filesystems, especially /proc and /sys, both of which we have already discussed when examining filesystems and kernel configuration. We will look at them both.
+
+While there are also a number of graphical system monitors that hide many of the details, we will consider only the command line tools in this course.
+
+Before considering some of the main utilities in some detail, you can see a summary on the next few pages, broken down by type; please note that some of the utilities have overlapping domains of coverage. 
+
+11.3.b. Available Monitoring Tools II
+
+                Process and Load Monitoring Utilities
+
+ 
+Utility	        Purpose	                                                    Package
+=======================================================================================
+top	        Process activity, dynamically updated	                        procps
+uptime	    How long the system is running and the average load	            procps
+ps	        Detailed information about processes	                        procps
+pstree	    A tree of processes and their connections  	                    psmisc (or pstree)
+mpstat	    Multiple processor usage	                                    sysstat
+iostat	    CPU utilization and I/O statistics	                            sysstat
+sar	        Display and collect information about system activity	        sysstat
+numastat	Information about NUMA (Non-Uniform Memory Architecture)	    numactl
+strace	    Information about all system calls a process makes 	            strace
 
 
+
+ 11.3.c. Available Monitoring Tools III
+
+Below you will find a summary of the main memory and I/O monitoring utility tools:
+
+ 
+
+ 
+
+Memory Monitoring Utilities 
+
+ 
+Utility    	Purpose 	                                                            Package 
+=================================================================================================
+free	    Brief summary of memory usage                                           procps 
+vmstat 	    Detailed virtual memory statistics and block I/O, dynamically updated 	procps 
+pmap 	    Process memory map 	                                                    procps 
+
+ 
+
+ 
+
+I/O Monitoring Utilities
+
+ 
+Utility	        Purpose	                                                                    Package
+=====================================================================================================
+iostat	        CPU utilization and I/O statistics	                                        sysstat
+sar	            Display and collect information about system activity	                    sysstat
+vmstat	        Detailed virtual memory statistics and block I/O, dynamically updated 	    procps
+
+11.3.d. Available Monitoring Tools IV
+
+Below you will find a summary of the main network monitoring utility tools
+
+ 
+
+ 
+
+Network Monitoring Utilities
+
+ 
+Utility	            Purpose	                                            Package
+======================================================================================
+netstat	            Detailed networking statistics	                    netstat
+iptraf	            Gather information on network interfaces	        iptraf
+tcpdump	            Detailed analysis of network packets and traffic	tcpdump
+wireshark	        Detailed network traffic analysis	                wireshark
+
+11.4. The /proc and /sys Psuedo-filesystems
+
+The /proc and /sys pseudo-filesystems contain a lot of information about the system. Furthermore, many of the entries in these directory trees are writable and can be used to change system behavior; in most cases, this requires a root user.
+
+These are pseudo-filesystems because they exist totally in memory; if you look at the disk partition when the system is not running, there will be only an empty directory which is used as a mount point.
+
+Furthermore, the information displayed is gathered only when it is looked at; there is no constant or periodic polling to update entries. 
+
+11.5. /proc Basics
+
+The /proc pseudo-filesystem has a long history; it has roots in other UNIX operating system variants, and, originally, was developed to display information about processes on the system, each of which has its own subdirectory in /proc with all important process characteristics available.
+
+Over time, it grew to contain a lot of information about system properties, such as interrupts, memory, networking, etc, in a somewhat anarchistic way. It is still extensively used, and we will often refer to it.
+
+11.7.a. /proc/sys I
+
+Most of the tunable system parameters can be found in the subdirectory tree rooted at /proc/sys:
+
+
+total 0
+dr-xr-xr-x 1 root root 0 Apr 24 09:14 abi/
+dr-xr-xr-x 1 root root 0 Apr 24 09:14 debug/
+dr-xr-xr-x 1 root root 0 Apr 24 09:14 dev/
+dr-xr-xr-x 1 root root 0 Apr 24 08:25 fs/
+dr-xr-xr-x 1 root root 0 Apr 24 08:25 kernel/
+dr-xr-xr-x 1 root root 0 Apr 24 09:14 net/
+dr-xr-xr-x 1 root root 0 Apr 24 09:14 sunrpc/
+dr-xr-xr-x 1 root root 0 Apr 24 08:25 vm/
+
+11.7.b. /proc/sys II
+
+Each of these subdirectories contains information, as well as knobs that can be tuned (with care):
+
+    abi/
+    Contains files with application binary information; rarely used.
+    debug/
+    Debugging parameters; for now, just some control of exception reporting.
+    dev/
+    Device parameters, including subdirectories for cdrom, scsi, raid, and parport.
+    fs/
+    Filesystem parameters, including quota, file handles used, and maximums, inode and directory information, etc.
+    kernel/
+    Kernel parameters. There are many important entries here.
+    net/
+    Network parameters. There are subdirectories for ipv4, netfilter, etc.
+    vm/
+    Virtual memory parameters. There are many important entries here.
+
+11.7.c. /proc/sys III
+
+Viewing and changing the parameters can be done with simple commands. For example, the maximum number of threads allowed on the system can be seen by looking at:
+
+$ ls -l /proc/sys/kernel/threads-max
+$ cat /proc/sys/kernel/threads-max
+129498
+
+We then can modify the value and verify the change was effected:
+
+$ sudo bash -c 'echo 100000 > /proc/sys/kernel/threads-max'
+$ cat /proc/sys/kernel/threads-max
+100000
+
+Remember from our discussion of sysctl the same effect is accomplished by:
+
+$ sudo sysctl kernel.threads-max=100000
+
+Viewing the value can be done as a normal user, while changing it requires superuser privilege.
+
+11.8. /sys Basics
+
+The /sys pseudo-filesystem is an integral part of what is termed the Unified Device Model. Conceptually, it is based on a device tree and one can walk through it and see the buses, devices, etc. It also now contains information which may or may not be strictly related to devices, such as kernel modules.
+
+It has a more tightly defined structure than does /proc. Most entries contain only one line of text, although there are exceptions, unlike its antecedent, which has many multi-line entries whose exact contents have been known to change between kernel versions. Thus, the interface is hopefully more stable.
+
+There are system properties which have display entries in both /proc and /sys; for compatibility with widely used system utilities, the older forms are only gradually being whittled down. 
+
+11.9.a. A Survey of /sys I
+
+Support for the sysfs virtual filesystem is built into all modern kernels, and it should be mounted under /sys. However, the unified device model does not require mounting sysfs in order to function.
+
+Let's take a look at what can be found using the 3.18 kernel; we warn you that the exact layout of this filesystem has a tendency to mutate. Doing a top level directory command yields:
+
+$ ls -F /sys
+block/ bus/ class/ dev/ devices/ firmware/ fs/ kernel/ module/ power/
+
+which displays the basic device hierarchy. The device model sysfs implementation also includes information not strictly related to hardware.
+
+11.9.b. A Survey of /sys II
+
+Network devices can be examined with:
+
+$ ls -lF /sys/class/net
+
+11.10.a. sar I
+
+sar stands for the Systems Activity Reporter. It is an all-purpose tool for gathering system activity and performance data and creating reports that are readable by humans.
+
+On Linux systems, the backend to sar is sadc (system activity data collector), which actually accumulates the statistics. It stores information in the /var/log/sa directory, with a daily frequency by default, but which can be adjusted. Data collection can be started from the command line, and regular periodic collection is usually started as a cron job stored in /etc/cron.d/sysstat.
+
+sar then reads in this data (either from the default locations or by use of a file specified with the -f option), and then produces a report.
+
+sar is invoked via:
+
+$ sar [ options ] [ interval ] [ count ]
+
+where the report is repeated after interval seconds a total of count times (which defaults to 1). With no options, it gives a report on CPU usage.
+
+
+11.10.b. sar II
+
+Here is a list of the major sar options, or modes, each one of which has its own sub-options:
+
+ 
+
+                    sar Options
+ Option   	    Meaning
+==========================================================================
+-A	            Almost all information
+-b	            I/O and transfer rate statistics (similar to iostat)
+-B	            Paging statistics including page faults
+-x	            Block device activity (similar to iostat -x)
+-n	            Network statistics
+-P	            Per CPU statistics (as in sar -P ALL 3)
+-q	            Queue lengths (run queue, processes and threads)
+-r	            Swap and memory utilization statistics
+-R	            Memory statistics
+-u	            CPU utilization (default)
+-v	            Statistics about inodes and files and file handles
+-w	            Context switching statistics
+-W	            Swapping statistics, pages in and out per second
+
+
+12.1. Process Monitoring - Introduction
+
+Keeping track of running (and sleeping) processes is an essential system administration task. The ps program has been a main tool for doing so in UNIX-based operating systems for decades.
+
+However, because the utility has a long and complicated history of being used differently in more than one operating system variety, it has a large assortment of options that can be applied with often confusing combinations. Another trusty tool is provided by top, which interactively monitors the system's state.
+
+12.2. Learning Objectives
+
+ By the end of this chapter, you should be able to:
+
+    Use ps to view characteristics and statistics associated with processes.
+    Identify different ps output fields and customize the ps output.
+    Use pstree  to get a visual description of the process ancestry and multi-threaded applications.
+    Use top to view system loads interactively.
+
+12.3. MOnitoring Tools
+
+In this section, we will concentrate on process monitoring. In order to do this, Linux administrators make use of many utilities, such as ps, pstree and top, all of which have long histories in UNIX-like operating systems.
+
+Once again, let us review the list of some of the main tools for process monitoring:
+
+ 
+
+Process and Load Monitoring Utilities
+
+ 
+Utility	            Purpose	                                                    Packag
+===============================================================================================
+top	                Process activity, dynamically updated	                    procps
+uptime	            How long the system is running and the average load	        procps
+ps	                Detailed information about processes	                    procps
+pstree	            A tree of processes and their connections  	                psmisc (or pstree)
+mpstat	            Multiple processor usage	                                sysstat
+iostat	            CPU utilization and I/O statistics	                        sysstat
+sar	                Display and collect information about system activity	    sysstat
+numastat	        Information about NUMA (Non-Uniform Memory Architecture)	numactl
+strace	            Information about all system calls a process makes 	        strace
+
+12.4. Viewing Process State with ps
+
+ps is a workhorse for displaying characteristics and statistics associated with processes, all of which are garnered from the /proc directory associated with the process.
+
+This command utility has existed in all UNIX-like operating system variants, and that diversity is reflected in the complicated potpourri of options that the Linux version of ps accepts, which fall into three categories:
+
+    UNIX options, which must be preceded by -, and which may be grouped.
+    BSD options, which must not be preceded by -, and which may be grouped.
+    GNU long options, each of which must be preceded by --.
+
+Having all these possible options can make life rather confusing. Most system administrators tend to use one or two standard combinations for their daily use.
+
+
+12.6.a. ps Output Fields I
+
+Most of the fields in the preceding example are self-explanatory. Of the others:
+
+    VSZ is the process' virtual memory size in KB.
+    RSS is the resident set size; the non-swapped physical memory a task is using in KB.
+    STAT describes the state of the process; in our example we see only S for sleeping, or R for running. The additional character in the state (where it exists) can be:
+    - < for high priority (not nice)
+    - N for low priority (nice)
+    - L for having pages locked in memory
+    - s for session leader
+    - l for multi-threaded
+    - + for being in the foreground process group.
+
+
+
+You can see a typical usage with the UNIX option format in the screenshot provided. Note that it is now showing the Parent Process ID (PPID) and the niceness (NI). You may observe that many processes show PPID=2 in this example (taken from RHEL 7 and using systemd) an internal kernel process, kthreadd, which is designed to adopt children when the parent process dies. In older kernels and systems, you would see PPID=1 for sbin/init, but it is really the same thing going on.
+
+
+12.7.b. UNIX Option Format for pa II
+
+Some common selection options in the UNIX format are:
+
+    -A or -e
+    Select all processes
+    -N
+    Negate selection (means do the opposite)
+    -C
+    Select by command name
+    -G
+    Select by real group ID (also supports names)
+    -U 
+    Select by real user ID (also supports names).
+
+12.8. Customizing the ps Output
+
+If you use the -o option, followed by a comma-separated list of field identifiers, you can print out a customized list of ps fields:
+
+    pid: Process ID number
+    uid: User ID number
+    cmd: Command with all arguments
+    cputime: Cumulative CPU time
+    pmem: Ratio of the process's resident set size to the physical memory on the machine, expressed as a percentage.
+
+You can see an example in the screenshot provided. You can consult the ps man page for many other output options.
+
+12.9. Using pstree
+
+pstree gives a visual description of the process ancestry and multi-threaded applications:
+
+$ pstree -aAp 2408
+
+bash,2408
+
+|-emacs,24998 pmonitor.tex
+
+|  |-{emacs},25002
+
+|  '-{emacs},25003
+
+|-evince,18036 LFS201-SLIDES.pdf
+
+|  |-{evince},18040
+
+|  |-{evince},18046
+
+|  '-{evince},18047
+
+Consult the man page for pstree for an explanation of many options; in the above we have chosen just to show information for pid=2408.
+
+Note that one of its child processes (evince, pid=18036) has three children of its own. Another way to see that is:
+
+$ ls -l /proc/18036/task 
+
+total 0
+
+dr-xr-xr-x 5 coop coop 0 Sep 11 07:15 18036
+
+dr-xr-xr-x 5 coop coop 0 Sep 11 07:15 18040
+
+dr-xr-xr-x 5 coop coop 0 Sep 11 07:15 18046
+
+dr-xr-xr-x 5 coop coop 0 Sep 11 07:15 18047
+
+12.10. Viewing System Loads with top
+
+When one wants to know what the system is spending its time on, the first tool one often uses is top. The screenshot shows you what you can see when using top without arguments.
+
+By default, top refreshes itself every 3.0 seconds.
+
+12.11.a. top Options I
+
+top is an ancient utility and has a ton of options, as well as interactive commands triggered when certain keys are pressed. For example, if one hits 1, each CPU is shown separately, and if one hits i only active processes are shown. You can see what doing both gives us in the screenshot.
+
+12.11.b. top Options II
+
+Ony has a lot of control over how processes are sorted and which fields are displayed; there are many others besides the defaults. For example, hitting h or ? gives a brief list of interactive commands and q exits. 
+
+Furthermore, one can kill a task by hitting k, or renice it (change its priority) with r.
+
+Doing man top will give you extensive documentation on configuration possibilities, options, and interactive possibilities.
+
+Note that there are popular alternatives to the standard top program, some of which have more visual interfaces and/or additional information, such as htop, ntop and atop. And most Linux distributions have a graphical system monitor (such as gnome-system-monitor or ksysguard) which has a top-like display window that can be shown.
+
+ 
+13.1. Memory: Monitoring Usage and Tunning - Introduction
+
+Over time, systems have become more demanding of memory resources at the same time RAM prices have decreased and performance has improved. Yet, it is often the case that bottlenecks in overall system performance and throughput are memory-related; the CPUs and the I/O subsystem can be waiting for data to be retrieved from or written to memory. There are many tools for monitoring, debugging and tuning a system's behavior with regard to its memory.
+
+13.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    List the primary (inter-related) considerations and tasks involved in memory tuning.
+    Know how to use entries in /proc/sys/vm, and decipher /proc/meminfo.
+    Use vmstat to display information about memory, paging, I/O, processor activity, and processes' memory consumption.
+    Understand how the OOM-killer decides when to take action and selects which processes should be exterminated to open up some memory.
+
+13.3. Memory Tunning Considerations
+
+Tuning the memory sub-system can be a complex process. First of all, one has to take note that memory usage and I/O throughput are intrinsically related, as, in most cases, most memory is being used to cache the contents of files on disk.
+
+Thus, changing memory parameters can have a large effect on I/O performance, and changing I/O parameters can have an equally large converse effect on the virtual memory sub-system.
+
+When tweaking parameters in /proc/sys/vm, the usual best practice is to adjust one thing at a time and look for effects. The primary (inter-related) tasks are:
+
+    Controlling flushing parameters; i.e., how many pages are allowed to be dirty and how often they are flushed out to disk.
+    Controlling swap behavior; i.e., how much pages that reflect file contents are allowed to remain in memory, as opposed to those that need to be swapped out as they have no other backing store.
+    Controlling how much memory overcommission is allowed, since many programs never need the full amount of memory they request, particularly because of copy on write (COW) techniques.
+
+Memory tuning can often be subtle, and what works in one system situation or load may be far from optimal in other circumstances.
+
+13.4. Memory Monitoring Tools
+
+Here is a list of some important basic tools for monitoring and tuning memory in Linux:
+
+
+                    Memory Monitoring Utilities
+
+ 
+Utility    	Purpose	                                                                    Package
+===================================================================================================
+free	    Brief summary of memory usage	                                            procps
+vmstat	    Detailed virtual memory statistics and block I/O, dynamically updated     	procps 
+pmap 	    Process memory map 	                                                        procps 
+
+ 13.5.a. /proc/sys/vm I
+
+The /proc/sys/vm directory contains many tunable knobs to control the Virtual Memory system. Exactly what appears in this directory will depend somewhat on the kernel version. Almost all of the entries are writable (by root).
+
+Remember that these values can be changed either by directly writing to the entry, or using the sysctl utility. Furthermore, by modifying /etc/sysctl.conf, values can be set at boot time.
+
+You can find full documentation for the /proc/sys/vm directory in the kernel source (or kernel documentation package on your distribution), usually under Documentation/sysctl/vm.txt.
+
+13.5.b. /proc/sys/vm II
+
+/proc/sys/vm Entries
+
+  
+Entry	                    Purpose 
+admin_reserve_kbytes	    Amount of free memory reserved for privileged users
+block_dump            	    Enables block I/O debugging
+compact_memory 	            Turns on or off memory compaction (essentially defragmentation) when configured into the kernel
+dirty_background_bytes 	    Dirty memory threshold that triggers writing uncommitted pages to disk
+dirty_background_ratio 	    Percentage of total pages at which kernel will start writing dirty data out to disk
+dirty_bytes 	            The amount of dirty memory a process needs to initiate writing on its own
+dirty_expire_centisecs 	    When dirty data is old enough to be written out in hundredths of a second)
+dirty_ratio	                Percentage of pages at which a process writing will start writing out dirty data on its own
+dirty_writeback_centisecs 	Interval in which periodic writeback daemons wake up to flush. If set to zero, there is no automatic periodic writeback
+drop_caches 	            Echo 1 to free page cache, 2 to free dentry and inode caches, 3 to free all. Note only clean cached pages are dropped; do sync first to flush dirty pages
+extfrag_threshold	        Controls when the kernel should compact memory
+hugepages_treat_as_movable 	Used to toggle how huge pages are treated
+hugetlb_shm_group 	        Sets a group ID that can be used for System V huge pages
+laptop_mode 	            Can control a number of features to save power on laptops
+legacy_va_layout 	        Use old layout (2.4 kernel) for how memory mappings are displayed
+lowmen_reserve_ratio 	    Controls how much low memory is reserved for pages that can only be there; i.e., pages which can go in high memory instead will do so. Only important on 32-bit systems with high memory
+max_map_count 	            Maximum number of memory mapped areas a process may have. The default is 64 K
+min_free_kbytes 	        Minimum free memory that must be reserved in each zone
+mmap_min_addr 	            How much address space a user process cannot memory map. Used for security purposes, to avoid bugs where accidental kernel null dereferences can overwrite the first pages used in an application
+nr_hugepages 	            Minimum size of hugepage pool
+nr_pdflush_hugepages 	    Maximum size of the hugepage pool = nr_hugepages *nr_overcommit_hugepages 
+nr_pdflush_threads 	        Current number of pdflush threads; not writeable
+oom_dump_tasks 	            If enabled, dump information produced when oom-killer cuts in
+oom_kill_allocating_task	If set, the oom-killer kills the task that triggered the out of memory situation, rather than trying to select the best one
+overcommit_kbytes 	        One can set either overcommit_ratio or this entry, but not both
+overcommit_memory	        If 0, kernel estimates how much free memory is left when allocations are made. If 1, permits all allocations until memory actually does run out. If 2, prevents any overcommission
+overcommit_ratio 	        If overcommit_memory = 2 memory commission can reach swap plus this percentage of RAM
+page-cluster 	            Number of pages that can be written to swap at once, as a power of two. Default is 3 (which means 8 pages)
+panic_on_oom 	            Enable system to crash on an out of memory situation
+percpu_pagelist_fraction	Fraction of pages allocated for each cpu in each zone for hot-pluggable CPU machines
+scan_unevictable_pages 	    If written to, system will scan and try to move pages to try and make them reclaimable
+stat_interval 	            How often vm statistics are updated (default 1 second) by vmstat
+swappiness	                How aggressively should the kernel swap
+user_reserve_kbytes	        If overcommit_memory is set to 2 this sets how low the user can draw memory resources
+vfs_cache_pressure	        How aggressively the kernel should reclaim memory used for inode and dentry cache. Default is 100; if 0 this memory is never reclaimed due to memory pressure
+
+
+13.6.a. vmstat I
+
+vmstat is a multi-purpose tool that displays information about memory, paging, I/O, processor activity and processes. It has many options. The general form of the command is: 
+
+$ vmstat [options] [delay] [count]
+
+If delay is given in seconds, the report is repeated at that interval count times; if count is not given, vmstat will keep reporting statistics forever, until it is killed by a signal, such as Ctl-C.
+
+If no other arguments are given, you can see what vmstat displays, where the first line shows averages since the last reboot, while succeeding lines show activity during the specified interval.
+
+$ vmstat 2 4
+
+13.6.b. vmstat II
+
+vmstat Fields 
+
+ 
+Field 	            Subfield 	            Meaning 
+============================================================================================
+Processes	        r 	                    Number of processes waiting to be scheduled in
+Processes	        b	                    Number of processes in uninterruptible sleep 
+memory 	            swpd 	                Virtual memory used (KB) 
+memory 	            free 	                Free (idle) memory (KB) 
+memory 	            buff 	                Buffer memory (KB) 
+memory 	            cache 	                Cached memory (KB) 
+swap 	            si 	                    Memory swapped in (KB) 
+swap 	            so 	                    Memory swapped out (KB) 
+I/O 	            bi 	                    Blocks written to devices (blocks/sec) 
+I/O	                bo 	                    Blocks read from devices (blocks/sec) 
+system 	            in 	                    Interrupts/second 
+system 	            cs 	                    Context switches/second 
+CPU 	            us 	                    CPU time running user code (percentage) 
+CPU 	            sy 	                    CPU time running kernel (system) code (percentage)
+CPU 	            id 	                    CPU time idle (percentage)
+CPU  	            wa 	                    Time waiting for I/O (percentage) 
+CPU 	            st 	                    Time "stolen" from virtual machine (percentage) 
+
+13.6.c. vmstat III
+
+If the option -S m is given, memory statistics will be in MB instead of KB.
+
+With the -a option, vmstat displays information about active and inactive memory, where active memory pages are those which have been recently used; they may be clean (disk contents are up to date) or dirty (need to be flushed to disk eventually). By contrast, inactive memory pages have not been recently used and are more likely to be clean and are released sooner under memory pressure:
+
+$ vmstat -a 2 4
+
+Memory can move back and forth between active and inactive lists, as they get newly referenced, or go a long time between uses.
+
+13.6.e. vmstat V
+
+To get a table of disk statistics use the -d option:
+
+
+$ vmstat -d
+disk- ------------reads------------ ------------writes----------- -----IO------
+       total merged sectors      ms  total merged sectors      ms    cur    sec
+loop0     39      0     240    2356      0      0       0       0      0      2
+loop1    293      0    2628   20692      0      0       0       0      0      1
+loop2     39      0     240     608      0      0       0       0      0      0
+loop3     53      0    2144    1120      0      0       0       0      0      1
+loop4  10817      0   23636  273344      0      0       0       0      0     11
+loop5     88      0     770   20860      0      0       0       0      0      2
+loop6     37      0     674    1368      0      0       0       0      0      1
+loop7     54      0    2106    2888      0      0       0       0      0      2
+sda    65340  13287 4657720 4544888  10025  14478  377770 1248812      0    365
+sr0        0      0       0       0      0      0       0       0      0      0
+sr1       17      0     112      44      0      0       0       0      0      0
+sdb        0      0       0       0      0      0       0       0      0      0
+loop8      5      0      16     100      0      0       0       0      0      0
+loop9   1831      0    3818   49912      0      0       0       0      0      2
+loop10     38      0     658     816      0      0       0       0      0      0
+
+13.6.f. vmstat VI
+
+vmstat Disk Fields 
+
+ 
+Field        	Subfield	Meaning
+=================================================================
+reads	        total	    Total reads completed successfully
+reads	        merged	    Grouped reads (resulting in one I/O)
+reads	        ms	M       illiseconds spent reading
+writes	        total	    Total writes completed successfully
+writes      	merged	    Grouped writes (resulting in one I/O)
+writes	        ms	        Milliseconds spent writing
+I/O	            cur	        I/O in progress
+I/O	            sec	        seconds spent for I/O
+
+13.6.g. vmstat VII
+
+If you just want to get some quick statistics on only one partition, use the -p option:
+
+
+$ vmstat -p /dev/sda2 2
+sda2          reads   read sectors  writes    requested writes
+               65077    4635186      10521     400304
+               65077    4635186      10521     400304
+               65077    4635186      10522     400312
+               65077    4635186      10522     400312
+               65077    4635186      10522     400312
+               65077    4635186      10522     400312
+               65077    4635186      10529     400648
+               65077    4635186      10529     400648
+               65077    4635186      10529     400648
+
+13.7.b. /proc/meminfo II
+
+It is worthwhile to go through this listing and understand most of the entries:
+
+
+/proc/meminfo Entries
+
+ 
+Entry                    	Meaning
+============================================================================================
+MemTotal	                Total usable RAM (physical minus some kernel reserved memory)
+MemFree	                    Free memory in both low and high zones
+Buffers	                    Memory used for temporary block I/O storage
+Cached	                    Page cache memory, mostly for file I/O
+SwapCached	                Memory that was swapped back in but is still in the swap file
+Active	                    Recently used memory, not to be claimed first
+Inactive	                Memory not recently used, more eligible for reclamation
+Active(anon)	            Active memory for anonymous pages
+Inactive(anon)	            Inactive memory for anonymous pages
+Active(file)	            Active memory for file-backed pages
+Inactive(file)	            Inactive memory for file-backed pages
+Unevictable	                Pages which can not be swapped out of memory or released
+Mlocked	                    Pages which are locked in memory
+SwapTotal	                Total swap space available
+SwapFree	                Swap space not being used
+Dirty	                    Memory which needs to be written back to disk
+Writeback	                Memory actively being written back to disk
+AnonPages	                Non-file back pages in cache
+Mapped	                    Memory mapped pages, such as libraries
+Shmem	                    Pages used for shared memory
+Slab	                    Memory used in slabs
+SReclaimable	            Cached memory in slabs that can be reclaimed
+SUnreclaim	                Memory in slabs that can't be reclaimed
+KernelStack	                Memory used in kernel stack
+PageTables	                Memory being used by page table structures
+Bounce	                    Memory used for block device bounce buffers
+WritebackTmp	            Memory used by FUSE filesystems for writeback buffers
+CommitLimit	                Total memory available to be used, including overcommission
+Committed_AS	            Total memory presently allocated, whether or not it is used
+VmallocTotal	            Total memory available in kernel for vmalloc allocations
+VmallocUsed	                Memory actually used by vmalloc allocations
+VmallocChunk	            Largest possible contiguous vmalloc area
+HugePages_Total	            Total size of the huge page pool
+HugePages_Free	            Huge pages that are not yet allocated
+HugePages_Rsvd	            Huge pages that have been reserved, but not yet used
+HugePages_Surp	            Huge pages that are surplus, used for overcommission
+Hugepagesize	            Size of a huge page
+
+ 
+
+ Note that the exact entries you may see will depend on the exact kernel version you are running.
+
+
+13.8.a. OOM Killer I
+
+The simplest way to deal with memory pressure would be to permit memory allocations to succeed as long as free memory is available and then fail when all memory is exhausted.
+
+The second simplest way is to use swap space on disk to push some of the resident memory out of core; in this case, the total available memory (at least in theory) is the actual RAM plus the size of the swap space. The hard part of this is to figure out which pages of memory to swap out when pressure demands. In this approach, once the swap space itself is filled, requests for new memory must fail.
+
+Linux, however, goes one better; it permits the system to overcommit memory, so that it can grant memory requests that exceed the size of RAM plus swap. While this might seem foolhardy, many (if not most) processes do not use all requested memory. 
+
+An example would be a program that allocates a 1 MB buffer, and then uses only a few pages of the memory. Another example is that every time a child process is forked, it receives a copy of the entire memory space of the parent. Because Linux uses the COW (copy on write) technique, unless one of the processes modifies memory, no actual copy needs be made. However, the kernel has to assume that the copy might need to be done.
+
+Thus, the kernel permits overcommission of memory, but only for pages dedicated to user processes; pages used within the kernel are not swappable and are always allocated at request time.
+
+One can modify, and even turn off this overcommission by setting the value of /proc/sys/vm/overcommit_memory:
+
+    0:  (default) Permit overcommission, but refuse obvious overcommits, and give root users somewhat more memory allocation than normal users.
+    1:  All memory requests are allowed to overcommit.
+    2:  Turn off overcommission. Memory requests will fail when the total memory commit reaches the size of the swap space plus a configurable percentage (50 by default) of RAM. This factor is modified changing /proc/sys/vm/overcommit_ratio.
+
+13.8.b. OOM Killer II
+
+If available memory is exhausted, Linux invokes the OOM-killer (Out Of Memory) to decide which process(es) should be exterminated to open up some memory.
+
+There is no precise science for this; the algorithm must be heuristic and cannot satisfy everyone. In the minds of many developers the purpose of the OOM-killer is to permit a graceful shutdown, rather than be a part of normal operations.
+
+An amusing take on this was given by Andries Brouwer (http://lwn.net/Articles/104185/):
+
+"An aircraft company discovered that it was cheaper to fly its planes with lesGs fuel on board. The planes would be lighter and use less fuel and money was saved. On rare occasions however the amount of fuel was insufficient, and the plane would crash. This problem was solved by the engineers of the company by the development of a special OOF (out-of-fuel) mechanism. In emergency cases a passenger was selected and thrown out of the plane. (When necessary, the procedure was repeated.) A large body of theory was developed and many publications were devoted to the problem of properly selecting the victim to be ejected. Should the victim be chosen at random? Or should one choose the heaviest person? Or the oldest? Should passengers pay in order not to be ejected, so that the victim would be the poorest on board? And if for example the heaviest person was chosen, should there be a special exception in case that was the pilot? Should first class passengers be exempted? Now that the OOF mechanism existed, it would be activated every now and then, and eject passengers even when there was no fuel shortage. The engineers are still studying precisely how this malfunction is caused."
+
+In order to make decisions of who gets sacrificed to keep the system alive, a value called the badness is computed (which can be read from /proc/[pid]/oom_score) for each process on the system and the order of the killing is determined by this value.
+
+Two entries in the same directory can be used to promote or demote the likelihood of extermination. The value of oom_adj is the number of bits the points should be adjusted by. Normal users can only increase the badness; a decrease (a negative value for oom_adj) can only be specified by a superuser. The value of oom_adj_score directly adjusts the point value. Note that the use of oom_adj is deprecated.
+
+
+14.1. I/O Monitoring and Tuning - Introduction
+
+video
+
+14.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Use iostat to monitor system I/O device activity.
+    Use iotop to display a constantly updated table of current I/O usage.
+    Use ionice to set both the I/O scheduling class and the priority for a given process.
+
+
+14.3. Disk Bottlenecks
+
+Disk performance problems can be strongly coupled to other factors, such as insufficient memory or inadequate network hardware and tuning. Disentangling can be difficult.
+
+As a rule, a system can be considered as I/O-bound when the CPU is found sitting idle waiting for I/O to complete, or the network is waiting to clear buffers.
+
+However, one can be misled. What appears to be insufficient memory can result from too slow I/O; if memory buffers that are being used for reading and writing fill up, it may appear that memory is the problem, when the real problem is that buffers are not filling up or emptying out fast enough. Similarly, network transfers may be waiting for I/O to complete and cause network throughput to suffer.
+
+Both real-time monitoring and tracing are necessary tools for locating and mitigating disk bottlenecks. However, rare or non-repeating problems can make this difficult to accomplish.
+
+There are many relevant variables and I/O tuning is complex. We will also consider I/O scheduling later.
+
+14.4.a. iostat I
+
+iostat is the basic workhorse utility for monitoring I/O device activity on the system. It can generate reports with a lot of information, with the precise content controlled by options.
+
+You can see in this screenshot what simply typing iostat gives us.
+
+$ iostat
+
+Linux 4.4.0-121-generic (george-HP-Pavilion-17-Notebook-PC) 	24/04/2018 	_x86_64_	(4 CPU)
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           4.85    0.03    2.79   10.38    0.00   81.95
+
+Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
+loop0             0.01         0.02         0.00        120          0
+loop1             0.06         0.25         0.00       1314          0
+loop2             0.01         0.02         0.00        120          0
+loop3             0.01         0.21         0.00       1072          0
+loop4             2.48         2.67         0.00      13879          0
+loop5             0.02         0.07         0.00        385          0
+loop6             0.01         0.06         0.00        337          0
+loop7             0.01         0.20         0.00       1053          0
+sda              39.82       722.98       508.69    3756300    2642957
+scd1              0.00         0.01         0.00         56          0
+loop8             0.00         0.00         0.00          8          0
+loop9             0.47         0.49         0.00       2539          0
+loop10            0.01         0.06         0.00        329          0
+
+14.4.b. iostat II
+
+After a brief summary of CPU utilization, I/O statistics are given: tps (I/O transactions per second; logical requests can be merged into one actual request), blocks read and written per unit time, where the blocks are generally sectors of 512 bytes; and the total blocks read and written.
+
+Information is broken out by disk partition (and if LVM is being used also by dm (device mapper) logical partitions).
+
+
+14.5.a. iostat Options I
+
+A somewhat different display is generated by giving the -k option, which shows results in KB instead of blocks. You can also use -m to get results in MB.
+
+14.5.b. iostat Options II
+
+Another useful option is -N to show by device name (or -d for a somewhat different format), as in the screenshot provided.
+
+14.6.a. iostat Extended Oprions I
+
+A much more detailed report can be obtained by using the -x option (for extended).
+
+14.6.b. iostat Extended Options II
+
+The fields you saw in the screenshot on the previous page have the following meanings:
+
+ 
+
+Extended iostat Fields 
+Field    	Meaning 
+Device 	    Device or partition name 
+rrqm/s 	    Number of read requests merged per second, queued to device 
+wrqm/s	    Number of write requests merged per second, queued to device 
+r/s 	    Number of read requests per second, issued to the device
+w/s 	    Number of write requests per second, issued to the device 
+rkB/s 	    KB read from the device per second 
+wkB/s 	    KB written to the device per second 
+avgrq-sz 	Average request size in 512 byte sectors per second 
+avgqu-sz 	Average queue length of requests issued to the device 
+await 	    Average time (in msecs) I/O requests between when a request is issued and when it is completed: queue time plus service time 
+svctm 	    Average service time (in msecs) for I/O requests 
+%util 	    Percentage of CPU time during the device serviced requests 
+
+ 
+
+Note that if the utilization percentage approaches 100, the system is saturated, or I/O bound.
+
+
+14.7.a. iotop I
+
+Another very useful utility is iotop, which must be run as root. It displays a table of current I/O usage and updates periodically, like top. You can see in the screenshot what typing sudo iotop with no options gives us.
+
+Please note that the be and rt entries in the PRIO are explained in the ionice section, and stand for best effort and real time.
+
+
+14.8.a. Using ionice to Set I/O Priorities I
+
+The ionice utility lets you set both the I/O scheduling class and priority for a given process. It takes the form:
+
+$ ionice [-c class] [-n priority] [-p pid ] [COMMAND [ARGS] ]
+
+If a pid is given with the -p argument results apply to the requested process, otherwise it is the process that will be started by COMMAND with possible arguments. If no arguments are given, ionice returns the scheduling class and priority of the current shell process, as in:
+
+$ ionice
+
+idle: prio 7
+
+The -c parameter specifies the I/O scheduling class, which can have the following 3 values:
+
+I/O Scheduling Classes
+
+I/O Scheduling 
+Class	            -c value	        Meaning
+===================================================================================================
+None or Unknown	        0	            Default value
+Real Time	            1 	            Get first access to the disk, can starve other processes. The priority defines how big a time slice each process gets.
+Best effort 	        2 	            All programs serviced in round-robin fashion, according to priority settings. The Default. 
+Idle	                3 	            No access to disk I/O unless no other program has asked for it for a defined period. 
+
+
+14.8.b. Using ionice to Set I/O Priorities II
+
+The Best Effort and Real Time classes take the -n argument which gives the priority, which can range from 0 to 7, with 0 being the highest priority. An example:
+
+$ ionice -c 2 -n 3 -p 30078
+
+Note: ionice works only when using the CFQ I/O Scheduler, which we will talk about in the next section.
+
+15.1. I/O Scheduling - Introduction
+
+System performance often depends very heavily on optimizing the I/O scheduling strategy. Many (often competing) factors influence behavior; these include minimizing hardware access times, avoiding wear and tear on storage media, ensuring data integrity, granting timely access to applications that need to do I/O, and being able to prioritize important tasks. Linux offers a variety of I/O Schedulers to choose from, each of which has tunable parameters, as well as a number of utilities for reporting on and analyzing I/O performance.
+
+15.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Explain the importance of I/O scheduling and describe the conflicting requirements that need to be satisfied.
+    Delineate and contrast the options available under Linux.  
+    Understand how the CFQ (Completely Fair Queue) and Deadline algorithms work.
+
+15.3. I/O Scheduling
+
+The I/O scheduler provides the interface between the generic block layer and low-level physical device drivers. Both the VM (Virtual Memory) and VFS (Virtual File System) layers submit I/O requests to block devices; it is the job of the I/O scheduling layer to prioritize and order these requests before they are given to the block devices.
+
+Any I/O scheduling algorithm has to satisfy certain (sometimes conflicting) requirements:
+
+    Hardware access times should be minimized; i.e., requests should be ordered according to physical location on the disk. This leads to an elevator scheme where requests are inserted in the pending queue in physical order.
+    Requests should be merged to the extent possible to get as big a contiguous region as possible, which also minimizes disk access time.
+    Requests should be satisfied with as low a latency as is feasible; indeed,in some cases, determinism (in the sense of deadlines) may be important.
+    Write operations can usually wait to migrate from caches to disk without stalling processes. Read operations, however, almost always require a process to wait for completion before proceeding further. Favoring reads over writes leads to better parallelism and system responsiveness.
+    Processes should share the I/O bandwidth in a fair, or at least consciously prioritized fashion; even it means some overall performance slowdown of the I/O layer, process throughput should not suffer inordinately.
+
+15.4. I/O Scheduler Choices
+
+Since these demands can be conflicting, different I/O schedulers may be appropriate for different workloads; e.g., a large database server vs. a desktop system. Furthermore, different hardware may mandate different strategy. In order to provide flexibility, the Linux kernel has an object oriented scheme, in which pointers to the various needed functions are supplied in a data structure, the particular one of which can be selected at boot on the kernel command line, as in:
+
+linux ...  elevator=[cfq|deadline|noop]
+
+At least one of the I/O scheduling algorithms must be compiled into the kernel. The current choices are:
+
+    Completely Fair Queueing (CFQ)
+    Deadline Scheduling
+    noop (A simple scheme).
+
+The default choice is a compile configuration option; modern distributions choose either CFQ or Deadline.
+
+15.5. I/O Scheduling and SSD Devices
+
+The gradual introduction of SSD (Solid State Drive) devices, which use flash memory to emulate hard disks, has important implications for I/O scheduling. 
+
+Such devices do not require an elevator scheme and benefit from wear leveling to spread I/O over the devices which have limited write/erase cycles.
+
+One can examine /sys/block/<device>/queue/rotational to see whether or not the device is an SSD or not, as in:
+
+$ cat /sys/block/sda/queue/rotational
+
+1
+
+$ cat /sys/block/sdb/queue/rotational
+
+0
+
+
+15.6.a. Tunables and Switching the I/O Scheduler at runtime I
+
+Each of the I/O schedulers exposes parameters which can be used to tune behavior at run time. The parameters are accessed through the pseudo-filesystem mounted at /sys.
+
+In addition, it is possible to use different I/O schedulers for different devices. The choice can be made easily through the command line. For example:
+
+$ cat /sys/block/sda/queue/scheduler
+
+noop deadline [cfq]
+
+$ echo noop > /sys/block/sda/queue/scheduler
+
+$ cat /sys/block/sda/queue/scheduler
+
+[noop] deadline cfq
+
+
+
+15.6.b. Tunables and Switching the I/O Scheduler at runtime II
+
+
+The actual tunables vary according to the particular I/O scheduler, and can be found under:
+
+/sys/block/<device>/queue/iosched
+
+You can see the actual tunables for a disk using CFQ in this screenshot.
+
+We will discuss some of these parameters shortly.
+
+
+15.8. CFQ (Completely Fair Queue) Scheduler
+
+The CFQ (Completely Fair Queue) method has the goal of equal spreading of I/O bandwidth among all processes submitting requests.
+
+Theoretically, each process has its own I/O queue, which works together with a dispatch queue which receives the actual requests on the way to the device. In actual practice, the number of queues is fixed (at 64) and a hash process based on the process ID is used to select a queue when a request is submitted.
+
+Dequeuing of requests is done round robin style on all the queues, each one of which works in FIFO (First In First Out) order. Thus, the work is spread out. To avoid excessive seeking operations, an entire round is selected, and then sorted into the dispatch queue before actual I/O requests are issued to the device. 
+
+
+15.9. CFQ Tunables
+
+In the examples below, the parameter HZ is a kernel-configured quantity, that corresponds to the number of jiffies per second, which the kernel uses as a coarse measure of time. Without getting into detail, let us just point out that time units HZ/2 is 0.5 seconds and 5 * HZ is 5 seconds etc.
+
+    quantum
+    Maximum queue length in one round of service.  (Default = 4);
+    queued
+    Minimum request allocation per queue.  (Default = 8);
+    fifo_expire_sync
+    FIFO timeout for sync requests.  (Default = HZ/2);
+    fifo_expire_async
+    FIFO timeout for async requests.  (Default = 5  *  HZ);
+    fifo_batch_expire
+    Rate at which the FIFO's expire.  (Default = HZ/8);
+    back_seek_max
+    Maximum backwards seek, in KB. (Default = 16K);
+    back_seek_penalty
+    Penalty for a backwards seek.  (Default = 2).
+
+15.10. Deadline Scheduler
+
+The Deadline I/O scheduler aggressively reorders requests with the simultaneous goals of improving overall performance and preventing large latencies for individual requests; i.e., limiting starvation.
+
+With each and every request, the kernel associates a deadline. Read requests get higher priority than write requests.
+
+Five separate I/O queues are maintained:
+
+    Two sorted lists are maintained, one for reading and one for writing, and arranged by starting block.\u200b
+    Two FIFO lists are maintained, again one for reading and one for writing. These lists are sorted by submission time.\u200b
+    A fifth queue contains the requests that are to be shoveled to the device driver itself. This is called the dispatch queue.
+
+Exactly how the requests are peeled off the first four queues and placed on the fifth (dispatch queue) is where the art of the algorithm is.
+
+15.11. Deadline Tunables
+
+Here are the available tunables for the Deadline scheduler:
+
+    read_expire:
+    How long (in milliseconds) a read request is guaranteed to occur within. (Default = HZ/2 = 500 ). 
+    write_expire:
+    How long (in milliseconds) a write request is guaranteed to occur within. (Default = 5 * HZ = 5000).
+    writes_starved:
+    How many requests we should give preference to reads over writes. (Default = 2 ).
+    fifo_batch:
+    How many requests should be moved from the sorted scheduler list to the dispatch queue, when the deadlines have expired. (Default = 16).
+    front_merges:
+    Back merges are more common than front merges as a contiguous request usually continues to the next block. Setting this parameter to 0 disables front merges and can give a boost if you know they are unlikely to be needed. (Default = 1 ).
+
+16.1. Linux Filesystems and VFS - Introduction
+
+16.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Explain the basic filesystem organization.
+    Understand the role of the VFS.
+    Know what filesystems are available in Linux and which ones can be used on your actual system.
+    Grasp why journalling filesystems represent significant advances.
+    Discuss the use of special filesystems in Linux.
+
+16.3. Filesystem Basics
+
+Application programs read and write files, rather than dealing with physical locations on the actual hardware on which files are stored.
+
+Files and their names are an abstraction camouflaging the physical I/O layer. Directly writing to disk in a raw fashion (ignoring the filesystem layer) is very dangerous and is only done by low-level operating system software, never by a user application.
+
+Local filesystems generally reside within a disk partition which can be a physical partition on a disk, or a logical partition controlled by a Logical Volume Manager (LVM). Filesystems can also be of a network nature and their true physical embodiment completely hidden to the local system across the network. 
+
+
+16.4. Filesystem Tree Organization
+
+All Linux systems use an inverted tree hierarchy branching off the root (/) directory. While the entire tree may be contained in one local filesystem in one partition, usually there are multiple partitions (or network filesystems) joined together at mount points. These can also include removable media, such as USB drives, optical drives, etc.
+
+In addition, certain virtual pseudo filesystems (useful abstractions which exist only in memory) will be mounted within the tree; these include /proc, /sys and /dev and perhaps /tmp and /run as well.
+
+Each of the elements mounted within the tree may in fact have its own filesystem variety. But, to the applications and operating system, it all appears in one unified tree structure. 
+
+
+16.5. Virtual File System (VFS)
+
+Linux implements a Virtual File System (VFS), as do all modern operating systems. When an application needs to access a file, it interacts with the VFS abstraction layer, which then translates all the I/O system calls (reading, writing etc.) into specific code relevant to the particular actual filesystem.
+
+Thus, neither the specific actual filesystem or physical media and hardware on which it resides need be considered by applications. Furthermore, network filesystems (such as NFS) can be handled transparently.
+
+This permits Linux to work with more filesystem varieties than any other operating system. This democratic attribute has been a large factor in its success.
+
+Most filesystems have full read and write access, while a few have only read access and perhaps experimental write access. Some filesystem types, especially non-UNIX based ones, may require more manipulation in order to be represented in the VFS.
+
+Variants such as vfat do not have distinct read/write/execute permissions for the owner/group/world fields; the VFS has to make an assumption about how to specify distinct permissions for the three types of user, and such behavior can be influenced by mounting operations.There are non-kernel filesystem implementations, such as the read/write ntfs-3g
+(http://www.tuxera.com/community/ntfs-3g-download) which are reliable but have weaker performance than in-kernel filesystems.
+
+16.6. Available FIlesystems
+
+The most commonly used filesystems include ext4, xfs, btrfs, squashfs, nfs, and vfat.
+
+The table below shows you a partial list of the currently supported filesystems.
+
+ 
+
+ Available Filesystems
+
+ 
+Name	                    Description
+===================================================================================
+ext4, ext3, ext2	        Native Linux filesystem
+proc	                    Used for /proc/
+vfat	                    Windows VFAT (includes FAT32, FAT, etc.)
+ntfs	                    Windows NT NTFS (read-only)
+udf	                        CD R/W, DVD
+hfs+        	            Apple MacIntosh Extended HFS
+jffs, jffs2	                Journalling Flash Filesystem
+iso9660	                    cdrom etc., including Joliet extensions
+tmpfs   	                Ram disk that is swappable
+gfs2	                    Clustering filesystem from Red Hat
+nfs	                        Network Filesystem (through version 4)
+smb	                        Samba networking
+ncp	                        Novell Netware FS using NCP Protocol
+coda	                    Experimental distributed filesystem
+afs	                        Andrew distributed filesystem, from Carnegie Mellon
+ocfs2	                    Extent-based, disk cluster filesystem from Oracle 
+
+16.8. Journalling FIlesystems
+
+A number of newer, high performance filesystems include full journalling capability.
+
+Journalling filesystems recover from system crashes or ungraceful shutdowns with little or no corruption, and do so very rapidly. While this comes at the price of having some more operations to do, additional enhancements can more than offset the price.
+
+In a journalling filesystem, operations are grouped into transactions. A transaction must be completed without error, atomically; otherwise, the filesystem is not changed. A log file is maintained of transactions. When an error occurs, usually only the last transaction needs to be examined.
+
+The following journalling filesystems are freely available under Linux:
+
+    ext3 was an extension of the earlier non-journalling ext2 filesystem
+    ext4 is a vastly enhanced outgrowth of ext3. Features include extents, 48-bit block numbers, and up to 16TB size. Most Linux distributions have used ext4 as the default filesystem for quite a few years
+    reiserfs was the first journalling implementation used in Linux, but lost its leadership and further development was abandoned
+    JFS was originally a product of IBM and was ported from IBM's AIX operating system
+    XFS was originally a product of SGI, and was ported from SGI's IRIX operating systems. RHEL 7 has adopted XFS as its default filesystem
+    btrfs is the newest of the journalling filesystems and is still under rapid development.
+
+16.9. Current FIlesystem Types
+
+You can see a list of the filesystem types currently registered and understood by the currently running Linux kernel by doing: 
+
+$ cat /proc/filesystems
+
+Note that additional filesystem types may have their code loaded only when the system tries to access a partition that uses them.
+
+16.10. Special FIlesystems'
+
+Linux widely employs the use of special filesystems for certain tasks. These are particularly useful for accessing various kernel data structures and tuning kernel behavior, or for implementing particular functions. Note that some of these special filesystems have no mount point; this means user applications don't interact with them, but the kernel uses them, taking advantage of VFS layers and code.
+
+ 
+
+Special Filesystems
+
+ 
+
+Filesystem
+Mount               Point        	                    Purpose
+=============================================================================================
+rootfs	            None	                            During kernel load, provides an empty root directory
+hugetlbfs	        Anywhere	                        Provides extended page access (2 or 4 MB on X86)
+bdev	            None	                            Used for block devices
+proc	            /proc	                            Pseudo filesystem access to many kernel structures and subsystems
+sockfs	            None	                            Used by BSD Sockets
+tmpfs	            Anywhere	                        RAM disk with swapping, re-sizing
+shm	                None	                            Used by System V IPC Shared Memory
+pipefs	            None	                            Used for pipes
+binfmt_misc	        Anywhere	                        Used by various executable formats
+devpts	            /dev/pts	                        Used by Unix98 pseudo-terminals
+usbfs	            /proc/bus/usb	                    Used by USB sub-system for dynamical devices
+sysfs	            /sys (or elsewhere)	                Used as a device tree
+debugfs	            /sys/kernel/debug (or elsewhere)	Used for simple debugging file access
+
+17.1. Disk Partitioning - Introduction
+
+video
+
+17.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Describe and contrast the most common types of hard disks and data buses.
+    Explain disk geometry and other partitioning concepts.
+    Understand how disk devices are named and how to identify their associated device nodes.
+    Distinguish among and select different partitioning strategies.
+    Use utilities such as blkid and fdisk.
+    Back up and restore partition tables.
+
+17.3.a. Common Disk Types I
+
+There are a number of different hard disk types, each of which is characterized by the type of data bus they are attached to, and other factors, such as speed, capacity, how well multiple drives work simultaneously, etc.:
+
+    SATA (Serial Advanced Technology  Attachment)
+    These were designed to replace Parallel ATA (PATA), as IDE came to be called. They had faster data transfer, smaller cables and were seen by the operating system as SCSI devices, simplifying the writing of device drivers etc., even though the hardware is not real SCSI.
+    Compared to PATA, SATA offers a smaller cable size (7 pins), native hot swapping, and faster and more efficient data transfer. The newest drives can handle 16 GB/s, but 3 GB/s and 6 GB/s are more common in consumer grade devices.
+    SCSI (Small Computer Systems Interface)
+    These have been the mainstay of Enterprise servers for decades. While they may have lower capacity than that of SATA drives, they tend to be much faster and work in parallel much better, such as is needed for RAID configurations. There are numerous SCSI versions, such as Fast, Wide, Ultra and UltraWide just to make things confusing, and there are many different device drivers depending on the hardware, unlike for SATA, where standardized drivers can fit a large variety of hardware. 
+    SCSI disks range from narrow (8 bit bus) to wide (16 bit bus) with a transfer rate of from about 5 MB per second (narrow, standard SCSI) to about 160 MB per second (Ultra-Wide SCSI-3). Most PCs use single-ended or differential SCSI drives. Unfortunately, the two types are not compatible with each other. Fortunately, the two types of devices may coexist on the same controller. Single-ended device controllers may host up to 7 devices and use a maximum cable length of about 6 meters. Differential controllers may host up to 15 devices and have a maximum cable length of about 12 meters.
+
+17.3.b. Common DIsk Types II
+
+Other types of hard disk, besides the ones just mentioned, are:
+
+    SAS
+    Serial Attached SCSI is a newer point-to-point serial protocol replacing the earlier Parallel SCSI interface. Data transfer rates are similar to SATA, but overall performance is better.
+    USB
+    Universal Serial Bus devices include pen drives and external USB drives. The operating system sees them as SCSI devices.
+    SSD
+    Solid State Drives have come down in price, have no moving parts, use less power than drives with rotational media, and have faster transfer speeds. Internal SSDs are even installed with the same form factor and in the same enclosures as conventional drives. SSDs still cost quite a bit more, but price is decreasing. It is common to have both SSDs and rotational drives in the same machines, with frequently accessed and performance critical data transfers taking place on the SSDs.
+    IDE and EIDE (Integrated Drive Electronics, and Enhanced IDE) 
+    These were the standard in consumer laptops and desktops for years. However, they are small and slow when compared to more modern hardware and they have therefore become obsolete; controllers can no longer be found in current machines.
+
+
+17.4.a. Disk Geometry I
+
+Disk Geometry is a concept with a long history for rotational media; one talks of heads, cylinders, tracks and sectors. The below screenshot shows how to view the geometry with fdisk, which we will explore shortly.
+
+
+17.4.b. DIsk Geomatry II
+
+Rotational disks are composed of one or more platters, each of which is read by one more heads. The heads read a circular track off a platter as the disk spins.
+
+These circular tracks are divided into data blocks called sectors, typically 512 bytes in size. A cylinder is a group which consists of the same track on all platters.
+
+For a long time, this physical structural image has been less and less relevant as internal electronics on the drive actually obscure much of it. Furthermore, SSDs have no moving parts or anything like the above ingredients.
+
+Currently, disks are starting to be manufactured with sectors larger than 512 bytes; 4 KB is becoming available. While larger sector sizes can lead to faster transfer speeds, operating system support is not yet mature in dealing with the larger sizes. 
+
+17.5. Partitioning
+
+Disks are divided into partitions. In geometrical terms, these consist of physically contiguous groups of sectors or cylinders.
+
+A disk may have up to four primary partitions. One of the primary partitions can be designated as an extended partition, which can be subdivided further into logical partitions. 
+
+SCSI and related standards, such as SATA, support up to 15 partitions on the disk. Partitions 1-4 are primary or extended partitions; partitions 5-15 are logical partitions. There can only be one extended partition, but it can be divided into as many logical partitions as needed, until one hits the maximum number of partitions allowed.
+
+For example, the first SCSI or SATA drive is called sda, the second sdb and so on. On the first drive, /dev/sda1 is the first primary partition and /dev/sda2 is the second, etc.
+
+If we created an extended partition as /dev/sda3 it could then be divided into logical partitions, with number designations like /dev/sda5, /dev/sda6 etc.
+
+Note: Linux doesn't require partitions to begin or end on cylinder boundaries, but other operating systems might complain if they don't. For this reason, the widely deployed Linux partitioning utilities try to play nice and end on boundaries. Obviously, partitions should not overlap either. 
+
+
+17.6.a. Why Partition? I
+
+There are multiple reasons as to why it makes sense to divide your system data into multiple partitions, including:
+
+    Separation
+    It is desirable to isolate user and application data from operating system files, most of which are only read except during installation and upgrades. For example, /home, which contains user-specific files is often put on a separate partition. 
+    Sharing
+    Multiple operating systems or machines may use the same filesystems. For example, /home might be mounted as an NFS share across a network. Or one might have a multi-boot system, even with just different Linux versions and you might want to share something like /usr/local or /home.
+    Security
+    It may be desirable to impose different quotas, permissions and settings for different parts of the system.
+    Size
+    Some data is rather constant and some is rather variable or volatile and changes often and can grow quite a bit in size. For example, such variable data is often placed in a /var partition. If the partition gets filled up, it will be less likely to crash the system if one is not filling up a more critical space.
+
+
+17.4.b. Why Partition? II
+
+Other reasons are:
+
+    Performance
+    Data which has to be read often, especially in large chunks, will be accessed more rapidly if it is either placed in a partition on a quicker disk (such as an SSD) or in old-fashioned terms, close to the center of the disk where seek times are shorter.
+    Swap
+    Linux systems prefer to have swap space placed in a separate partition rather than a file on another partition. This has a secondary advantage that hibernation schemes exploit the space in the swap partition.
+
+A common partition layout contains a /boot partition, a partition for the root filesystem /, a swap partition, and a partition for the /home directory tree.
+
+Keep in mind that it is more difficult to re-size a partition after the fact than during install/creation time. Plan accordingly.
+
+We will discuss filesystem layouts and partitioning impact on them in a later section.
+
+
+17.7.a. Partition Table I
+
+The disk partition table is contained within the disk's Master Boot Record (MBR), which is 512 bytes in length and whose structure is defined by an operating system-independent convention.
+
+The partition table is 64 bytes long and is placed after the 446 byte boot record. (Note for the curious, there are 2 more bytes at the end of the MBR known as the magic number, signature word, or end of sector marker, which always have the value 0x55AA.)
+
+The first 446 bytes are reserved for program code. They typically hold part of a boot loader program such as GRUB.
+
+Only one partition on a given disk may be marked active. When the system boots, that partition is where the master boot loader looks for items to load. 
+
+17.7.b. Partition Table II
+
+Each entry in the partition table is 16 bytes long, and describes one of the four possible primary partitions. The information for each is:
+
+    Active bit
+    Beginning address in cylinder/head/sectors (CHS) format (ignored by Linux)
+    Partition type code, indicating: xfs, LVM, ntfs, ext4, swap, etc.
+    Ending address in CHS (also ignored by Linux)
+    Start sector, counting linearly from 0
+    Number of sectors in partition.
+
+Linux only uses the last two fields for addressing using the linear block addressing (LBA) method.
+
+17.8. Naming Disk Devices and Nodes
+
+The Linux kernel interacts at a low level with disks through device nodes normally found in the /dev directory. Normally, device nodes are accessed only through the infrastructure of the kernel's Virtual File System; raw access through the device nodes is an extremely efficient way to destroy a filesystem. For example, you do this when formatting a partition, as in:
+
+$ sudo mkfs.ext4 /dev/sda9
+
+Device nodes for SCSI and SATA disks follow a simple naming convention:
+
+    The first hard disk is /dev/sda
+    The second hard disk is /dev/sdb
+    Etc.
+
+Partitions are also easily enumerated, as in:
+
+    /dev/sdb1 is the first partition on the second disk
+    /dev/sdc4 is the fourth partition on the third disk.
+
+In the above, sd means SCSI or SATA disk. Back in the days where IDE disks could be found, they would have been /dev/hda3, /dev/hdb etc. 
+
+Doing ls -l /dev will show you the current available disk device nodes.
+
+17.9. More on SCSI Device Names
+
+For SCSI devices we need to elaborate a little more on what we mean by first, second hard disk etc. These are determined by the controller number/ID number combination.
+
+The drive designation (a, b, c, etc.) is primarily based on the ID number of the SCSI device rather than its position on the bus itself.
+
+For example, if we had two SCSI controllers with target ID number 1 and 3 on controller 0 and target ID number 2 and 5 on controller 1 (with ID 2 as the last drive):
+
+    ID 1 would be /dev/sda
+    ID 3 would be /dev/sdb
+    ID 2 (on controller 1) would be /dev/sdc
+    ID 5 would be /dev/sdd
+
+17.10.a. blkid and lsblk I
+
+blkid is a utility to locate block devices and report on their attributes. It works with the libblkid library. It can take as an argument a particular device or list of devices. The screenshot below shows a use of blkid with arguments. 
+
+blkid will only work on devices which contain data that is finger-printable; e.g., an empty partition will not generate a block-identifying UUID. blkid has two main forms of operation: either searching for a device with a specific NAME=value pair, or displaying NAME=value pairs for one or more devices. Without arguments, it will report on all devices. There are quite a few options designating how to specify devices and what attributes to report on.
+
+17.10.b. blkid and lsblk II
+
+A related utility is lsblk which presents results in a tree format
+
+
+NAME   MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
+sda      8:0    0 931.5G  0 disk 
+\u251c\u2500sda1   8:1    0   512M  0 part /boot/efi
+\u251c\u2500sda2   8:2    0 923.1G  0 part /
+\u2514\u2500sda3   8:3    0     8G  0 part [SWAP]
+sr0     11:0    1  1024M  0 rom  
+loop0    7:0    0   4.9M  1 loop /snap/canonical-livepatch/38
+loop1    7:1    0  93.5M  1 loop /snap/ao/9
+loop2    7:2    0   4.4M  1 loop /snap/canonical-livepatch/26
+loop3    7:3    0  81.7M  1 loop /snap/core/4206
+loop4    7:4    0  86.6M  1 loop /snap/core/4486
+loop5    7:5    0  38.9M  1 loop /snap/telegram-sergiusens/68
+loop6    7:6    0  35.8M  1 loop /snap/telegram-sergiusens/53
+loop7    7:7    0  86.5M  1 loop /snap/core/4407
+loop8    7:8    0     4K  1 loop /snap/anbox-installer/17
+loop9    7:9    0   4.9M  1 loop /snap/canonical-livepatch/39
+loop10   7:10   0  38.9M  1 loop /snap/telegram-sergiusens/55
+loop11   7:11   0   512M  0 loop /mnt
+
+17.11. Sizing Up Partitions
+
+Linux systems should use a minimum of two partitions:
+
+    /(root): used for the entire logical filesystem
+    - In practice, most installations will have more than one filesystem on more than one partition, which are joined together at mount points.
+    - It is difficult with most filesystem types to resize the root partition; using LVM, which we will discuss later, can make this easier.
+    While it is certainly possible to run Linux with just the root partition, most systems use more partitions to allow for easier backups, more efficient use of disk drives, and better security.
+    Swap: used as an extension of physical memory; pages of memory which are not file-backed can be moved to disk until needed again.
+    - The usual recommendation is swap size should be equal to physical memory in size; sometimes, twice that is recommended. However, the correct choice depends on the related issues of system use scenarios, as well as hardware capabilities. Examples of thinking on this subject can be found at https://help.ubuntu.com/  community/SwapFaq and http://www.novell.com/support/kb/doc.php?id=7010157.
+    - The system may have multiple swap partitions and/or swap files.
+    - On a single disk system, try to center the swap partition; on multiple disk systems, try to spread swap over disks.
+    - Adding more and more swap will not necessarily help because, at a certain point, it becomes useless. One will need to either add more memory or re-evaluate the system setup.
+
+Swap is used as virtual memory: Any time pages from processes are moved out of physical memory, they are generally stored on the swap device.
+
+17.12. Backing Up and Restoring Partition Tables
+
+Partitioning and re-partitioning disks are dangerous operations. In order to be able to restore the situation if something goes wrong, one needs to know how to backup and restore partition tables.
+
+Backing up can be easily done with dd, as in:
+
+$ sudo dd if=/dev/sda of=mbrbackup bs=512 count=1
+
+which will back up the MBR on the first disk, including the 64-bit partition table which is part of it.
+
+The MBR can then be restored, if necessary, by doing:
+
+$ sudo dd if=mbrbackup of=/dev/sda bs=512 count=1
+
+Note that the above commands only copy the primary partition table; they do not deal with any partition tables stored in the other partitions (for extended partitions, etc.)
+
+Note: You should always assume that changing the disk partition table might eliminate all data in all filesystems on the disk (It should not, but be cautious!). Therefore, it is always prudent to make a backup of all data (that is not already backed up) before doing any of this type of work.
+
+In particular, one must be careful in using dd: A simple typing error or misused option could destroy your entire disk; hence, do backups! 
+
+17.13. Partition Table Editors
+
+There are a number of utilities which can be used to manage partition tables:
+
+    fdisk is a menu driven partition table editor. It is the most standard and one of the most flexible of the partition table editors. It is the only one of these utilities we will discuss.
+    sfdisk is a non-interactive partition editor program, making it useful for scripting. Use the sfdisk tool with care!
+    parted is the GNU partition manipulation program. It can create, remove, resize, and move partitions (including certain filesystems).
+    gparted is a widely-used graphical interface to parted.
+
+Many Linux distributions have a live/installation version which can be run off either a CDROM or USB stick. These media usually include a copy of gparted, so they can easily be used as a graphical partitioning tool on disks which are not actually being used while the partitioning program is run.
+
+Note that gparted can do a lot of operations besides just adding and deleting partitions and the other operations fdisk can do, like designating the partition type. One can move and resize partitions and format them as well, which implies it has to understand the details of many filesystem types; this goes far beyond a partition editor's essential functions.
+
+While this is convenient, it is difficult to get right and errors can have serious consequences. Thus, it is often good to drop down to the command line and do each of these operations separately with lower-level tools. In fact, Red Hat Enterprise Linux no longer supports gparted.
+
+17.14.a. Using fdisk I
+
+fdisk will always be included in any Linux installation, so it is a good idea to learn how to use it. You must be root to run fdisk. It can be somewhat complex to handle, and caution is advised.
+
+The fdisk interface is simple and text-menu driven. After starting on a particular disk, as in:
+
+$ sudo fdisk /dev/sdb
+
+the main (one letter) commands are:
+
+    m: Display the menu
+    p: List the partition table
+    n: Create a new partition
+    d: Delete a partition
+    t: Change a partition type
+    w: Write the new partition table information and exit
+    q: Quit without making changes.
+
+Fortunately, no actual changes are made until you write the partition table to the disk by entering w. It is therefore important to verify your partition table is correct (with p) before writing to disk with w. If something is wrong, you can jump out safely with q.
+
+17.14.b. Using fdisk II
+
+The system will not use the new partition table until you reboot. However, you can use the following command:
+
+$ sudo partprobe -s
+
+to try and read in the revised partition table. However, this doesn't always work reliably and it is best to reboot before doing things like formatting new partitions, etc., as mixing up partitions can be catastrophic.
+
+At any time you can do:
+
+$ cat /proc/partitions
+
+to examine what partitions the operating system is currently aware of.
+
+17.15. 
