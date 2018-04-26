@@ -4277,4 +4277,232 @@ video
 
 25.2. Learning Objectives
 
+By the end of this chapter, you should be able to:
 
+    Grasp the main responsibilities the kernel must fulfill and how it achieves them.
+    Explain what parameters can be set on the kernel command line and how to make them effective either for just one system boot, or persistently.
+    Know where to find detailed documentation on these parameters.
+    Know how to use sysctl to set kernel parameters either after the system starts, or persistently across system reboots. 
+
+25.3. Kernel Overview
+
+Narrowly defined, Linux is only the kernel of the operating system, which includes many other components, such as libraries and applications that interact with the kernel.
+
+The kernel is the essential central component that connects the hardware to the software and manages system resources, such as memory and CPU time allocation among competing applications and services. It handles all connected devices using device drivers, and makes the devices available for operating system use.
+
+A system running only a kernel has rather limited functionality. It will be found only in dedicated and focused embedded devices
+
+25.4. Main Kernel Tasks
+
+The main responsibilities of the kernel include:
+
+    System initialization and boot up
+    Process scheduling
+    Memory management
+    Controlling access to hardware
+    I/O (Input/Output) between applications and storage devices
+    Implementation of local and network filesystems
+    Security control, both locally (such as filesystem permissions) and over the network
+    Networking control.
+
+25.5. Kernel Command Line
+
+Various parameters are passed to the system at boot on the kernel command line. Normally, these are on the kernel (or linux16) line in the GRUB configuration file, but can be modified at boot.
+
+For GRUB Version 2, a sample kernel command line might look like:
+
+linux16 /boot/vmlinuz-3.19.1.0 \
+
+        root=UUID=178d0092-4154-4688-af24-cda272265e08 ro \
+
+                     vconsole.keymap=us crashkernel=auto  \
+
+        vconsole.font=latarcyrheb-sun16 rhgb quiet LANG=en_US.UTF-8 
+
+or, with a more minimal set of options:
+
+linux16 /boot/vmlinuz-4.7.3 root=LABEL=RHEL7 ro rhgb quiet
+
+and would be found in /boot/grub2/grub.cfg.            
+
+Everything after the vmlinuz file specified is an option. Any options not understood by the kernel will be passed to init (pid = 1), the first user process to be run on the system.                                                                               
+
+You should not edit this file directly, but modify the relevant files under /etc.
+
+In the examples provided above, long lines were broken up for display, but they are each all one long line. To see what command line a system was booted with type:
+
+$ cat /proc/cmdline
+
+BOOT_IMAGE=/boot/vmlinuz-4.7.3 root=LABEL=RHEL7
+
+25.6.a. Kernel Boot parameters I
+
+There is a rather surprisingly long list of available kernel parameters. Detailed documentation can be found:
+
+    In the kernel source in the file Documentation/kernel-parameters.txt.
+    Online, at https://www.kernel.org/doc/html/latest/admin-guide/kernel-parameters.html.
+    On the system in the kernel documentation package provided by most distributions with a name like kernel-doc or linux-doc.
+    By typing man bootparam.
+
+Parameters can be specified simply as a value given as an argument, or in the form param=value, where the given value can be a string, integer, array of integers, etc., as explained in the documentation file.
+
+vmlinuz root=/dev/sda6 ..... noapic .... crashkernel=256M
+
+Kernel options are placed at the end of the kernel line and are separated by spaces. Examples were given on the previous page
+
+
+25.6.b. Kernel Boot parameters II
+
+Below you can see an explanation of some of the boot parameters we have displayed previously:
+
+    root: root filesystem
+    ro: mounts root device read-only on boot
+    vconsole.keymap: which keyboard to use on the console
+    crashkernel: how much memory to set aside for kernel crashdumps
+    vconsole.font: which font to use on the console
+    rhgb: for graphical boot 
+    quiet: disables most log messages.
+    LANG: is the system language.
+
+By convention, there should be no intentionally hidden or secret parameters. They should all be explained in the documentation and patches to the kernel source with new parameters should always include patches to the documentation file.
+
+
+25.7.a. sysctl I
+
+The sysctl interface can be used to read and tune kernel parameters at run time. The screenshot shows you how the current values can be displayed by doing:
+
+$ sysctl -a
+
+Each value corresponds to a particular pseudofile residing under /proc/sys, with directory slashes being replaced by dots. For example, the following two statements are equivalent:
+
+$ sudo sh -c 'echo 1 > /proc/sys/net/ipv4/ip_forward'
+
+$ sudo sysctl net.ipv4.ip_forward=1
+
+where the second form is used to set a value with the sysctl command line interface. One cannot leave spaces around the = sign in this command. Note that in the first form, we cannot just use a simple sudo with echo; the command must be done in the complicated way shown, or executed as root.
+
+
+25.7.b. sysctl II
+
+Browsing through the pseudofiles under /proc/sys will render the same information as sysctl -a. You can get full details on how to use sysctl by doing man 8 sysctl. To get information about using the sysctl() function from programs to do the same operations, do man 2 sysctl.
+
+If settings are placed in /etc/sysctl.conf (see man sysctl.conf for details) settings can be fixed at boot time.
+
+Note that typing 
+
+$ sudo sysctl -p
+
+effectuates immediate digestion of the file, setting all parameters as found; this is also part of the boot process. 
+
+On some recent distributions based on systemd (such as RHEL 7), the actual settings file is now /usr/lib/sysctl.d/00-system, but the original file is still supported, as it is self-documented in that file.
+
+26.1. Kernel Modules - Introduction
+
+The Linux kernel makes extensive use of modules, which contain important software that can be loaded and unloaded as needed after the system starts. Many modules incorporate device drivers to control hardware either inside the system or attached peripherally. Other modules can control network protocols, support different filesystem types and many other purposes. Parameters can be specified when loading modules to control their behavior. The end result is great flexibility and agility in responding to changing conditions and needs.
+
+
+26.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    List the advantages of utilizing kernel modules.
+    Use insmod, rmmod and modprobe to load and unload kernel modules.
+    Know how to use modinfo to find out information about kernel modules. 
+
+
+26.3. Advantages of Kernel Modules
+
+Many facilities in the Linux kernel are designed to be built-in to the kernel when it is initially loaded, or to be added (or removed) later as modules as necessary. Indeed, all but the most central kernel components are integrated in such a fashion.
+
+Such modules may or may not be device drivers. For example, they may implement a certain network protocol or filesystem rather than drive a hardware or software device. Even in cases where the functionality will virtually always be needed, incorporation of the ability to load and unload as a module facilitates development, as kernel reboots are not required to test changes.
+
+Even with the widespread usage of kernel modules, Linux retains a monolithic kernel architecture, rather than a microkernel one. This is because once a module is loaded, it becomes a fully functional part of the kernel, with few restrictions. It communicates with all kernel sub-systems primarily through shared resources, such as memory and locks, rather than through message passing as might a microkernel.
+
+Linux is hardly the only operating system to use modules; Solaris does it as well, as does AIX, which terms them kernel extensions. However, Linux uses them in a particularly robust fashion.
+
+26.4. Modules Utilities
+
+There are a number of utility programs that are used with kernel modules:
+
+    lsmod: List loaded modules.
+    insmod: Directly load modules.
+    rmmod: Directly remove modules.
+    modprobe: Load or unload modules, using a pre-built module database with dependency information.
+    depmod: Rebuild the module dependency database; needed by modprobe and modinfo.
+    modinfo: Display information about a module.
+
+
+26.5.a. Modules Loading and Unloading I
+
+Module loading and unloading must be done as the root user. If the full path name is known, one can always load the module directly with:
+
+$ sudo /sbin/insmod <pathto>/module_name.ko
+
+The normal filesystem location for kernel modules is under the directory tree at /lib/modules/<kernel-version>.  A kernel module always has a file extension of .ko, as in e1000e.ko, ext4.ko, or usbserial.ko.
+
+Kernel modules are kernel version specific and must match the running kernel or they cannot be loaded. They must be compiled either when the kernel itself is compiled, or later, on a system which retains enough of the kernel source and compilation configuration to do this properly.
+
+
+While the module is loaded, you can always see its status with lsmod, as in the screenshot provided.
+
+Module removal can always be done directly with:
+
+$ sudo /sbin/rmmod module_name
+
+Note that it is not necessary to supply either the full path name or the .ko extension when removing a module.
+
+
+26.6. modprobe
+
+In most circumstances, modules are not loaded and unloaded with insmod and rmmod. Rather, one uses modprobe, as in:
+
+$ sudo /sbin/modprobe module_name
+
+$ sudo /sbin/modprobe -r module_name
+
+with the second form being used for removal. For modprobe to work, the modules must be installed in the proper location, generally under /lib/modules/$(uname  -r) where $(uname  -r) gives the current kernel version, such as 4.14.2.
+
+
+26.7. Some Considerations with Modules
+
+There are some important things to keep in mind when loading and unloading modules:
+
+    It is impossible to unload a module being used by one or more other modules, which one can ascertain from the lsmod listing.
+    It is impossible to unload a module that is being used by one or more processes, which can also be seen from the lsmod listing. However, there are modules which do not keep track of this reference count, such as network device driver modules, as it would make it too difficult to temporarily replace a module without shutting down and restarting much of the whole network stack.
+    When a module is loaded with modprobe, the system will automatically load any other modules that need to be loaded first.
+    When a module is unloaded with modprobe  -r, the system will automatically unload any other modules being used by the module, if they are not being simultaneously used by any other loaded modules.
+
+
+26.8. modinfo
+
+modinfo can be used to find out information about kernel modules (whether or not they are currently loaded), as in:
+
+$ /sbin/modinfo my_module
+
+$ /sbin/modinfo <pathto>/my_module.ko
+
+You can see an example in the screenshot here, which displays information about version, file name, which hardware devices the device driver module can handle, and what parameters can be supplied on loading.
+
+Much information about modules can also be seen in the /sys pseudo-filesystem directory tree; in our example, one would look under /sys/module/e1000 and some, if not all parameters, can be read and/or written under /sys/module/e1000/parameters. We will show how to set them next.
+
+
+26.9. Module Parameters
+
+Many modules can be loaded while specifying parameter values, such as in:
+
+$ sudo /sbin/insmod <pathto>/e1000e.ko debug=2 copybreak=256
+
+or, for a module already in the proper system location, it is easier with:
+
+$ sudo /sbin/modprobe e1000e debug=2 copybreak=256
+
+
+26.10. Kernel Module Configuration
+
+Files in the /etc/modprobe.d directory control some parameters that come into play when loading with modprobe. These parameters include module name aliases and automatically supplied options. One can also blacklist specific modules to avoid them being loaded. 
+
+Settings apply to modules as they are loaded or unloaded, and configurations can be changed as needs change.
+
+The format of files in /etc/modprobe.d is simple: one command per line, with blank lines and lines starting with # ignored (useful for adding comments). A backslash at the end of a line causes it to continue on the next line, which makes the file a bit neater.
+
+26.11. 

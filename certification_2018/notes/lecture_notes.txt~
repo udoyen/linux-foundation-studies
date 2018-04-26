@@ -4133,3 +4133,155 @@ Thus, use of RAID can improve both performance and reliability.
 
 
 24.3.b. RAID II
+
+One of the main purposes of a RAID device is to create a filesystem which spans more than one disk. This allows us to create filesystems which are larger than any one drive. RAID devices are typically created by combining partitions from several disks together.
+
+Another advantage of RAID devices is the ability to provide better performance, redundancy, or both. Striping provides better performance by spreading the information over multiple devices so simultaneous writes are possible. Mirroring writes the same information to multiple drives, giving better redundancy.
+
+mdadm is used to create and manage RAID devices.
+
+Once created, the array name, /dev/mdX, can be used just like any other device, such as /dev/sda1.
+
+24.4. RAID Levels
+
+There are a number of RAID specifications of increasing complexity and use. The most commonly used are levels 0, 1, and 5.
+
+    RAID 0 uses only striping. Data is spread across multiple disks. However, in spite of the name, there is no redundancy and there is no stability or recovery capabilities. In fact, if any disk fails, data will be lost. But performance can be improved significantly because of parallelization of I/O tasks.
+    RAID 1 uses only mirroring; each disk has a duplicate. This is good for recovery. At least two disks are required.
+    RAID 5 uses a rotating parity stripe; a single drive failure will cause no loss of data, only a performance drop. There must be at least 3 disks.
+    RAID 6 has striped disks with dual parity; it can handle loss of two disks, and requires at least 4 disks. Because RAID 5 can impose significant stress on disks, which can lead to failures during recovery procedures, RAID 6 has become more important. 
+    RAID 10 is a mirrored and striped data set. At least 4 drives are needed.
+
+As a general rule, adding more disks improves performance.
+
+24.5.a. Software RAID Configuration I
+
+The essential steps in configuring a software RAID device are:
+
+    Create partitions on each disk (type fd in fdisk)
+    Create RAID device with mdadm
+    Format RAID device 
+    Add device to /etc/fstab
+    Mount RAID device
+    Capture RAID details to ensure persistence.
+
+The command:
+
+$ sudo mdadm -S
+
+can be used to stop RAID.
+
+24.5.b. Software RAID Configuration II
+
+For example:
+
+First, create two partitions of type fd on disks sdb and sdc (say /dev/sdbX and /dev/sdcX) by running fdisk on each:
+
+$ sudo fdisk /dev/sdb
+
+$ sudo fdisk /dev/sdc
+
+Then, set up the array, format it, add to the configuration and mount it:
+
+$ sudo mdadm --create /dev/md0 --level=1 --raid-disks=2 /dev/sdbX /dev/sdcX
+
+$ sudo mkfs.ext4 /dev/md0
+
+$ sudo bash -c "mdadm --detail --scan >> /etc/mdadm.conf"
+
+$ sudo mkdir /myraid
+
+$ sudo mount /dev/md0 /myraid
+
+Be sure to add a line in /etc/fstab for the mount point:
+
+/dev/md0  /myraid  ext4  defaults 0 2
+
+24.5.c. Software RAID Configuration III
+
+You can examine /proc/mdstat to see the RAID status, as in:
+
+$ cat /proc/mdstat
+
+         Personalities : [raid1]
+
+    md0 : active raid1 sdb8[1] sdc7[0]
+
+    ---------- 521984 blocks [2/2]
+
+    unused devices: <none>
+
+You can use:
+
+$ sudo mdadm -S /dev/md0
+
+to stop the RAID device.
+
+24.6.Monitoring RAIDS
+
+You can monitor RAID devices multiple ways, as in:
+
+$ sudo mdadm --detail /dev/md0
+
+$ cat /proc/mdstat
+
+One can also use mdmonitor, which requires configuring /etc/mdadm.conf. The command:
+
+$ sudo mdadm --detail /dev/mdX
+
+will show the current status of the RAID device /dev/mdX. Another way to do this is to examine the /proc filesystem:
+
+$ cat /proc/mdstat
+
+It will show the status of all RAID devices on the system.
+
+You can also use the mdmonitor service by editing /etc/mdadm.conf and adding a line like:
+
+ MAILADDR eddie@haskell.com
+
+so that it notifies you with email sent to eddie@haskell.com when a problem occurs with a RAID device, such as when any of the arrays fail to start or fall into a degraded state. You turn it on with:
+
+$ sudo systemctl start mdmonitor
+
+and make sure it starts at boot with:
+
+$ sudo systemctl enable mdmonitor
+
+(Note: On Ubuntu systems, the service is called mdadm rather than mdmonitor.)
+
+24.7. RAID Hoe Spares
+
+One of the important things that RAID provides is redundancy. To help ensure any reduction in that redundancy is fixed as quick as possible, a hot spare can be used.
+
+To create a hot spare when creating the RAID array:
+
+$ sudo mdadm --create /dev/md0 -l 5 -n3 -x 1 /dev/sda8 /dev/sda9 /dev/sda10 /dev/sda11
+
+The -x 1 switch tells mdadm to use one spare device. Note that a hot spare can also be added at a later time.
+
+The command:
+
+$ sudo mdadm --fail /dev/md0 /dev/sdb2
+
+will test the redundancy and hot spare of your array.
+
+To restore the tested drive, or a new drive in a legitimate failure situation, first remove the "faulty" member, then add the "new" member, as in:
+
+$ sudo mdadm --remove /dev/md0 /dev/sdb2
+
+$ sudo mdadm --add /dev/md0 /dev/sde2
+
+25.1. Kernel Services and Configuration - Introduction
+
+video
+
+25.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Grasp the main responsibilities the kernel must fulfill and how it achieves them.
+    Explain what parameters can be set on the kernel command line and how to make them effective either for just one system boot, or persistently.
+    Know where to find detailed documentation on these parameters.
+    Know how to use sysctl to set kernel parameters either after the system starts, or persistently across system reboots. 
+
+
