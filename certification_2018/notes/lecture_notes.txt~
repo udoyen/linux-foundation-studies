@@ -3980,4 +3980,156 @@ Starting with possibly creating a new volume group, the steps involved in settin
 
 23.7.b. Creating Logical Volumes II
 
+For example, assuming one has already created partitions /dev/sdb1 and /dev/sdc1 and given them type 8e:
 
+$ sudo pvcreate /dev/sdb1
+
+$ sudo pvcreate /dev/sdc1
+
+$ sudo vgcreate -s 16M vg /dev/sdb1
+
+$ sudo vgextend vg /dev/sdc1
+
+$ sudo lvcreate -L 50G -n mylvm vg
+
+$ sudo mkfs -t ext4 /dev/vg/mylvm
+
+$ mkdir /mylvm
+
+$ sudo mount /dev/vg/mylvm /mylvm
+
+Be sure to add the line
+
+/dev/vg/mylvm /mylvm ext4 defaults 0 0
+
+to /etc/fstab to make this a persistent mount.
+
+
+23.8. Displaying Logical Volumes
+
+In order to display information about LVM the following command line programs are available:
+
+    pvdisplay shows physical volumes as in
+    $ sudo pvdisplay
+    $ sudo pvdisplay /dev/sda5
+    vgdisplay shows volume groups as in
+    $ sudo vgdisplay
+    $ sudo vgdisplay /dev/vg0
+    lvdisplay shows logical volumes as in
+    $ sudo lvdisplay
+    $ sudo lvdisplay /dev/vg0/lvm1
+
+Without arguments, these utilities will display all physical volumes, volume groups, or logical volumes.
+
+23.9. Resizing Logical Volumes
+
+ One great advantage of using LVM is that it is easy and quick to change the size of a logical volume, especially when compared with trying to do this with a physical partition that already contains a filesystem.
+
+When doing this, extents can be added or subtracted from the logical volume, and they can come from anywhere in the volume group; they need not be from physically contiguous sections of the disk.
+
+If the volume contains a filesystem, expanding or shrinking it is an entirely different operation than changing the size of the volume:
+
+    When expanding a logical volume with a filesystem, one must first expand the volume and then expand the filesystem.\u200b
+    When shrinking a logical volume with a filesystem, one must first shrink the filesystem and then shrink the volume.
+
+The filesystem cannot be mounted when being shrunk. However, some filesystems permit expansion while they are mounted.
+
+The utilities which change the filesystem size are obviously filesystem dependent; for ext4 the program is resize2fs.
+
+23.10. Examples of Resizing
+
+To grow a logical volume with an ext4 filesystem:
+
+$ sudo lvextend -L +500M /dev/vg/mylvm
+
+$ sudo resize2fs /dev/vg/mylvm
+
+where the plus sign indicates adding space.
+
+To shrink the filesystem:
+
+$ sudo umount /mylvm
+
+$ sudo fsck -f /dev/vg/mylvm
+
+$ sudo resize2fs /dev/vg/mylvm 200M
+
+$ sudo lvreduce  -L 200M /dev/vg/mylvm
+
+$ sudo mount /dev/vg/mylvm
+
+It turns out that if you have a recent version of the lvm utilities you can do these operations in one step instead of two, using the -r option, as in:
+
+$ sudo
+
+$ sudo lvextend -r -L +100M /dev/vg/mylvm
+
+$ sudo lvreduce -r -L -100M /dev/vg/mylvm
+
+where the quantities use plus and minus signs to indicate the change required. This uses the underlying fsadm utility, which can resize any type of filesystem for which you have support. It would be a good idea to read the man page for fsadm.
+
+You can also reduce a volume group, as in:
+
+$ sudo pvmove /dev/sdc1
+
+$ sudo vgreduce vg /dev/sdc1
+
+23.11. LVM Snapshots
+
+LVM Snapshots create an exact copy of an existing logical volume.
+
+They are useful for backups, application testing, and deploying VMs (Virtual Machines). The original state of the snapshot is kept as the block map.
+
+Snapshots only use space for storing deltas:
+
+    When the original logical volume changes, original data blocks are copied to the snapshot.
+    If data is added to snapshot, it is stored only there.
+
+To create a snapshot of an existing logical volume:
+
+$ sudo lvcreate -l 128 -s -n mysnap /dev/vg/mylvm
+
+To then make a mount point and mount the snapshot:
+
+$ mkdir /mysnap
+$ mount -o ro /dev/vg/mysnap /mysnap
+
+To use the snapshot and to remove the snapshot:
+
+$ sudo umount /mysnap
+$ sudo lvremove /dev/vg/mysnap
+
+Always be sure to remove the snapshot when you are through with it. If you do not remove the snapshot and it fills up because of changes, it will be automatically disabled. A snapshot with the size of the original will never overflow.
+
+24.1. RAID - Introduction
+
+The use of RAID spreads I/O activity over multiple physical disks, rather than just one. Its purpose is to enhance data integrity and recoverability in case of failure, as well as to boost performance when used with modern storage devices. There are a number of different RAID levels which vary in their relative strengths in safety, performance, complexity and cost.
+
+24.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    Explain the concept of RAID.
+    Summarize RAID levels.
+    Configure a RAID device using the essential steps provided.
+    Monitor RAID devices in multiple ways.
+    Use hot spares.
+
+24.3.a. RAID I
+
+ RAID (Redundant Array of Independent Disks) spreads I/O over multiple disks. This can really increase performance in modern disk controller interfaces, such as SCSI, which can perform the work in parallel efficiently.
+
+RAID can be implemented either in software (it is a mature part of the Linux kernel), or in hardware. If your hardware RAID is known to be of good quality, it should be more efficient than using software RAID. With the hardware implementation, the operating system is actually not directly aware of using RAID; it is transparent. For example, three 512GB hard drives (two for data, one for parity) configured with RAID-5 will just look like a single 1TB disk.
+
+However, one disadvantage of using hardware RAID is that if the disk controller fails, it must be replaced by a compatible controller, which may not be easy to obtain. When using software RAID, the same disks can be attached to and work with any disk controller. Such considerations are more likely to be relevant for low and mid-range hardware.
+
+Three essential features of RAID are:
+
+    mirroring: writing the same data to more than one disk
+    striping: splitting of data to more than one disk
+    parity: extra data is stored to allow problem detection and repair, yielding fault tolerance.
+
+Thus, use of RAID can improve both performance and reliability. 
+
+
+24.3.b. RAID II
