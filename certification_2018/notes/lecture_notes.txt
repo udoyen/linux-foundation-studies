@@ -4505,4 +4505,2425 @@ Settings apply to modules as they are loaded or unloaded, and configurations can
 
 The format of files in /etc/modprobe.d is simple: one command per line, with blank lines and lines starting with # ignored (useful for adding comments). A backslash at the end of a line causes it to continue on the next line, which makes the file a bit neater.
 
-26.11. 
+27.1 Devices and udev - Introduction
+
+Linux uses udev, an intelligent apparatus for discovering hardware and peripheral devices both during system boot, and later when they are connected to the system. Device Nodes are created automatically and then used by applications and operating system subsystems to communicate with and transfer data to and from devices. System administrators can control how udev operates and craft special udev rules to assure desired behavior results
+
+27.2 Learning Objectives:
+
+By the end of this chapter, you should be able to:
+
+    - Explain the role of device nodes and how they use major and minor numbers.
+    - Understand the need for the udev method and list its key components.
+    - Describe how the udev device manager functions.
+    - Identify udev rule files and learn how to create custom rules.
+
+27.3. Device Nodes
+
+Character and block devices have filesystem entries associated with them; network devices in Linux do not. These device nodes can be used by programs to communicate with devices, using normal I/O system calls such as open(), close(), read(), and write(). On the other hand, network devices work by transmitting and receiving packets, which must be constructed by breaking up streams of data, or reassembled into streams when received.
+
+A device driver may manage multiple device nodes, which are normally placed in the /dev directory:
+
+$ ls -l /dev
+total 0
+crw------- 1 coop audio 14, 4 Jul 9 01:54 audio
+crw------- 1 root root 10, 62 Jul 9 01:54 autofs
+lrwxrwxrwx 1 root root 4 Jul 9 01:54 cdrom -> scd0
+lrwxrwxrwx 1 root root 4 Jul 9 01:54 cdrw -> scd0
+crw------- 1 coop root 5, 1 Jul 9 06:54 console
+....
+lrwxrwxrwx 1 root root 4 Jul 9 01:54 dvd -> scd0
+lrwxrwxrwx 1 root root 4 Jul 9 01:54 dvdwriter -> scd0
+crw------- 1 root root 10, 228 Jul 9 01:54 hpet
+crw-r----- 1 root kmem 1, 2 Jul 9 01:54 kmem
+crw------- 1 root root 1, 11 Jul 9 01:54 kmsg
+crw-r----- 1 root kmem 1, 1 Jul 9 01:54 mem
+crwxrwxrwx 1 root root 1, 3 Jul 9 01:54 null
+crw-rw---- 1 root root 10, 144 Jul 9 01:54 nvram
+brw------- 1 coop disk 11, 0 Jul 9 01:54 scd0
+....
+brw-r----- 1 root disk 8, 0 Jul 9 01:53 sda
+brw-r----- 1 root disk 8, 1 Jul 9 01:53 sda1
+
+brw-r----- 1 root disk 8, 2 Jul 9 06:54 sda2
+....
+brw-r----- 1 root disk 8, 16 Jul 9 01:53 sdb
+brw-r----- 1 root disk 8, 17 Jul 9 01:53 sdb1
+brw-r----- 1 root disk 8, 18 Jul 9 01:53 sdb2
+....
+crw------- 1 coop audio 14, 1 Jul 9 01:54 sequencer
+crw------- 1 coop audio 14, 8 Jul 9 01:54 sequencer2
+crw-rw-rw- 1 root tty 5, 0 Jul 9 01:54 tty
+crw-rw---- 1 root root 4, 0 Jul 9 14:54 tty0
+crw------- 1 root root 4, 1 Jul 9 06:54 tty1
+cr--r--r-- 1 root root 1, 9 Jul 9 01:53 urandom
+....
+crw-rw-rw- 1 root root 1, 5 Jul 9 01:54 zero
+
+Device nodes can be created with:
+
+$ sudo mknod [-m mode] /dev/name <type> <major> <minor>
+
+e.g., mknod -m 666 /dev/mycdrv c 254 1
+
+Device Nodes:
+
+  |------------------------------------------------------------------------------------------|
+  |                                     Application                                          |
+  |                                                                                          |
+  --------------------------------------------------------------------------------------------
+                                / \                                         / \
+                                 |                                           |
+                                 |                                           |
+                                 V                                           |
+  |------------------------------------------------------------------|       |
+  |                 Virtual File System                              |       |
+  |------------------------------------------------------------------|       |
+         / \                   / \         / \                               |
+          |                     |           |                                |
+          |                     |           |                                |
+          V                     V           |                                |
+  |---------------|      |---------------|  |      |----------------|        |
+  | character node|      |  block node   |<-|      |   socket       |        |
+  |---------------|      |---------------|         |----------------|        |
+        / \                    / \                             / \           |
+         |                      |                               |            |
+         |                      |                               |            |
+         v                      V                               V            v
+  |-----------------|      |------------------|             |-----------------------------|
+  | character driver|      |    file system   |             |     TCP/IP Appletalk, etc   |
+  |-----------------|      |------------------|             |-----------------------------|
+         / \                     / \                                      / \
+          |                       |                                        |
+          |                       |                                        |
+          |                       v                                        v  
+          |                 |------------------|             |-----------------------------|
+          |                 |  block driver    |             |    network driver           |
+          |                 |------------------|             |-----------------------------|
+          |                        / \                                    / \
+          |                         |                                      |
+          |                         |                                      |
+          v                         v                                      v
+  |----------------------------------------------------------------------------------------------|
+  |                                        Hardware                                              |
+  |                                                                                              |
+  ------------------------------------------------------------------------------------------------
+
+
+27.4. Major and Minor Numbers
+
+The major and minor numbers identify the driver associated with the device, with the driver uniquely reserving a group of numbers. In most cases (but not all), device nodes of the same type (block or character) with the same major number use the same driver.
+
+If you list some device nodes, as in:
+
+$ ls -l /dev/sda*
+brw-rw---- 1 root disk 8,  0 Dec 29 06:40 /dev/sda
+brw-rw---- 1 root disk 8,  1 Dec 29 06:40 /dev/sda1
+brw-rw---- 1 root disk 8,  2 Dec 29 06:40 /dev/sda2
+.......
+
+The major and minor numbers appear in the same place that file size would when looking at a normal file; in the above example as 8, 1, etc. While normal users will probably never need to refer explicitly to major and minor numbers and will refer to devices by name, system administrators may have to untangle them from time to time if the system gets confused about devices, or has some hardware added at runtime.
+
+The minor number is used only by the device driver to differentiate between the different devices it may control, or how they are used. These may either be different instances of the same kind of device, (such as the first and second sound card, or hard disk partition) or different modes of operation of a given device (such as different density floppy drive media).
+
+Device numbers have meaning in user-space as well. Two system calls, mknod() and stat(), return information about major and minor numbers.
+
+27.5. udev
+
+The methods of managing device nodes became clumsy and difficult as Linux evolved. The number of device nodes lying in /dev and its subdirectories reached numbers in the 15,000 - 20,000 range in most installations during the 2.4 kernel version series. Nodes for all kinds of devices which would never be used on most installations were still created by default, as distributors could never be sure exactly which hardware would be present on a system.
+
+Of course many developers and system administrators trimmed the list to what was actually needed, especially in embedded configurations, but this was essentially a manual and potentially error-prone task.
+
+Note that, while device nodes are not normal files and don't take up significant space on the filesystem, having huge directories slowed down access to device nodes, especially upon first usage. Furthermore, exhaustion of available major and minor numbers required a more modern and dynamic approach to the creation and maintenance of device nodes. Ideally, one would like to register devices by name. However, major and minor numbers cannot be gotten rid of altogether, as the POSIX standard requires them. (POSIX is an acronym for Portable Operating System Interface, a family of standards designed to ensure compatibility between different operating systems.)
+
+The udev method creates device nodes on the fly as they are needed. There is no need to maintain a ton of device nodes that will never be used. The u in udev stands for user, and indicates that most of the work of creating, removing, and modifying devices nodes is done in user-space.
+
+udev handles the dynamical generation of device nodes and it evolved to replace earlier mechanisms such as devfs and hotplug. One nice feature is the support of persistent device naming; names need not depend on the order of device connection or plugging in. Such behavior is controlled by specification of udev rules.
+
+27.6. udev Components
+
+udev runs as a daemon (either udevd or systemd-udevd) and monitors a netlink socket. When new devices are initialized or removed, the uevent kernel facility sends a message through the socket, which udev receives and takes appropriate action to create or remove device nodes of the right names and properties according to the rules.
+
+The three components of udev are:
+
+    The libudev library which allows access to information about the devices
+    The udevd or systemd-udevd daemon that manages the /dev directory
+    The udevadm utility for control and diagnostics.
+
+The cleanest way to use udev is to have a pure system; the /dev directory is empty upon the initial kernel boot, and then is populated with device nodes as they are needed. When used this way, one must boot using an initramfs image, which may contain a set of preliminary device nodes, as well as the the udev infrastructure.
+
+27.7. udev and Hotplug
+
+As devices are added or removed from the system, working with the hotplug sub-system, udev acts upon notification of events to create and remove device nodes. The information necessary to create them with the right names, major and minor numbers, permissions, etc., are gathered by examination of information already registered in the sysfs pseudo-filesystem (mounted at /sys) and a set of configuration files.
+
+The main configuration file is /etc/udev/udev.conf. It contains information such as where to place device nodes, default permissions and ownership, etc. By default, rules for device naming are located in the /etc/udev/rules.d and /usr/lib/udev/rules.d directories. By reading the man page for udev one can get a lot of specific information about how to set up rules for common situations.
+
+27.8. The udev Device Manager
+
+When udev receives a message from the kernel about devices being added or removed, it parses the rule-setting files in /etc/udev/rules.d/*.rules and /usr/lib/udev/rules.d/*.rules to see if there are any rules relevant to the device being added or removed.
+
+It then takes appropriate actions including: 
+
+    Device node naming
+    Device node and symbolic links creation
+    Setting file permissions and ownership for the device node
+    Taking other actions to initialize and make device available.
+
+These rules are completely customizable.
+
+27.9. udev Rule Files
+
+udev rules files are located under /etc/udev/rules.d/<rulename>.rules with names like:
+
+    30-usb.rules
+    90-mycustom.rules 
+
+By default, when udev reads the rules files it looks for files that have a suffix of .rules. If it finds more than one file, it reads them one by one, lexicographically, i.e., in ascending alphabetical order. The standard rule file name is generally a two digit number followed by a descriptive name (for the rules), followed by the .rules suffix.
+
+                    |-----------------------------------------------|
+                    |             Create device node in /dev        |
+                    |                                               |
+                    |-----------------------------------------------|
+                                         / \
+                                          |
+                                          |
+                                          |
+                    |------------------------------------------------|
+                    |                    udevd                       |
+                    |------------------------------------------------|
+                         / \                              / \
+                          |                                |
+                          |                                |
+                          |                                |
+                          |                                |
+                          v                                v
+        |----------------------------|                 |---------------------------|
+        |     Kernel module          |                 |      Rules database       |
+        |                            |                 |                           |
+        |----------------------------|                 |---------------------------|
+
+27.10. Creating udev Rules
+
+The format for a udev rule is simple:
+
+<match><op>value [, ...] <assignment><op>value [, ... ]
+
+There are two separate parts defined on a single line:
+
+    The first part consists of one or more match pairs denoted by == .  These try to match a device's attributes and/or characteristics to some value.
+    The second part consists of one or more assignment key-value pairs that assign a value to a name, such as a file name, group assignment, even file permissions, etc.
+
+If no matching rule is found, it uses the default device node name and other attributes.
+
+27.11. Some Examples of Rues Files
+
+Here is an example of a rules file for a Fitbit device:
+
+$ cat /usr/lib/udev/rules.d/99-fitbit.rules
+
+SUBSYSTEM=="usb", ATTR{idVendor}=="2687", ATTR{idProduct}=="fb01", SYMLINK+="fitbit", MODE="0666"
+
+Some other examples: 
+
+$ cat /usr/lib/udev/rules.d/98-kexec.rules
+
+SUBSYSTEM=="cpu", ACTION=="online", PROGRAM="/bin/systemctl try-restart kdump.service" SUBSYSTEM=="cpu", ACTION=="offline", PROGRAM="/bin/systemctl try-restart kdump.service" SUBSYSTEM=="memory", ACTION=="add", PROGRAM="/bin/systemctl try-restart kdump.service" SUBSYSTEM=="memory", ACTION=="remove", PROGRAM="/bin/systemctl try-restart kdump.service"
+
+$ cat /usr/lib/udev/rules.d/80-kvm.rules
+
+KERNEL=="kvm", GROUP="kvm", MODE="0666"
+
+$ cat /usr/lib/udev/rules.d/99-fuse.rules
+
+KERNEL=="fuse", MODE="0666",OWNER="root",GROUP="root"
+
+28.1 Virtualization Overview - Introduction
+
+Virtualization entails creating (in software) an abstracted complete machine environment, under which enduser software runs unaware of the physical details of the machine it is is running on.
+
+While there are quite a few approaches to accomplishing this mission, they generally involve a host operating system and filesystem which directly use the hardware. One or more guest systems run on top (or underneath, depending how you look at it) of the host system at a lower level of privilege. Access to hardware such as network adapters is usually done through some kind of virtual device which may access the physical device when required.
+
+There are many uses for virtual machines. Major ones include more efficient use of hardware, software isolation, security, stability, safe development options, and the ability to run multiple operating systems at the same time without rebooting.
+
+28.1. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    - Understand the concepts behind virtualization and how it came to be widely used.
+    - Understand the roles of hosts and guests.
+    - Discuss the difference between emulation and virtualization.
+    - Distinguish between the different types of hypervisors.
+    - Be familiar with how Linux distributions use and depend on libvirt.
+    - Use the qemu hypervisor.
+    - Install, use and manage KVM.
+
+28.2. What is virtualization?
+
+In this chapter, we will be concerned with the creation, deployment, and maintenance of Virtual Machines (VMs).
+
+Virtual Machines are a virtualized instance of an entire operating system, and may fulfill the role of a server or a desktop/workstation.\u200b
+
+The outside world sees the VM as if it were an actual physical machine, present somewhere on the network. Applications running in the VM are generally unaware of their non-physical environment.\u200b
+
+Other kinds of virtualization include:\u200b
+
+    Network
+    The details of the actual physical network, such as the type of hardware, routers, etc. are abstracted and need not be known by software running on it and configuring it.\u200b
+    Storage
+    Multiple network storage devices are configured to look like one big storage unit, such as a disk.\u200b
+    Application
+    An application is isolated into a standalone format, such as a container, which will be discussed later.\u200b
+
+There are differences between physical and virtual machines which are not always easy to ignore. For example, performance tuning at a low level needs to be done (separately) on both the VM and the physical machine residing underneath it.
+
+28.3. VIrtualization History
+
+Virtualization\u200b has a long proud history. It was implemented originally on mainframes decades ago:
+
+    Enables better hardware utilization
+    Operating systems often progress more quickly than hardware
+    It is microcode driven
+    Not particularly user-friendly.
+
+Later on, virtualization technology migrated to PCs and workstations:
+
+    Initially, it was done using Emulation
+    CPUs enhanced to support virtualization led to a boost in performance, easier configuration, and more flexibility in VM installation and migration.
+
+From early mainframes to mini-computers, virtualization has been used for expanding limits, debugging and administration enhancements.
+
+Today, virtualization can be found everywhere in many forms. Each of the different forms and implementations that are available provide particular advantages.\u200b
+
+28.5. Hosts and Guests
+
+A host is the underlying physical operating system managing one or more virtual machines.
+
+A guest is the VM which is an instance of a complete operating system, running one or more applications. Sometimes, a guest is also called a client. In most cases, the guest should not care what host it is running on and can be migrated from one host to another, sometimes while actually running.
+
+In fact, it is possible to convert physical machines into virtual ones, by copying the entire contents into a VM. Specialized software utilities can make this easier.
+
+Low-level performance tuning on areas such as CPU utilization, networking throughput, memory utilization, is often best done on the host, as the guest may have only simulated qualities not directly useful.
+
+Application tuning will be done mostly on the guest.
+
+28.6. Emulators
+
+The first implementations of virtualization on the PC architecture were through the use of Emulators. An application running on the current operating system would appear to another OS as a specific hardware environment. Emulators generally do not require special hardware to operate.
+
+Qemu is one such emulator.
+
+
+    |-----------| |----------| |----------|
+    |    vm     | |    vm    | |   vm     |
+    |-----------| |----------| |----------|
+
+    |-------------------------------------|
+    |      Dynamic Library Transition     |
+    |-------------------------------------|
+    
+    |-------------------------------------|
+    |      Private Operating System       |
+    |-------------------------------------|
+   
+    |-------------------------------------|
+    |                Hardware             |
+    |-------------------------------------|
+
+                      Emulator
+
+
+28.7. Emulation vs Virtualization
+
+An Emulator runs completely in software. Hardware constructs are replaced by software. It is useful for running virtual machines on different architectures, such as running a pretend ARM guest machine on an X86 host. Emulation is often used for developing an operating system for a new CPU, even before hardware is available. Performance is relatively slow.
+
+
+28.8. Types of Virtualization Hypervisors
+
+ The host system, besides functioning normally with respect to software that it runs, also acts as the hypervisor that initiates, terminates, and manages guests. It also called Virtual Machine Monitor (VMM).
+
+There are two basic methods of virtualization:
+
+    Hardware virtualization (also known as Full Virtualization)
+    The guest system runs without being aware it is running as a virtualized guest, and does not require modifications to be run in this fashion. \u200b
+    Para-virtualization
+    The guest system is aware it is running in a virtualized environment, and has been modified specifically to work with it. 
+
+Recent CPUs from Intel and AMD incorporate virtualization extensions to the x86 architecture that allow the hypervisor to run fully virtualized (i.e., unmodified) guest operating systems with only minor performance penalties.
+
+The Intel extension (Intel Virtualization Technology), usually abbreviated as VT, IVT, VT-32 or VT-64, is also known under the development code name of Vanderpool. It has been available since the spring of 2005.
+
+The AMD extension is usually called AMD-V and is still sometimes referred to by the development code name of Pacifica.
+
+For a detailed explanation and comparison of how these two extensions work, see http://lwn.net/Articles/182080/.
+
+You can check directly if your CPU supports hardware virtualization extensions by looking at /proc/cpuinfo; if you have an IVT-capable chip, you will see vmx in the flags field, and, if you have an AMD-V capable chip, you will see svm in the same field. You may also have to ensure the virtualization capability is turned on in your CMOS.
+
+While the choice of operating systems tends to be more limited for para-virtualized guests, originally they tended to run more efficiently than fully virtualized guests. Recent advances in virtualization techniques have narrowed or eliminated such advantages, and the wider availability of the hardware support needed for full virtualization has made para-virtualization less advantageous and less popular. 
+
+28.9. External and in-Kernel Hypervisors
+
+The hypervisor can be:
+
+    External to the host operating system kernel: VMware
+    Internal to the host operating system kernel: KVM.
+
+In this course, we will concentrate on KVM, as it is all open source, and requires no external third party hypervisor program.\u200b
+
+28.10. Dedicated Hypervisor
+
+Going past Emulation, the merging of the hypervisor program into a specially-designed lightweight kernel was the next step in the Virtualization deployment.
+
+VMware ESX (and related friends) is an example of a hypervisor embedded into an operating system.
+
+
+     |-----------|  |--------------|  |---------|
+     |           |  |              |  |         |
+     |  VM       |  |     OS       |  |   Vir   |
+     | Control   |  |     Not      |  |  Aware  |         
+     | Interface |  |    Virt      |  |    OS   |                        
+     |    for    |  |    Aware     |  |         |
+     | hypervisor|  |--------------|  |         |
+     |           |  |--------------|  |         |
+     |           |  |              |  |         |
+     |           |  |    Para      |  |         |
+     |           |  |virtualization|  |         |
+     |              |   layer      |  |         |
+     |           |  |--------------|  |---------|
+     |           |-------------------------------|
+     |-----------|                               |
+     |                                           | 
+     |     Hypervisor Operating System           |
+     |                                           | 
+     |-------------------------------------------|
+
+     |-------------------------------------------|
+     |              Hardware                     |
+     |                                           | 
+     |-------------------------------------------|
+
+
+                  Dedicated Hypervisor
+
+
+28.11. Hypervisor in the Kernel
+
+The KVM project added hypervisor capabilities into the Linux kernel. This leveraged the facilities of the kernel and enabled the kernel to be a hypervisor.
+
+As we have discussed, specific CPU chip functions and facilities were required and deployed for this type of virtualization.\u200b
+
+   |---------|   |---------|                                  
+   | app1    |   | app2    |                                                 
+   |         |   |         |                                                       
+   |---------|   |---------|                                             
+   |---------|   |---------|                                            
+   |         |   |         |                                                       
+   |bin/libs |   |bin/libs |                         
+   |---------|   |---------|                              
+   |---------|   |---------|                          
+   |  OS     |   |  OS     |                          
+   | Image1  |   | Image2  |                      
+   |         |   |         |            
+   |---------|   |---------|
+
+   |-------------------------|
+   |  KVM Hypervisor         |
+   |                         |
+   |-------------------------|
+
+   |-------------------------|
+   |  Operating System       |
+   |                         |
+   |-------------------------|                                                       
+  
+   |-------------------------|
+   |      Hardware           |
+   |          |--------------|
+   |          |Virtualization|
+   |          | support      |
+   |-------------------------|
+
+
+
+     Hypervisor in the Kernel
+
+28.12. libvirt
+
+The libvirt project is a toolkit to interact with virtualization technologies. It provides management for virtual machines, virtual networks, and storage, and is available on all enterprise Linux distributions.
+
+Many application programs interface with libvirt, and some of the most common ones are virt-manager, virt-viewer, virt-install, virsh.
+
+The complete list of currently supported hypervisors can be found at http://www.libvirt.org:
+
+    QEMU/KVM
+    Xen
+    Oracle VirtualBox
+    VMware ESX
+    VMware Workstation/Player
+    Microsoft Hyper-V
+    IBM PowerVM (phyp)
+    OpenVZ
+    UML (User Mode Linux)
+    LXC (Linux Containers)
+    Virtuozzo
+    Bhyve (The BSD Hypervisor)
+    Test (Used for testing).
+
+28.13. Programs Using libvirt
+
+There are many utilities using libvirt. The exact list will depend on your Linux distribution. A full list can be found at http://www.libvirt.org/app.html.
+
+In this course, we will work through the use of the robust GUI, virt-manager, rather than make much use of command line utilities, which lead to more flexibility, as well as use on non-graphical servers.
+
+28.14. What is QEMU?
+
+QEMU stands for Quick EMUlator. It was originally written by Fabrice Bellard in 2002. (Bellard is also known for feats such as holding, at one point, the world record for calculating \u03c0, reaching 2.7 trillion digits.)
+
+QEMU is a hypervisor that performs hardware emulation, or virtualization. It emulates CPUs by dynamically translating binary instructions between the host architecture and the emulated one.
+
+The host and the emulated architectures may be different, or the same. There are numerous choices for both host and guest operating systems.
+
+QEMU can also be used to emulate just particular applications, not entire operating systems.
+
+By itself, QEMU is much slower than the host machine. But, it can be used together with KVM (Kernel Virtual Machine) to reach speeds close to those of the native host.
+
+Guest operating systems do not require rewriting to run under QEMU. QEMU can save, pause, and restore a virtual machine at any time. QEMU is a free software licensed under the GPL.
+
+QEMU has the capability of supporting many architectures, including: IA-32 (i386), x86-64, MIPS, SPARC, ARM, SH4, PowerPC, CRIS, MicroBlaze, etc.
+
+The cross-compilation abilities of QEMU make it extremely useful when doing development for embedded processors.
+
+In fact, QEMU has often been used to develop processors which have either not yet been physically produced, or released to market. 
+
+
+28.15. Third Party Hypervisor Integration:
+
+ Used by itself, QEMU is relatively slow. However, it can be integrated with third party hypervisors, and then reach near native speeds. Note that some of these systems are very close cousins of QEMU; others are more remote. To mention a few main ones:
+
+    KVM offers particularly tight integration with QEMU. When the host and the target are the same architecture, full acceleration and high speed are delivered. KVM is native to Linux. We will discuss this in detail.
+    Xen, also native to Linux, can run in hardware virtualization mode if the architecture offers it, as does x86 and some ARM variants.
+    Oracle Virtual Box can use qcow2 formatted images, and has a very close relationship with QEMU.
+
+In this course, we recommend using (and will use in labs) virt-manager to configure and run virtual machines. We will also give instructions on how to run them using qemu command line utilities. 
+
+28.16. Image Formats
+
+QEMU supports many formats for disk image files. However, only two are used primarily, with the rest being available for historical reasons and for conversion utilities. These two main formats are:
+
+    - raw (default)
+    This is the simplest and easiest format to export to other non-QEMU emulators. Empty sectors do not take up space.
+
+    - qcow2COW stands for Copy On Write. There are many options. See man qemu-img for more details. 
+
+To get a list of supported formats:
+
+c7:/tmp> qemu-img --help | grep formats:
+
+Supported formats: vfat vpc vmdk vhdx vdi ssh sheepdog rbd raw host_cdrom host_floppy host_device file \
+qed qcow2 qcow parallels nbd iscsi gluster dmg tftp ftps ftp https http cloop bochs blkverify blkdebug
+
+Note in particular:
+
+    vdi: Used by Oracle Virtual Box
+    vmdk: Used by VMware.
+
+Note that qemu-img can be used to translate between formats, .e.g.:
+
+$ qemu-img convert -O vmdk myvm.qcow2 myvm.vmdk
+
+using default options. See the man page for full possibilities. 
+
+28.17. VM and Linux
+KVM uses the Linux kernel for computing resources, including memory management, scheduling, synchronization, and more. When running a virtual machine, KVM engages in a co-processing relationship with the Linux kernel.
+
+In this format, KVM runs the virtual machine monitor within one or more of the CPUs, using VMX or SVM instructions. At the same time, the Linux kernel is executing on the other CPUs.
+
+The virtual machine monitor runs the guest, which is running at full hardware speed, until it executes an instruction that causes the virtual machine monitor to take over.
+
+At this point, the virtual machine monitor can use any Linux resource to emulate a guest instruction, restart the guest at the last instruction, or do something else.
+
+By loading the KVM modules and starting a guest, you turn Linux into a hypervisor. The Linux personality is still there, but you also have the hardware virtual machine monitor. You can control the Virtual Machine using standard Linux resource and process control tools, such as cgroups, nice, numactl, and so on.
+
+KVM first appeared (pre-merge) as part of a Windows Virtual Desktop product. At the time of its upstream merge in 2007, KVM required recent x86_64 processors. On x86_64 platforms, KVM is primarily (but not always) a driver for the processor's virtualization subsystem.
+
+KVM appeared as a trio of Linux kernel modules in 2007. When paired with a modified version of QEMU (also provided at the same time), it created a hypervisor that used the Linux kernel for most of its runtime services.
+
+Shortly after Avi Kivity, the author of KVM, submitted the source code to the Linux development community, Linus merged KVM into his Linux tree. This was surprising to a lot of folks. 
+
+28.18. Managing KVM
+
+There are many low level commands for creating, converting, manipulating, deploying, and maintaining virtual machine images.
+
+Managing KVM can be done with both command line and graphical interfaces.\u200b
+
+Command line tools include: virt-* and qemu-*. Graphical interfaces include virt-manager, kimchi, OpenStack, oVirt, etc. \u200b
+
+As you develop more expertise, you will become practiced in using them. But, for all basic operations, virt-manager will suffice and that is what we will use. 
+
+29.1 Containsers Overview - Introduction
+
+Containers offer a lighter weight method to isolate an application or set of applications from other running processes.
+
+Unlike virtual machines, each of which constitutes a complete operating system, multiple containers can run simultaneously on one system, which can be either a virtualized one or a physical one. A very common method of deploying containers is to use docker, which we will discuss in some detail.
+
+29.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    - Understand the basic parameters and methods that define containers.
+    - Understand the difference between containers and virtual machines.
+    - Be familiar with docker and know the steps necessary to use it properly.
+    - Use the major commands associated with containers and docker.
+
+29.3. Container Basics
+
+Further integration between the hypervisor and the Linux kernel allowed the creation of operating system-level virtual machines, or Containers. Containers share many facilities in the Linux kernel, and make use of some recent kernel additions, such as namespaces and cgroups. Containers are very lightweight and reduce the overhead associated with having whole virtual machines.
+
+The first flavor of containers was the OS container. This type of container runs an image of an operating system with the ability to run init processes and spawn multiple applications.
+
+LXC (Linux Containers) is one example. 
+
+
+           --------------    --------------  ---------------
+           |            |    |            |  |             |
+           |  Container |    |  Container |  |  Container  |
+           |     OS     |    |     OS     |  |     OS      |
+           |            |    |            |  |             |
+           |____________|    |____________|  |_____________|
+           _________________________________________________
+           | ____________________________________________  |
+           | |        Kernel Namespace Facilities        | |
+           | |___________________________________________| |
+           |                                               |
+           |             Operating System                  |
+           |_______________________________________________|
+
+           -------------------------------------------------
+           |                                               |
+           |                Hardware                       |
+           |_______________________________________________|
+
+                              Containers
+
+
+28.4. Application Virtualization
+
+In an effort to further reduce the overhead associated with virtual machines, application virtualization is rising in popularity. Application virtualization runs one application for each container. Many single application containers are typically initialized on a single machine. Using smaller components creates a greater flexibility and reduces overhead normally associated with virtualization.
+
+Docker is one such project. 
+
+             
+           --------------    --------------  ---------------
+           |            |    |            |  |             |
+           |    App1    |    |    App2    |  |    App3     |
+           |            |    |            |  |             |
+           |            |    |            |  |             |
+           |____________|    |____________|  |_____________|
+
+           --------------    --------------  ---------------
+           |            |    |            |  |             |
+           |libs & bins |    |libs & bins |  |libs & bins  |
+           |            |    |            |  |             |
+           |            |    |            |  |             |
+           |____________|    |____________|  |_____________|
+
+
+           _________________________________________________
+           |                                               |
+           |                                               |
+           |                                               |
+           |                                               |
+           |             Docker   Engine                   |
+           |_______________________________________________|
+
+           ________________________________________________
+           |                                               |
+           |                                               |
+           |                                               |
+           |                                               |
+           |             Operating System                  |
+           |_______________________________________________|
+
+           -------------------------------------------------
+           |                                               |
+           |                Hardware                       |
+           |_______________________________________________|
+
+
+                       Application Virtualization
+
+29.5. Containers vs. Virtual Machines
+
+Both Virtual Machines and Containers satisfy important needs. For a while, each facility had its day in the sun, and was seen as the way to go for almost everything.
+
+Both have long histories:
+
+    Mainframe computers have had software partitioning and virtual machines for decades, in rather specialized ways.
+    Operating systems have had chroot and BSD Jail implementations for many years, that share a basic isolation motivation with containers. 
+
+If a number of different services and applications need to be tightly integrated, a virtual machine functioning as a service may be the best solution.
+
+If the applications being run were written expecting a complete operating system environment with a wide range of services and other libraries and applications, virtual machines may be best.
+
+Virtual machines run a complete operating system, and can run many services and applications. Virtual machines use more resources than a container. \u200bContainers usually run one thing. Containers are more portable, and can be run inside a VM. Containers are harder to secure. They usually start faster. Multiple containers share one OS kernel, while each VM has its own.
+
+Scaling workloads is different for containers and virtual machines. Orchestration systems such as Kubernetes or Mesos can decide on the proper quantity of containers needed, do load balancing, replicate images and remove them, etc., as needed.
+
+Overall, virtual machines are still often the best solution.
+
+29.6. Docker
+
+Docker is an application-level virtualization using many individual images to build up the necessary services to support the target application. These images are packaged into containers - they are components in containers. Images may contain:
+
+    - Application code
+    - Runtime libraries
+    - System tools
+    - Or just about anything required for an application.
+
+Images may reside on a Docker Hub or a registry server.
+
+The Docker website, http://www.docker.com, has documentation, tutorials, and training information.
+
+One of the most compelling features of Docker is that an application can be packaged up with all of its dependent code and services and deployed as a single unit with the minimum of overhead. This deployment can be easily repeated as often as desired. This reduces the requirement of building up a server with layered services to support the end application. 
+
+29.7. Docker Steps
+
+Starting up a Docker containerized application may include only a few steps:
+
+    - Install the Docker service package with your favorite tool
+
+    - Start the Docker service
+
+    - Search for an appropriate image from Docker Hub or your private repository
+
+    - Pull the image
+
+    - Run the image
+
+    - And finally, test the application. 
+
+The steps detailed above are just a very minimal example of testing a Docker application.
+
+There are, of course, many, many options that may be used, including functions that create an image, set system variables or configuration parameters, and then, store the result as a new image. In some cases, a writable image is required, rather than a non-writable one.
+
+Most of the Docker commands have individual man pages. Examples include: docker(1), docker-search(1), docker-pull(1), docker-create(1), and docker-run(1). 
+
+29.8. docker Command
+
+ The docker command has more than 40 sub-commands, some with 50 or more options. To learn more about the docker command, you can always do:
+
+$ docker <command> --help
+
+The many docker sub-commands tend to be somewhat self-documenting. Often confused are run, create and exec. The ps command will list running containers, or all containers, if you include the -all option.
+
+docker run will start a new container and execute a command within. Common options are -t to attach to a tty, and -d to run the container in the background.
+
+The docker create command creates a container. It has many options for configuring container settings and attachments.
+
+If the container is already running, and you want to execute something inside of it, you can use the docker exec command. It also
+
+accepts the -t -d options.
+
+The docker images command will show images in various outputs. The docker rmi command will remove images and delete untagged
+
+parents by default.
+
+You can also leverage shell functions to operate upon all containers. For example, to remove all stopped containers, you can do:
+
+$ docker rm $(ps -a -q)
+
+30.1. User Account Management - Introduction
+
+30.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    - Explain the purpose of individual user accounts and list their main attributes.
+    - Create new user accounts and modify existing account properties, as well as remove or lock accounts.
+    - Understand how user passwords are set, encrypted and stored, and how to require changes in passwords over time for security purposes.
+    - Explain how restricted shells and restricted accounts work.
+    - Understand the role of the root account and when to use it.
+
+30.3. User Accounts
+
+Linux systems provide a multi-user environment which permits people and processes to have separate simultaneous working environments.
+
+The purposes of having individual user accounts include:
+
+    Providing each user with their own individualized private space
+    Creating particular user accounts for specific dedicated purposes
+    Distinguishing privileges among users.
+
+One special user account is for the root user, who is able to do anything on the system. To avoid making costly mistakes, and for security reasons, the root account should only be used when absolutely necessary.
+
+Normal user accounts are for people who will work on the system. Some user accounts (like the daemon account) exist for the purpose of allowing processes to run as a user other than root.
+
+In the next section, we will continue with a discussion of group management, where subsets of the users on the system can share files, privileges, etc., according to common interests.
+
+30.4. Attributes of a User Account
+
+Each user on the system has a corresponding line in the /etc/passwd file that describes their basic account attributes. (We will talk about passwords as well as this file later). For example:
+
+....
+
+beav:x:1000:1000:Theodore Cleaver:/home/beav:/bin/bash
+
+warden:x:1001:1001:Ward Cleaver:/home/warden:/bin/bash
+
+dobie:x:1002:1002:Dobie Gillis:/home/dobie:/bin/bash
+
+....
+
+The seven elements here are:
+
+    User name
+    The unique name assigned to each user.
+    User password
+    The password assigned to each user.
+    User identification number (UID)
+    A unique number assigned to the user account. The UID is used by the system for a variety of purposes, including a determination of user privileges and activity tracking.
+    Group identification number (GID)
+    Indicates the primary, principal, or default group of the user.
+    Comment or GECOS information
+    A defined method to use the comment field for contact information (full name, email, office, contact number). (Don't worry about what GECOS means, it is a very old term.)
+    Home directory
+    For most users, this is a unique directory that offers a working area for the user. Normally, this directory is owned by the user, and except for root will be found on the system somewhere under /home.
+    Login shell
+    Normally, this is a shell program such as /bin/bash or /bin/csh. Sometimes, however, an alternative program is referenced here for special cases. In general, this field will accept any executable.
+
+30.5. Creating User Accounts with useradd
+
+
+The command:
+
+$ sudo useradd stephane
+
+will create an account for user stephane, using default algorithms for assigning user and group id, home directory, and shell choice.
+
+Specifically, the useradd command above causes the following steps to execute:
+
+    The next available UID greater than UID_MIN (specified in /etc/login.defs) by default is assigned as stephane's UID.
+    A group called stephane with a GID=UID is also created and assigned as stephane's primary group.
+    A home directory /home/stephane is created and owned by stephane.
+    stephane's login shell will be /bin/bash.
+    The contents of /etc/skel is copied to /home/stephane. By default, /etc/skel includes startup files for bash and for the X Window system.
+    An entry of either !! or ! is placed in the password field of the /etc/shadow file for stephane's entry, thus requiring the administrator to assign a password for the account to be usable.
+
+The defaults can easily be overruled by using options to useradd as in:
+
+$ sudo useradd -s /bin/csh -m -k /etc/skel -c "Bullwinkle J Moose" bmoose
+
+where explicit non-default values have been given for some of the user attributes.
+
+30.6.a.  Modifying and Deleting User Accounts I
+
+
+The root user can remove user accounts using userdel:
+
+$ sudo userdel isabelle
+
+All references to the user isabelle will be erased from /etc/passwd, /etc/shadow, and /etc/group.
+
+While this removes the account, it does not delete the home directory (usually /home/isabelle) in case the account may be re-established later. If the -r option is given to userdel the home directory will also be obliterated. However, all other files on the system owned by the removed user will remain.
+
+usermod can be used to change characteristics of a user account, such as group memberships, home directory, login name, password, default shell, user id, etc.
+
+Usage is pretty straightforward. Note that usermod will take care of any modifications to files in the /etc directory as necessary.
+
+30.6.b. 
+
+
+sudo usermod --help
+Usage: usermod [options] LOGIN
+
+Options:
+  -c, --comment COMMENT         new value of the GECOS field
+  -d, --home HOME_DIR           new home directory for the user account
+  -e, --expiredate EXPIRE_DATE  set account expiration date to EXPIRE_DATE
+  -f, --inactive INACTIVE       set password inactive after expiration
+                                to INACTIVE
+  -g, --gid GROUP               force use GROUP as new primary group
+  -G, --groups GROUPS           new list of supplementary GROUPS
+  -a, --append                  append the user to the supplemental GROUPS
+                                mentioned by the -G option without removing
+                                him/her from other groups
+  -h, --help                    display this help message and exit
+  -l, --login NEW_LOGIN         new value of the login name
+  -L, --lock                    lock the user account
+  -m, --move-home               move contents of the home directory to the
+                                new location (use only with -d)
+  -o, --non-unique              allow using duplicate (non-unique) UID
+  -p, --password PASSWORD       use encrypted password for the new password
+  -R, --root CHROOT_DIR         directory to chroot into
+  -s, --shell SHELL             new login shell for the user account
+  -u, --uid UID                 new UID for the user account
+  -U, --unlock                  unlock the user account
+  -v, --add-subuids FIRST-LAST  add range of subordinate uids
+  -V, --del-subuids FIRST-LAST  remove range of subordinate uids
+  -w, --add-subgids FIRST-LAST  add range of subordinate gids
+  -W, --del-subgids FIRST-LAST  remove range of subordinate gids
+  -Z, --selinux-user SEUSER     new SELinux user mapping for the user account
+
+30.7.a. Locked Accounts I
+
+Linux ships with some system accounts that are locked, which means they can run programs, but can never login to the system and have no valid password associated with them. For example, /etc/passwd has entries like:
+
+bin:x:1:1:bin:/bin:/sbin/nologin
+
+daemon:x:2:2:daemon:/sbin:/sbin/nologin
+
+The nologin shell returns the following if a locked user tries to login to the system:
+
+This account is currently not available.
+
+or whatever message may be stored in /etc/nologin.txt.
+
+Such locked accounts are created for special purposes, either by system services or applications; if you scan /etc/passwd for users with the nologin shell, you can see who they are on your system.
+
+30.7.b. Locked Accounts II
+
+It is also possible to lock the account of a particular user, as in:
+
+$ sudo usermod -L stephane
+
+which means the account stays on the system but logging in is impossible. Unlocking can be done with the -U option.
+
+A customary practice is to lock a user's account whenever they leave the organization or is on an extended leave of absence.
+
+Another way to lock an account is to use chage to change the expiration date of an account to a date in the past:
+
+$ sudo chage -E 2014-09-11 isabelle
+
+The actual date is irrelevant as long as it is in the past. We will discuss chage shortly.
+
+Another approach is to edit the /etc/shadow file and replace the user's hashed password with !! or some other invalid string.
+
+30.8. User IDs and /etc/passwd
+
+We have already seen how /etc/passwd contains one record (one line) for each user on the system, as in
+
+beav:x:1000:1000:Theodore Cleaver:/home/beav:/bin/bash
+
+rsquirrel:x:1001:1001:Rocket J Squirrel:/home/rsquirrel:/bin/bash
+
+and we have already discussed the fields in here. Each record consists of a number of fields separated by colons (:). The fields are the attributes we discussed earlier.
+
+If /etc/shadow is not used, the password field contains the hashed password. If it is used, it contains a place holder ("x").
+
+The convention most Linux distributions have used is that any account with a user ID less than 1000 is considered special and belongs to the system; normal user accounts start at 1000. The actual value is defined as UID_MIN and is defined in /etc/login.defs.
+
+Historically, Red Hat-derived distributions used UID_MIN=500, not 1000, but, with RHEL 7 they adopted the more common value of 1000.
+
+If a User ID is not specified when using useradd, the system will incrementally assign UIDs starting at UID_MIN.
+
+Additionally, each user gets a Primary Group ID which, by default, is the same number as the UID. These are sometimes called User Private Groups (UPG).
+
+It is bad practice to edit /etc/passwd, /etc/group or /etc/shadow directly; either use appropriate utilities such as usermod, or use the vipw special editor to do so as it is careful about file locking, data corruption, etc.
+
+30.9. /etc/shadow
+
+The file /etc/shadow contains one record (one line) for each user, as in:
+
+daemon:*:16141:0:99999:7:::
+.....
+beav:$6$iCZyCnBJH9rmq7P.$RYNm10Jg3wrhAtUnahBZ/mTMg.RzQE6iBXyqaXHvxxbKTYqj.d
+       9wpoQFuRp7fPEE3hMK3W2gcIYhiXa9MIA9w1:16316:0:99999:7:::
+
+The colon-separated fields are:
+
+    username: unique user name
+    password: the hashed (sha512) value of the password
+    lastchange: days since Jan 1, 1970 that password was last changed
+    mindays: minimum days before password can be changed
+    maxdays: maximum days after which password must be changed
+    warn: days before password expires that the user is warned
+    grace: days after password expires that account is disabled
+    expire: date that account is/will be disabled
+    reserved: reserved field.
+
+The username in each record must match exactly that found in /etc/passwd, and also must appear in the identical order.
+
+All dates are stored as the number of days since Jan. 1, 1970 (the epoch date).
+
+The password hash is the string "$6$" followed by an eight character salt value, which is then followed by a $ and an 88 character (sha512) password hash.
+
+30.10. Why Use /etc/shadow?
+
+Use of /etc/shadow enables password aging on a per user basis. At the same time, it also allows for maintaining greater security of hashed passwords.
+
+The default permissions of /etc/passwd are 644 (-rw-r--r--); anyone can read the file. This is unfortunately necessary because system programs and user applications need to read the information contained in the file. These system programs do not run as the user root and, in any event, only root may change the file.
+
+Of particular concern are the hashed passwords themselves. If they appear in /etc/passwd, anyone may make a copy of the hashed passwords and then make use of utilities such as Crack and John the Ripper to guess the original cleartext passwords given the hashed password. This is a security risk!
+
+/etc/shadow has permission settings of 400 (-r--------), which means that only root can access this file. This makes it more difficult for someone to collect the hashed passwords.
+
+Unless there is a compelling good reason not to, you should use the /etc/shadow file.
+
+30.11. Password Management
+
+Passwords can be changed with passwd; a normal user can change only their own password, while root can change any password. When you type your password it is not shown; echoing back to the screen is suppressed.
+
+By default, the password choice is examined by pam_cracklib.so, which furthers making good password choices.
+
+A normal user changing their password:
+
+$ passwd
+
+Changing password for clyde
+
+(current) UNIX password: <clyde's password>
+
+New UNIX password: <clyde's-new-password>
+
+Retype new UNIX password: <clyde's-new-password>
+
+passwd: all authentication tokens updated successfully
+
+Also, note that when root changes a user's password, root is not prompted for the current password:
+
+$ sudo passwd kevin
+
+New UNIX password:  <kevin's-new-password>
+
+Retype new UNIX password: <kevin's-password>
+
+passwd: all authentication tokens updated successfully
+
+Note that normal users will not be allowed to set bad passwords, such as ones that are too short, or based on dictionary words. However, root is allowed to do so.
+
+30.12.a. chage: Password Aging I
+
+It is generally considered important to change passwords periodically. This limits the amount of time a cracked password can be useful to an intruder and also can be used to lock unused accounts. The downside is users can find this policy annoying and wind up writing down their ever-changing passwords and thus making them easier to steal.
+
+The utility that manages this is chage:
+
+chage [-m mindays] [-M maxdays] [-d lastday] [-I inactive] [-E expiredate] [-W warndays] user
+
+Examples:
+
+$ sudo chage -l stephane
+$ sudo chage -m 14 -M 30 kevlin
+$ sudo chage -E 2012-4-1 isabelle
+$ sudo chage -d 0 clyde
+
+30.12.b. chage: Password Aging II
+
+ Only the root user can use chage. The one exception to this is that any user can run chage -l to see their aging.
+
+ To force a user to change their password at their next login, do:
+
+$ sudo chage -d 0 USERNAME
+
+30.13. Restricted shell
+
+Under Linux one can use a restricted shell, which can be invoked as:
+
+$ bash -r
+
+(Some distributions may define an rbash command to the same effect.)
+
+A restricted shell functions in a more tightly controlled environment than a standard shell, but otherwise functions normally. In particular, it:
+
+    Prevents the user from using cd to change directories.
+    Prevents the user from redefining the following environment variables: SHELL, ENV, and PATH.
+    Does not permit the user to specify the absolute path or executable command names starting from /.
+    Prevents the user from redirecting input and/or output.
+
+Note that there are other restrictions; the best way to see them all is to do man bash and search for RESTRICTED SHELL.
+
+Because the restricted shell executes $HOME/.bash_profile without restriction, the user must have neither write nor execute permission on the /home directory.
+
+30.14. Restricted Accounts
+
+There are times when granting access to a user is necessary, but should be limited in scope. Setting up a restricted user account can be useful in this context. A restricted account:
+
+    Uses the restricted shell
+    Limits available system programs and user applications
+    Limits system resources
+    Limits access times
+    Limits access locations.
+
+From the command line, or from a script, a restricted shell may be invoked with /bin/bash -r. However, flags may not be specified in the /etc/passwd file. A simple way to get around this restriction would be to do one of the following:
+
+$ cd /bin ; sudo ln -s bash rbash
+
+$ cd /bin ; sudo ln bash rbash
+
+$ cd /bin ; sudo cp bash rbash
+
+and then, use /bin/bash as the shell in /etc/passwd.
+
+When setting up such an account, one should avoid inadvertently adding system directories to the PATH environment variable; this would grant the restricted user the ability to execute other system programs, such as an unrestricted shell.
+
+Restricted accounts are also sometimes referred to as limited accounts.  
+
+30.15. The root Account
+
+The root account should only be used for administrative purposes when absolutely necessary and never used as a regular account. Mistakes can be very costly, both for integrity and stability, and system security.
+
+By default, root logins through the network are generally prohibited for security reasons. One can permit Secure Shell logins using ssh, which is configured with /etc/ssh/sshd_config, and PAM (Pluggable Authentication Modules), which we will discuss later, through the pam_securetty.so module and the associated /etc/securetty file. Root login is permitted only from the devices listed in /etc/securetty.
+
+It is generally recommended that all root access be through su, or sudo (causing an audit trail of all root access through sudo). Note that some distributions (such as Ubuntu), by default actually prohibit logging in directly to the root account.
+
+PAM can also be used to restrict which users are allowed to su to root. It might also be worth it to configure auditd to log all commands executed as root.
+
+30.16.a. SSH I
+
+One often needs to login through the network into a remote system, either with the same user name or another. Or one needs to transfer files to and from a remote machine. In either case, one wants to do this securely, free from interception.
+
+SSH (Secure SHell) exists for this purpose. It uses encryption based on strong algorithms. Assuming the proper ssh packages are installed on a system, one needs no further setup to begin using ssh.
+
+To sign onto a remote system:
+
+$ whoami
+student
+
+$ ssh farflung.com
+student@farflung.com's password: (type here)
+$
+
+where we are assuming there is a student account on farflung.com. To log in as a different user:
+
+$ ssh root@farflung.com
+root@farflung.com's password: (type here)
+
+or
+
+$ ssh -l root farflung.com
+root@farflung.com's password: (type here)
+
+30.16.b. SSH II
+
+To copy files from one system to another:
+
+$ scp file.txt farflung.com:/tmp
+$ scp file.tex student@farflung.com/home/student
+$ scp -r some_dir farflung.com:/tmp/some_dir
+
+(We have omitted the request for a password to save space; if you configure properly with encryption keys as we will discuss next, you will not need to supply a password.)
+
+To run a command on multiple machines simultaneously:
+
+$for machines in node1 node2 node3
+
+do (ssh $machines some_command &)
+
+done
+
+30.17.a. SSH Configuration Files I
+
+One can configure SSH further to expedite its use, in particular to permit logging in without a password. User-specific configuration files are created under every user's home directory in the hidden .ssh directory:
+
+ $ ls -l ~/.ssh
+total 20
+-rw-r--r-- 1 hilda hilda 1172 Sep 27  2014 authorized_keys
+-rw------- 1 hilda hilda  207 Aug  9  2011 config
+-rw------- 1 hilda hilda 1675 Dec  8  2010 id_rsa
+-rw-r--r-- 1 hilda hilda  393 Dec  8  2010 id_rsa.pub
+-rw-r--r-- 1 hilda hilda 1980 Apr 28 07:36 known_hosts
+
+which contains:
+
+    id_rsa: the user's private encryption key
+    id_rsa.pub: the user's public encryption key
+    authorized_keys: A list of public keys that are permitted to login
+    known_hosts: A list of hosts from which logins have been allowed in the past
+    config: A configuration file for specifying various options.
+
+30.17.b. SSH Configuration Files II
+
+First, a user has to generate their private and public encryption keys with ssh-keygen:
+
+$ ssh-keygen
+
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/hilda/.ssh/id_rsa):
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again: 
+Your identification has been saved in /home/hilda/.ssh/id_rsa
+Your public key has been saved in /home/hilda/.ssh/id_rsa.pub
+The key fingerprint is:
+76:da:d3:51:1e:c8:2d:3b:34:28:46:b2:2b:db:d1:c4 hilda@c7
+The key's randomart image is:
++--[ RSA 2048]----+
+|      . .        |
+|       =   o o   |
+|      . E . * +  |
+|       = . . * . |
+|    . o S . + .  |
+|     + o + . o   |
+|    . . . o .    |
+|           .     |
+|                 |
++-----------------+
+
+This will also generate the public key, \u0303/.ssh/id_rsa.pub.
+
+30.17.c. SSH Configuration Files III
+
+The public key can be given to any machine with which you want to permit password-less access. It should also be added to your authorized_keys file, together with all the public keys from other users who have accounts on your machine and you want to permit password-less access to their accounts.
+
+The known_hosts file is gradually built up as ssh accesses occur. If the system detects changes in the users who are trying to log in through ssh it will warn you of them and afford the opportunity to deny access. Note that the authorized_keys file contains information about users and machines:
+
+$ cat authorized_keys
+
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQ
+...0000aSd...hilda@sbc
+
+while the known_hosts only contains information about computer nodes:
+
+$ cat known_hosts
+
+192.30.252.129 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSw
+....BK6Tb...==
+
+You can examine the man pages to see what kinds of options can go into the ssh configuration file, config.
+
+30.18. Remote Graphical Login
+
+ Login into the remote machine with full graphical desktop. Often, you may use VNC (Virtual Network Computing) to connect to a system. A common implementation is tigervnc.
+
+To test this, first make sure that you have the vnc packages installed:
+
+$ sudo yum install tigervnc tigervnc-server
+
+$ sudo zypper install tigervnc tigervnc-server
+
+$ sudo apt-get install tigervnc tigervnc-server
+
+using the right package management system command.
+
+Start the server as a normal user with:
+
+$ vncserver
+
+You can test with:
+
+$ vncviewer localhost:2
+
+(You may have to play with numbers other than 2, such as 1,3,4..., depending on what you are running at the moment, and how your machine is configured.)
+
+To view from a remote machine, it is just slightly different:
+
+$ vncviewer -via student@some_machine localhost:2
+
+If you get a rather strange message about having to authenticate because of 'color profile', and no passwords work, you have to kill the colord daemon on the server machine, as in:
+
+$ sudo systemctl stop colord
+
+31.1. Group Management - Introduction
+
+Linux systems form collections of users called groups, whose members share some common purpose. To further that end, they share certain files and directories and maintain some common privileges; this separates them from others on the system, sometimes collectively called the world. Using groups aids collaborative projects enormously.
+
+31.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    -Explain why it is useful to have Linux users belong to one or more groups.
+    - Use utilities such as groupadd, groupdel, groupmod, and usermod to create, remove and manipulate groups and their membership.
+    - Describe User Private Groups.
+    - Explain the concept of group membership
+
+31.3. Groups
+
+Users belong to one or more groups under Linux. Purposes include:
+
+    Allowing users to share a work area (directories, files, etc.)
+    Setting up file permissions to allow access to group members, but not the entire world
+    Permitting certain specified users to access resources they would not be allowed to otherwise.
+
+Groups are defined in /etc/group, which has the same role for groups as /etc/passwd has for users.  Each line of the file looks like:
+
+groupname:password:GID:user1,user2,...
+
+where:
+
+    groupname is the name of the group
+    password is the password place holder. Group passwords may be set, but only if the /etc/gshadow file exists
+    GID is the group identifier. Values between 0 and 99 are for system groups. Values between 100 and GID_MIN (as defined in /etc/login.defs and usually the same as UID_MIN) are considered special. Values over GID_MIN are for UPG (User Private Groups)
+    user1,user2,... is a comma-separated list of users who are members of the group. The user need not be listed here if this group is the user's principal group.
+
+31.4. Group Management
+
+Group accounts may be managed and maintained with:
+
+    groupadd:  Add a new group.
+    groupdel:  Remove a group.
+    groupmod:  Modify a group's properties.
+    usermod:  Modify a user's group memberships (add or remove).
+
+One can also edit /etc/group directly, but it is better to use the vigr utility, which is generally symbolically linked to the vipw utility mentioned earlier.
+
+These group manipulation utilities modify /etc/group and (if it exists) /etc/gshadow, and may only be executed by root:
+
+Examples:
+
+$ sudo groupadd -r -g 215 staff
+
+$ sudo groupmod -g 101 blah
+
+$ sudo groupdel newgroup
+
+$ sudo usermod -G student,group1,group2 student
+
+Note:  Be very careful with the usermod -G command; the group list that follows is the complete list of groups, not just the changes. Any supplemental groups left out will be gone! Non-destructive use should utilize the -a option, which will preserve pre-existing group memberships when adding new ones.
+
+31.5. User Private Groups
+
+Linux uses User Private Groups (UPG).
+
+The idea behind UPGs is that each user will have his or her own group. However, UPGs are not guaranteed to be private; additional members may be added to someone's private group in /etc/group.
+
+By default, users whose accounts are created with useradd have: primary GID = UID and the group name is also identical to the user name.
+
+As specified in /etc/profile, the umask is set to 002 for all users created with UPG. Under this scheme, user files are thus created with permissions 664 (rw-rw-r--) and directories with 775 (rwxrwxr-x). We will discuss umask in the next section.
+
+31.6. Group Membership
+
+A Linux user has one primary group; this is listed in /etc/passwd and will also be listed in /etc/group. A user may belong to between 0 and 15 secondary groups.
+
+The primary group is the GID that is used whenever the user creates files or directories. Membership in other, secondary, groups grants the user additional permissions.
+
+Group membership can be identified by running:
+
+$ groups [user1 user2 ...]
+
+$ id -Gn [user1 user2 ...]
+
+With no arguments, either command reports on the current user. Note that the default groups can differ by distribution:
+
+On Centos:
+
+[student@CentOS7 ~]$ groups
+
+student
+
+[student@CentOS7 ~]$ 
+
+On Ubuntu:
+
+student@ubuntu:~$ groups
+
+student adm cdrom sudo dip plugdev lpadmin sambashare libvirt
+
+student@ubuntu:~$ 
+
+32.1. File Permissions and Ownership - Introduction
+
+32.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    - Explain the concepts of owner, group, and world.
+    - Set file access rights (read, write, and execute) for each category.
+    - Authenticate requests for file access, respecting proper permissions. 
+    - Use chmod to change file permissions, chown to change user ownership, and chgrp  to change group ownership.
+    - Understand the role of umask in establishing desired permissions on newly created files.
+    - Use ACLs to extend the simpler user, group, world and read, write, execute model.
+
+32.3. Owner, Gruop and World
+
+When you do an ls -l as in:
+
+$ ls -l a_file
+
+-rw-rw-r-- 1 coop aproject 1601 Mar 9 15:04  a_file
+
+after the first character (which indicates the type of the file object) there are nine more which indicate the access rights granted to potential file users. These are arranged in three groups of three:
+
+    owner:  the user who owns the file (also called user)
+    group:  the group of users who have access
+    world:  the rest of the world (also called other).
+
+In the above listing, the user is coop and the group is aproject.
+
+32.4. File Access Rights
+
+Each of the triplets can have each of the following sets:
+
+    r:  read access is allowed
+    w:  write access is allowed
+    x:  execute access is allowed.
+
+If the permission is not allowed, a - appears instead of one of these characters.
+
+In addition, other specialized permissions exist for each category, such as the setuid/setgid permissions.
+
+Thus, in the preceding example, the user coop and members of the group aproject have read and write access, while anyone else has only read access.
+
+32.5. File Permissions and Security and Authentication
+
+These file access permissions are a critical part of the Linux security system. Any request to access a file requires comparison of the credentials and identity of the requesting user to those of the owner of the file.
+
+This authentication is granted depending on one of these three sets of permissions, in the following order:
+
+    If the requester is the file owner, the file owner permissions are used.
+    Otherwise, if the requester is in the group that owns the files, the group permissions are examined.
+    If that doesn't succeed, the world permissions are examined.
+
+32.6. Changing Permissions: chmod
+
+Changing file permissions is done with chmod. You can only change permissions on files you own, unless you are the superuser.
+
+There are a number of different ways to use chmod. For instance, to give the owner and world execute permission, and remove the group write permission:
+
+$ ls -l a_file
+
+-rw-rw-r-- 1 coop coop 1601 Mar  9 15:04 a_file
+
+$ chmod uo+x,g-w a_file
+
+$ ls -l a_file
+
+-rwxr--r-x 1 coop coop 1601 Mar  9 15:04 a_file
+
+where u stands for user (owner), o stands for other (world), and g stands for group.
+
+32.7.a. chmod: Numerical Syntax for Permissions I
+
+The symbolic syntax can be difficult to type and remember, so one often uses the octal shorthand, which lets you set all the permissions in one step. This is done with a simple algorithm, and a single digit suffices to specify all three permission bits for each entity. This digit is the sum of:
+
+    4 if the read permission is desired
+    2 if the write permission is desired
+    1 if execute permission is desired.
+
+Thus, 7 means read/write/execute, 6 means read/write, and 5 means read/execute.
+
+When you apply this with chmod, you have to give a value for each of the three digits, such as in
+
+$ chmod 755 a_file
+$ ls -l a_file
+-rwxr-xr-x 1 coop coop 1601 Mar 9 15:04 a_file
+
+32.7.b. chmod: Numerical Syntax for Permissions I
+
+Permissions can be represented either as a bitmap, usually written in octal, or in a symbolic form. Octal bitmaps usually look like 0755 while symbolic representations look like u+rwx,g+rwx,o+rx.
+
+32.8. Changing User and Group File Ownership: chmod and chgrp
+
+Changing file ownership is done with chown and changing the group is done with chgrp.
+
+Only the superuser can change ownership on files. Likewise, you can only change group ownership to groups that you are a member of.
+
+Changing the group ownership of the file is as simple as doing:
+
+$ chgrp aproject a_file
+
+and changing the ownership is as simple as
+
+$ chown coop a_file
+
+You can change both at the same time with:
+
+$ chown coop:aproject a_file
+
+where you separate the owner and the group with a colon (or a period).
+
+All three of these programs take the -R option, which stands for recursive. For example:
+
+$ chown -R coop:aproject ./
+
+$ chown -R coop:aproject subdir
+
+will change the owner and group of all files in the current directory and all its subdirectories in the first command, and in subdir and all its subdirectories in the second command.
+
+32.9. umask
+
+The default permissions given when creating a file are read/write for owner, group and world (0666), and for a directory it is read/write/execute for everyone (0777). However, if you do the following:
+
+$ touch afile
+$ mkdir adir
+$ ls -l | grep -e afile -e adir
+drwxrwxr-x 2 coop coop 4096 Sep 16 11:18 adir
+-rw-rw-r-- 1 coop coop    0 Sep 16 11:17 afile
+
+you will notice the actual permissions have changed to 664 for the file and 775 for the directory. They have been modified by the current umask whose purpose is to show which permissions should be denied. The current value can be shown by:
+
+$ umask
+0002
+
+which is the most conventional value set by system administrators for users. This value is combined with the file creation permissions to get the actual result; i.e.,
+
+0666 & ~002 = 0664; i.e., rw-rw-r--
+
+You can change the umask at any time with the umask command, as in
+
+$ umask 0022
+
+32.11. Filesystem ACLs
+
+Linux contains a full implementation of  POSIX ACLs (Access Control Lists) which extends the simpler user, group, world and read, write, execute model.
+
+Particular privileges can be granted to specific users or groups of users when accessing certain objects or classes of objects. Files and directories can be shared without using 777 permissions.
+
+While the Linux kernel enables the use of ACLs, it still must be implemented as well in the particular filesystem. All major filesystems used in modern Linux distributions incorporate the ACL extensions, and one can use the option -acl when mounting. A default set of ACLs is created at system install. 
+
+32.12. Getting and Setting ACLs
+
+To see ACLs:
+
+$ getfacl file|directory
+
+Example:
+
+ $ getfacl file1
+
+To set ACLs:
+
+ $ setfacl options permissions file|directory
+
+Examples:
+
+$ setfacl -m u:isabelle:rx /home/stephane/file1
+
+$ setfacl -x u:isabelle    /home/stephane/file
+
+Note that new files inherit the default ACL (if set) from the directory they reside in. Also note that mv and cp -p preserve ACLs. 
+
+To remove an ACL:
+
+$ setfacl -x u:isabelle /home/stephane/file1
+
+To set the default on a directory:
+
+$ setfacl -m d:u:isabelle:rx somedir
+
+33.1. Pluggable Authentication Modules - Introduction
+
+Pluggable Authentication Modules provide a uniform mechanism to ensure that users and applications are properly identified and authenticated. Conditional rules can be applied to limit the scope of permissions and control can be established over what to do in case of either success or failure. PAM can also work with LDAP to centralize authentication throughout a network.
+
+33.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    - Explain the basic concepts that motivate the use of PAM.
+    - List the steps involved in the authentication process.
+    - Use and modify PAM configuration files.
+    - Know how to interpret PAM rules and create new ones.
+    - Apply LDAP to use and administer distributed directory services over the network.
+
+33.3 PAM: A Unified Approach to Authentication
+
+Historically, authentication of users was performed individually by individual applications; i.e., su, login, and ssh would each authenticate and establish user accounts independently of each other.
+
+Most modern Linux applications have been written or rewritten to exploit PAM (Pluggable Authentication Modules) so that authentication can be done in one uniform way, using libpam.
+
+This library of modules provides enormous flexibility and consistency with respect to authentication, password, session, and account services.
+
+PAM incorporates the following components:
+
+    PAM-aware applications
+    Configuration files in /etc/pam.d/ 
+    PAM modules in the libpam* libraries, which can be found in different locations depending on the Linux distribution.
+
+Each PAM-aware application, or service, may be configured with respect to PAM by an individual configuration file in /etc/pam.d.
+
+33.4. Authentication Process
+
+Several steps are involved in authentication:
+
+   - A user invokes a PAM-aware application, such as login, ssh, or su.
+   - The application calls libpam.
+   - The library checks for files in /etc/pam.d; these delineate which PAM modules to invoke, including system-auth.
+   - Each referenced module is executed in accordance with the rules of the relevant configuration file for that application.
+
+33.5. PAM Configuration Files
+
+Each file in /etc/pam.d corresponds to a service and each (non-commented) line in the file specifies a rule. The rule is formatted as a list of space-separated tokens, the first two of which are case insensitive:
+
+type control module-path module-arguments
+
+As an example, the screenshot here shows what are the contents of /etc/pam.d/su on a RHEL 7 system. Notice that there is a stack here; su will require loading of system-auth etc.
+
+
+#
+# The PAM configuration file for the Shadow `su' service
+#
+
+# This allows root to su without passwords (normal operation)
+auth       sufficient pam_rootok.so
+
+# Uncomment this to force users to be a member of group root
+# before they can use `su'. You can also add "group=foo"
+# to the end of this line if you want to use a group other
+# than the default "root" (but this may have side effect of
+# denying "root" user, unless she's a member of "foo" or explicitly
+# permitted earlier by e.g. "sufficient pam_rootok.so").
+# (Replaces the `SU_WHEEL_ONLY' option from login.defs)
+# auth       required   pam_wheel.so
+
+# Uncomment this if you want wheel members to be able to
+# su without a password.
+# auth       sufficient pam_wheel.so trust
+
+# Uncomment this if you want members of a specific group to not
+# be allowed to use su at all.
+# auth       required   pam_wheel.so deny group=nosu
+
+# Uncomment and edit /etc/security/time.conf if you need to set
+# time restrainst on su usage.
+# (Replaces the `PORTTIME_CHECKS_ENAB' option from login.defs
+# as well as /etc/porttime)
+# account    requisite  pam_time.so
+
+# This module parses environment configuration file(s)
+# and also allows you to use an extended config
+# file /etc/security/pam_env.conf.
+# 
+# parsing /etc/environment needs "readenv=1"
+session       required   pam_env.so readenv=1
+# locale variables are also kept into /etc/default/locale in etch
+# reading this file *in addition to /etc/environment* does not hurt
+session       required   pam_env.so readenv=1 envfile=/etc/default/locale
+
+# Defines the MAIL environment variable
+# However, userdel also needs MAIL_DIR and MAIL_FILE variables
+# in /etc/login.defs to make sure that removing a user 
+# also removes the user's mail spool file.
+# See comments in /etc/login.defs
+#
+# "nopen" stands to avoid reporting new mail when su'ing to another user
+session    optional   pam_mail.so nopen
+
+# Sets up user limits according to /etc/security/limits.conf
+# (Replaces the use of /etc/limits in old login)
+session    required   pam_limits.so
+
+# The standard Unix authentication modules, used with
+# NIS (man nsswitch) as well as normal /etc/passwd and
+# /etc/shadow entries.
+@include common-auth
+@include common-account
+@include common-session
+
+33.6. PAM Rules
+
+The module type specifies the management group the module is to be associated with:
+
+    auth:  Instructs the application to prompt the user for identification (username, password, etc). May set credentials and grant privileges.
+    account:  Checks on aspects of the user's account, such as password aging, access control, etc.
+    password:  Responsible for updating the user authentication token, usually a password.
+    session:  Used to provide functions before and after the session is established (such as setting up environment, logging, etc.).
+
+The control flag controls how the success or failure of a module affects the overall authentication process:
+
+    required:  Must return success for the service to be granted. If part of a stack, all other modules are still executed. Application is not told which module or modules failed.
+    requisite:  Same as required, except a failure in any module terminates the stack and a return status is sent to the application.
+    optional:  Module is not required. If it is the only module, then its return status to application may cause failure.
+    sufficient:  If this module succeeds, then no subsequent modules in the stack are executed. If it fails, then it doesn't necessarily cause the stack to fail, unless it is the only one in the stack.
+
+There are other control flags, such as include and substack. Please see man pam.d for details.
+
+module-path gives the file name of the library to be found in /lib*/security, in either absolute or relative path form.
+
+module-arguments can be given to modify the PAM module's behavior.
+
+33.7. LDAP Authentication
+
+LDAP (Lightweight Directory Access Protocol) is an industry standard protocol for using and administering distributed directory services over the network, and is meant to be both open and vendor-neutral.
+
+When using LDAP for centralized authentication, each system (or client) connects to a centralized LDAP server for user authentication. Using TLS makes it a secure option and is recommended.
+
+LDAP uses PAM and system-config-authentication or authconfig-tui. One has to specify the server, search base DN (domain name) and TLS (Transport Layer Security). Also required is openldap-clients, pam ldap and nss-pam-ldapd.
+
+When you configure a system for LDAP authentication, five files are changed:
+
+/etc/openldap/ldap.conf
+
+/etc/pam_ldap.conf
+
+/etc/nslcd.conf
+
+/etc/sssd/sssd.conf
+
+/etc/nsswitch.conf
+
+You can edit these files manually or use one of the utility programs available (system-config-authentication or authconfig-tui).
+
+35.1. Network Devices and COnfiguration - Introduction
+
+  Network devices such as Ethernet and wireless connections require careful configuration, especially 
+    when there are multiple devices of the same type. The question of consistent and persistent device 
+    naming can become tricky in such circumstances. Recently, the adoption of new schemes has made the 
+    naming more predictable. A number of important utilities are used to bring devices up and down, 
+    configure their properties, establish routes, etc., and system administrators must become adept at their use.
+
+35.2. Learning Objectives
+
+    By the end of this chapter, you should be able to:
+
+    - Identify network devices and understand how the operating system names them and binds them to specific duties.
+    - Use the ip utility to display and control devices, routing, policy-based routing, and tunnelling. 
+    - Use the older ifconfig to configure, control, and query network interface parameters from either the command line or from system configuration scripts.
+    - Use Network Manager (nmtui and nmcli) to configure network interfaces in a distribution-independent manner.  
+    - Know how to set default routes and static routes.
+    - Configure name resolution as well as run diagnostic utilities.
+
+35.3. Network Devices
+
+    Unlike block and character devices, network devices are not associated with special device files, also known as device nodes. Rather than having associated entries in the /dev directory, they are known by their names.
+
+These names consist of a type identifier followed by a number as in:
+
+    - eth0, eth1, eno1,eno2 etc. for Ethernet devices.
+    - wlan0, wlan1, wlan2, wlp3s0, wlp3s2,  etc. for wireless devices.
+    - br0,  br1, br2 etc. for bridge interfaces.
+    - vmnet0,  vmnet1,   vmnet2 etc. for virtual devices for communicating with virtual clients.
+
+Sometimes multiple virtual devices can be associated with single physical devices.
+
+35.4. Problems with Network Device Names
+
+    The classic device naming conventions described earlier encountered difficulties, particularly when multiple interfaces of the same type were present. For example, suppose one has two network cards; one would be named eth0 and the other eth1. However, which physical device should be associated with each name?
+
+The simplest method would be to have the first device found be eth0, the second eth1 etc. Unfortunately, probing for devices is not deterministic for modern systems, and devices may be located or plugged in an unpredictable order. Thus, one might wind up with the Internet interface swapped with the local interface. Even if hardware doesn't change, the order in which interfaces are located has been known to vary with kernel version and configuration.
+
+Many system administrators have solved this problem in a simple manner, by hardcoding associations between hardware (MAC) addresses and device names in system configuration files and startup scripts. While this method has worked for years it requires manual tuning and had other problems, such as when MAC addresses were not fixed; this can happen in both embedded and virtualized systems. 
+
+35.5. Predicatable Network Interface Device Names
+
+    The Predictable Network Interface Device Names (PNIDN) is strongly correlated with the use of udev and integration with systemd. There are now 5 types of names that devices can be given:
+
+    1. Incorporating Firmware or BIOS provided index numbers for on-board devices:
+    Example: eno1
+    2. Incorporating Firmware or BIOS provided PCI Express hotplug slot index numbers:
+    Example: ens1
+    3. Incorporating physical and/or geographical location of the hardware connection:
+    Example: enp2s0
+    4. Incorporating the MAC address:
+    Example: enx7837d1ea46da
+    5. Using the old classic method:
+    Example: eth0
+
+35.6. Examples of the New Naming Scheme
+
+    For example, on a machine with two onboard PCI network interfaces that would have been eth0 and eth1:
+
+$ ifconfig | grep enp
+
+enp2s0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500 enp4s2: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+
+These names are correlated with the physical locations of the hardware on the PCI system:
+
+02:00.0 Ethernet controller: Marvell Technology Group Ltd. 88E8056 PCI-E Gigabit Ethernet Controller (rev 12)
+
+04:02.0 Ethernet controller: Marvell Technology Group Ltd. 88E8001 Gigabit Ethernet Controller (rev 14)
+
+The triplet of numbers at the beginning of each line from the lspci output is the bus, device (or slot), and function of the device; hence it reveals the physical location.
+
+Likewise, for a wireless device that previously would have been simply named wlan0:
+
+$ ifconfig grep wl
+
+wlp3s0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+
+$ lspci | grep Centrino
+
+03:00.0 Network controller: Intel Corporation Centrino Advanced-N 6205 [Taylor Peak] (rev 34)
+
+We see the same pattern. It is easy to turn off the new scheme and go back to the classic names. We'll leave that as a research project. In what follows we will mostly follow the classic names for definiteness and simplicity.
+
+35.7.a. ip 1
+
+ ip is the preferred  command line utility as compared to the venerable ifconfig we discuss next, as it is more versatile as well as more efficient because it uses netlink sockets rather than ioctl system calls.
+
+ip can be used for a wide variety of tasks. It can be used to configure, control and query devices and interface parameters, as well as manipulate routing, policy-based routing, and tunneling.
+
+The basic syntax is:
+
+ip [ OPTIONS ] OBJECT { COMMAND | help }
+
+ip [ -force ] -batch filename
+
+where the second form can read commands from a designated file.
+
+ip is a multiplex utility; the OBJECT argument describes what kind of action is going to be performed. The possible COMMANDS depend on which OBJECT is selected.
+
+35.7.b. ip II
+
+                        Main ip OBJECTs
+     OBJECT	                        Function
+    ========================================================================
+    address	                        IPv4 or IPv6 protocol device address
+    link        	                Network Devices
+    maddress	                    Multicast Address
+    monitor	                        Watch for netlink messages
+    route	                        Routing table entry
+    rule	                        Rule in the routing policy database
+    tunnel	                        Tunnel over IP
+
+35.8.a. Examples of Using ip I
+
+    The ip utility can be used in many ways, such as:
+
+    -   Show information for all network interfaces:
+            $ ip link
+    -   Show information for the eth0 network interface:
+            $ ip -s link show eth0
+    -   Set the IP address for eth0:
+            $ sudo ip addr add 192.168.1.7 dev eth0
+    -   Bring eth0 down:
+            $ sudo ip link set eth0 down
+    -   Set the MTU to 1480 bytes for eth0:
+            $ sudo ip link set eth0 mtu 1480
+    -   Set the networking route:
+            $ sudo ip route add 172.16.1.0/24 via 192.168.1.5
+
+35.8.b. Examples of Using ip II
+
+35.9.a. ifconfig I
+
+    ifconfig is a system administration utility long found in UNIX-like operating systems used to configure, control, and query network interface parameters from either the command line or from system configuration scripts. It has been superseded by ip and some Linux distributions no longer install it by default. Here are some usage examples:
+
+    -   Display information about all interfaces:
+            $ ifconfig
+    -   Display information about only eth0:
+            $ ifconfig eth0
+    -   Set the IP address to 192.168.1.50 on interface eth0:
+            $ sudo ifconfig eth0 192.168.1.50
+    -   Set the netmask to 24-bit:
+            $ sudo ifconfig eth0 netmask 255.255.255.0
+    -   Bring interface eth0 up:
+            $ sudo ifconfig eth0 up
+    -   Bring interface eth0 down:
+            $ sudo ifconfig eth0 down
+
+35.9.b. ifconfig II
+
+    Set the MTU (Maximum Transfer Unit) to 1480 bytes for interface eth0:
+
+    $ sudo ifconfig eth0 mtu 1480
+
+35.10. NIC Configuration Files
+
+    While network interfaces can be configured on the fly using either the ip or ifconfig utilities, these settings are not persistent. Thus, a number of  Linux distribution-dependent files store persistent network interface and device configuration information.
+
+Each distribution has its own set of files and/or directories. Depending on your version, these might be:
+
+Red Hat
+
+/etc/sysconfig/network
+
+/etc/sysconfig/network-scripts/ifcfg-ethX
+
+/etc/sysconfig/network-scripts/ifcfg-ethX:Y
+
+/etc/sysconfig/network-scripts/route-ethX
+
+Debian
+
+/etc/network/interfaces
+
+ SUSE
+
+/etc/sysconfig/network
+
+When using systemd, it is preferable to use Network Manager, rather than try to configure the underlying text files. In fact, in new Linux distributions many of these files are non-existent, empty or much smaller and are there only for backward compatibility reasons.
+
+35.11. Network Manager
+
+    Once upon a time, network connections were almost all wired (Ethernet) and did not change unless there was a significant change to either the hardware, the software, or the network configuration. During system boot, files in /etc were consulted to establish all device configuration.
+
+However, modern systems often have dynamic configurations:
+
+    Networks may change as a device is moved from place to place.
+    Wireless devices may have a large choice of networks to hook into.
+    Devices may change as hardware such as wireless devices, are plugged in or turned on and off.
+
+The previously discussed configuration files were created to deal with more static situations and are very distribution dependent.
+
+Network Manager still uses configuration files, but the administrator can avoid directly manipulating them, and its use is hopeefully almost the same on different systems.
+
+35.12. Network Manager Interfaces
+    
+    GUI (Graphical User Interface)
+
+If you are using your laptop in a hotel room or a coffee shop, you are probably going to use whatever graphical interface your Linux distribution's desktop offers. You can use this to select between different networks, configure security and passwords, turn devices off and on etc.
+
+nmtui
+If you are making a configuration change on your system that is likely to last for a while, you are likely to use nmtui as it has almost no learning curve and will edit the underlying configuration files for you.
+
+nmcli
+
+If you need to run scripts that change the network configuration, you will want to use nmcli. Or, if you are a command line junkie, you may want to use this instead of nmtui.
+
+If the GUI is properly done, you should be able to accomplish any task using any of these three methods. However, we will focus on nmtui and nmcli because they are essentially distribution independent and hide any differences in underlying configuration files.
+
+35.13. nmtui
+
+    nmtui is rather straightforward to use. You can navigate with either the arrow keys or the tab key.
+
+Besides activating or editing connections, you also set the system hostname. However, some operations, such as this, cannot be done by normal users and you will be prompted for the root password to go forward. 
+
+35.14. nmtui Wireless Configuration
+
+35.15. nmcli
+
+    nmcli is the command line interface to Network Manager. One can issue direct commands, but it also has an interactive mode.
+
+For many details and examples, you can visit https://fedoraproject.org/wiki/Networking/CLI  or you can type: 
+
+$ man nmcli-examples 
+
+We will explore the use of nmcli in lab exercises. 
+
+35.16. Routing
+
+    Routing is the process of selecting paths in a network along which to send network traffic. The routing table is a list of routes to other networks managed by the system. It defines paths to all networks and hosts, sending remote traffic to routers.
+
+To see the current routing table, one can use route or ip:  
+
+35.17.a. Default Route I
+
+    The default route is the way packets are sent when there is no other match in the routing table for reaching the specified network.
+
+It can be obtained dynamically using DHCP. However, it can also be manually configured (static). With nmcli it can be done via:
+
+$ sudo nmcli con mod virbr0 ipv4.routes 192.168.10.0/24 \
+              +ipv4.gateway 192.168.122.0
+$ sudo nmcli con up virbr0
+
+or one can modify configuration files directly. On Red Hat-based systems, one can modify /etc/sysconfig/network putting in the line:
+
+GATEWAY=x.x.x.x
+
+or alternatively in /etc/sysconfig/network-scripts/ifcfg-ethX on a device-specific basis in the configuration file for the individual NIC. On Debian-based systems, the equivalent is putting:
+
+gateway=x.x.x.x
+
+in /etc/network/interfaces.
+
+35.17.b. Default Route II
+
+    On either system you can set the default gateway at runtime with:
+
+$ sudo route add default gw 192.168.1.10 enp2s0
+$ route
+Kernel IP routing table
+Destination   Gateway      Genmask       Flags Metric Ref Use Iface
+default       192.168.1.10 0.0.0.0       UG    0      0     0 enp2s0
+default       192.168.1.1  0.0.0.0       UG    1024   0     0 enp2s0
+172.16.132.0  0.0.0.0      255.255.255.0 U     0      0     0 vmnet1
+192.168.1.0   0.0.0.0      255.255.255.0 U     0      0     0 enp2s0
+192.168.113.0 0.0.0.0      255.255.255.0 U     0      0     0 vmnet8
+
+Note that this might wipe out your network connection! You can restore either by resetting the network, or in the above example by doing:
+
+$ sudo route add default gw 192.168.1.1 enp2s0
+
+These changes are not persistent and will not survive a system restart.
+
+25.18.a. Static Routes I
+
+    Static routes are used to control packet flow when there is more than one router or route. They are defined for each interface and can be either persistent or non-persistent.
+
+When the system can access more than one router, or perhaps there are multiple interfaces, it is useful to selectively control which packets go to which router.
+
+Either the route or ip command can be used to set a non-persistent route as in:
+
+$ sudo ip route add 10.5.0.0/16 via 192.168.1.100
+$ route
+Destination  Gateway      Genmask        Flags Metric Ref Use Iface
+default      192.168.1.1  0.0.0.0        UG    0      0     0 eth0
+10.5.0.0     quad         255.255.0.0    UG    0      0     0 eth0
+192.168.1.0  *            255.255.255.0  U     1      0     0 eth0
+
+
+35.18.b. Static Routes II
+
+    A persistent route can be set by editing /etc/sysconfig/network-scripts/route-ethX as shown by: 
+
+$ cat /etc/sysconfig/network-scripts/route-eth0
+10.5.0.0/16 via 172.17.9.1
+
+On a Debian-based system you need to add lines to /etc/network/interfaces such as:
+
+iface eth1 inet dhcp
+    post-up route add -host 10.1.2.51 eth1
+    post-up route add -host 10.1.2.52 eth1
+
+On a SUSE-based system you need to add to or create a file such as /etc/sysconfig/network/ifroute-eth0 with lines like:
+
+# Destination Gateway Netmask Interface [Type] [Options]
+
+192.168.1.150 192.168.1.1 255.255.255.255 eth0
+10.1.1.150 192.168.233.1.1 eth0
+10.1.1.0/24 192.168.1.1 - eth0
+
+where each field is separated by tabs.
+
+35.19. Name Resolution
+
+    Name resolution is the act of translating hostnames to the IP addresses of their hosts. For example, a browser or email client will take training.linuxfoundation.org and resolve the name to the IP address of the server (or servers) that serve training.linuxfoundation.org in order to transmit to and from that location.
+
+There are two facilities for doing this translation:
+
+    Static name resolution (using /etc/hosts).
+    Dynamic name resolution (using DNS servers).
+
+From the command line:
+
+$ [dig | host | nslookup] linuxfoundation.org
+
+    dig: generates the most information and has many options
+    host: more compact
+    nslookup: older.
+
+One sometimes also requires reverse resolution: converting an IP address to a host name
+
+35.20. /etc/hosts
+
+   /etc/hosts holds a local database of hostnames and IP addresses. It contains a set of records (each taking one line) which map IP addresses with corresponding hostnames and aliases.
+
+A typical /etc/hosts file looks like:
+
+127.0.0.1     localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1           localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+192.168.1.100 hans hans7 hans64
+192.168.1.150 bethe bethe7 bethe64
+192.168.1.2 hp-printer
+192.168.1.10 test32 test64 oldpc
+
+Such static name resolution is primarily used for local, small, isolated networks. It is generally checked before DNS is attempted to resolve an address; however, this priority can be controlled by /etc/nsswitch.conf. 
+
+35.21. DNS
+
+    If name resolution cannot be done locally using /etc/hosts, then the system will query a DNS (Domain Name Server) server.
+
+DNS is dynamic and consists of a network of servers which a client uses to look up names. The service is distributed; any one DNS server has only information about its zone of authority; however, all of them together can cooperate to resolve any name.
+
+The machine's usage of DNS is configured in /etc/resolv.conf, which historically has looked like:
+
+search example.com aps.org
+nameserver 192.168.1.1
+nameserver 8.8.8.8
+
+which:
+
+    Can specify particular domains to search
+    Defines a strict order of nameservers to query
+    May be manually configured or updated from a service such as DHCP (Dynamic Host Configuration Protocol).
+
+Most modern systems will have an /etc/hosts.resolv file generated automatically, such as:
+
+# Generated by NetworkManager
+192.168.1.1
+
+which was generated by NetworkManager invoking DHCP on the primary network interface. 
+
+
+                                    __________________________________
+                                    |  user requests wikipedia.org   |
+                                    |                                |
+                                    ----------------------------------
+                                                    |
+                                                    |
+                                                   \ /
+                                    __________________________________
+                          found     |        look in hosts           |
+                     ---------------|                                |<-----|--| returns page
+                     |              ----------------------------------      |  |
+                     |                              |                       |  |
+                     |               Not found      |                       |  |
+                     |                             \ /                      |  |
+                     | queries DNS  ___________________________________     |  |
+                     | serer of     |      user's DNS server          |     |  |
+                     | wikipedia.org|                                 |     |  |
+                     |      --------|                                 |-----|  |   
+                     |      |   |-> -----------------------------------        | 
+returns IP address          |   |                  |                           |
+of DNS server of--------------->|                  |   not found so            |
+wikipedia.org               |   |                 \ /     query                |
+                     |      |   |   ___________________________________        |
+                     |      |   |   |         DNS server for .org     |        |
+                     |      |   |   |           domain                |        |
+                     |      |   ----|_________________________________|        |
+                     |      |                       |                          |
+                     |      |                       |                          |
+                     |      |                      \ /                         |
+                     |      |                                                  |
+                     |      |       ------------------------------------       |
+                     |      |       |         DNS server wikipedia.org |       |
+                     |       ------>|                                  |--------
+                     |              |                                  |
+                     -------------->|__________________________________|       
+
+35.22.a. Network Diagnostic Utilities I
+
+    A number of basic network utilities are in every system administrator's toolbox, including:
+
+    ping
+    Send 64-byte test packets to designated network hosts and (if it finds them) tries to report back on the time required to reach it (in milliseconds), any lost packets, and some other parameters. Note that the exact output will vary according to the host being targeted, but you can at least see that the network is working and the host is reachable.
+    traceroute
+    Is used to display a network path to a destination. It shows the routers packets flow through to get to a host, as well as the time it takes for each hop.
+    mtr
+    Combines the functionality of ping and traceroute and creates a continuously updated display, like top.
+    dig
+    Is useful for testing DNS functionality. Note that one can also use host or nslookup, older programs that also try to return DNS information about a host.
+
+Note that some recent distributions (such as RHEL 7) require root privilege (as with sudo) in order to run the first three diagnostic utilities.
+
+Examples:
+
+$ ping -c 10 linuxfoundation.org
+
+$ traceroute linuxfoundation.org
+
+$ mtr linuxfoundation.org
+
+35.22.b. Network Diagnostic Utilities II
+
+35.22.c. Network Diagnostic Utilities III
+
+
+36.1. Firewalls - Introduction
+
+     Firewalls are used to control both incoming and outgoing access to your systems and local network, and are an essential security facility in modern networks, where intrusions and other kinds of attacks are a fact of life on any computer connected to the internet. One can control the level of trust afforded on traffic across particular interfaces, and/or with particular network addresses.
+
+36.2. Learning Objectives
+
+    By the end of this chapter, you should be able to:
+
+    Understand what firewalls are and why they are necessary.
+    Know what tools are available both at the command line and using graphical interfaces.
+    Discuss about firewalld and the firewall-cmd programs.
+    Know how to work with zones, sources, services and ports.
+    
+
+36.3. What is a firewall?
+
+    A firewall is a network security system that monitors and controls all network traffic. It applies rules on both incoming and outgoing network connections and packets and builds flexible barriers (i.e., firewalls) depending on the level of trust of a given connection.
+
+Firewalls can be hardware or software based. They are found both in network routers, as well as in individual computers, or network nodes. Many firewalls also have routing capabilities.
+
+Early firewalls (dating back to the late 1980's) were based on packet filtering; the content of each network packet was inspected and was either dropped, rejected, or sent on. No consideration was given about the connection state; what stream of traffic the packet was part of.
+
+The next generation of firewalls were based on stateful filters which also examine the connection state of the packet; is it a new connection, part of an already existing one, or part of none. Denial of service attacks can bombard this kind of firewall to try and overwhelm it. 
+
+The third generation of firewalls is called Application Layer Firewalls, and are aware of the kind of application and protocol the connection is using. They can block anything which should not be part of the normal flow.
+
+36.4. Packet Filtering
+
+    Almost all firewalls are based on Packet Filtering.
+
+Information is transmitted\u200b across networks in the form of packets, and each one of these packets has:
+
+    - Header
+    - Payload
+    - Footer.
+
+The header and footer contain information about destination and source addresses, what kind of packet it is, and which protocol it obeys, various flags, which packet number this is in a stream, and \u200ball sorts of other metadata about transmissions. The actual data is in the payload.
+
+Packet filtering intercepts packets at one or more stages in the network transmission, including application, transport, network, and datalink.
+
+A firewall establishes a set of rules by which each packet may be:
+
+    - Accepted or rejected based on content, address, etc.\u200b
+    - Mangled in some way
+    - Redirected to another address
+    - Inspected for security reasons
+    - Etc.
+
+Various utilities exist for establishing rules and actions to be taken as the result of packet filtering.
+
+36.5. Frewall Generations
+
+    Early firewalls (dating back to the late 1980's) were based on packet filtering: the content of each network packet was inspected and was either dropped, rejected, or sent on. No consideration was given about the connection state: what stream of traffic the packet was part of.
+
+The next generation of firewalls were based on stateful filters, which also examine the connection state of the packet, to see if it is a new connection, \u200bpart of an already existing one, or part of none. Denial of service attacks can bombard this kind of firewall to try and overwhelm it.
+
+The third generation of firewalls is called Application Layer Firewalls, and are aware of the kind of application and protocol the connection is using. They can block anything which should not be part of the normal flow.\u200b
+
+36.6. Firewall Interfaces and Tools
+
+    Configuring your system's firewall can be done by:
+
+    - Using relatively low-level tools from the command line, combined with editing various configuration files in the /etc subdirectory tree:
+
+      - iptables
+
+      - firewall-cmd
+
+      - ufw
+
+    - Using robust graphical interfaces:
+
+      - system-config-firewall
+
+      - firewall-config
+
+      - gufw
+
+      - yast
+
+We will work with the lower-level tools for the following reasons:
+
+    - They change less often than the graphical ones.
+    - They tend to be have a larger set of capabilities.
+    - They tend to be quite different and each confined to GUI. They vary little from distribution to distribution, while the only one family of distributions.
+
+The disadvantage is they can seem more difficult to learn at first. In the following we will concentrate on the use of the modern firewalld package, which includes both firewall-cmd and firewall-config. For distributions which don't have it by default (such as RHEL 6) it can be installed from source rather easily, as we will do if necessary in an exercise.
+
+36.7. Why We Are Not Woring with iptables
+
+    Most firewall installations today are actually using the iptables package on the user side. This currently interfaces the same kernel firewall implementation code as firewalld, which we will discuss in more detail. 
+
+We have decided not to teach iptables because it requires much more time to get to useful functionality.
+
+However, iptables is discussed in detail in the next course in the Linux Foundation system administrator sequence: LFS311 - Advanced Linux System Administration and Networking/LFS211 - Linux Networking and Administration.
+
+36.8. firewalld
+
+    firewalld is the Dynamic Firewall Manager. It utilizes network/firewall zones which have defined levels of trust for network interfaces or connections. It supports both IPv4 and IPv6 protocols.
+
+In addition, it separates runtime and permanent (persistent) changes to configuration, and also includes interfaces for services or applications to add firewall rules.
+
+Configuration files are kept in /etc/firewalld and /usr/lib/firewalld; the files in /etc/firewalld override those in the other directory and are the ones a system administrator should work on.
+
+The command line tool is actually firewall-cmd which we will discuss. We recommend that before getting any further, you run:
+
+$ firewall-cmd --help
+
+Usage: firewall-cmd [OPTIONS...]
+....
+Status Options
+   --state                 Return and print firewalld state
+   --reload                Reload firewall and keep state information
+
+   --complete-reload       Reload firewall and loose state information
+   --runtime-to-permanent  Create permanent from runtime configuration
+....
+
+which runs about 200 lines, so it is too long to include here.
+
+However, you will see that almost all options are rather obvious as they are well named. As a service, firewalld replaces the older iptables. It is an error to run both services, firewalld and iptables, at the same time.
+
+
+36.9.a. firewalld Service Status I
+
+    firewalld is a service which needs to be running to use and configure the firewall, and is enabled/disabled, or started or stopped in the usual way:
+
+$ sudo systemctl [enable/disable] firewalld
+$ sudo systemctl [start/stop] firewalld
+
+You can show the current state in either of the following ways:
+
+$ sudo systemctl status firewalld
+firewalld.service - firewalld - dynamic firewall daemon
+    Loaded: loaded (/usr/lib/systemd/system/firewalld.service; enabled)
+    Active: active (running) since Tue 2015-04-28 12:00:59 CDT; 5min ago
+ Main PID: 777 (firewalld)
+    CGroup: /system.slice/firewalld.service
+             777 /usr/bin/python -Es /usr/sbin/firewalld --nofork --nopid
+Apr 28 12:00:59 CentOS7 systemd[1]: Started firewalld - dynamic firewall daemon.
+
+$ sudo firewall-cmd --state
+running
+
+36.9.b firewalld Service Status II
+
+    Note that if you have more than one network interface when using IPv4, you have to turn on ip forwarding. You can do this at runtime by doing either of:
+
+$ sudo sysctl net.ipv4.ip_forward=1
+$ echo 1 > /proc/sys/net/ipv4/ip_forward (needs to be run as root to get echo to work properly)
+
+However, this is not persistent. To do that you have to add the following line to /etc/sysctl.conf:
+
+net.ipv4.ip_forward=1
+
+and then reboot or type:
+
+$ sudo sysctl -p
+
+to read in the new setting without rebooting.
+
+36.10.a. Zones I
+
+    firewalld works with zones, each of which has a defined level of trust and a certain known behavior for incoming and outgoing packets. Each interface belongs to a particular zone (normally, it is NetworkManager which informs firewalld which zone is applicable), but this can be changed with firewall-cmd or the firewall-config GUI.
+
+The zones are:
+
+    - drop
+        All incoming packets are dropped with no reply. Only outgoing connections are permitted.
+    - block
+        All incoming network connections are rejected. The only permitted connections are those from within the system.
+    - public
+        Do not trust any computers on the network; only certain consciously selected incoming connections are permitted.
+    - external
+        Used when masquerading is being used, such as in routers. Trust levels are the same as in public.
+    - dmz (Demilitarized Zone)
+        Used when access to some (but not all) services are to be allowed to the public. Only particular incoming connections are allowed.
+
+39.10.b. Zones II
+
+    The zones are (continued):
+
+    - work
+        Trust (but not completely) connected nodes to be not harmful. Only certain incoming connections are allowed.
+    - home
+        You mostly trust the other network nodes, but still select which incoming connections are allowed.
+    - internal
+        Similar to the work zone.
+    - trusted
+        All network connections are allowed.
+
+On system installation, most, if not all Linux distributions, will select the public zone as default for all interfaces.
+
+The differences between some of the zones we mentioned are not obvious, and we do not need to go into that much detail here, but note that one should not use a more open zone than necessary.
+
+36.11.a. Zone Management I
+
+    Get the default zone:
+
+$ sudo firewall-cmd --get-default-zone
+public
+
+Obtain a list of zones currently being used:
+
+$ sudo firewall-cmd --get-active-zones
+public
+  interfaces: eno16777736
+
+List all available zones:
+
+$ sudo firewall-cmd --get-zones
+block dmz drop external home internal public trusted work
+
+To change the default zone to trusted and then change it back!
+
+$ sudo firewall-cmd --set-default-zone=trusted
+success
+$ sudo firewall-cmd --set-default-zone=public
+success
+
+To assign an interface temporarily to a particular zone:
+
+$ sudo firewall-cmd --zone=internal --change-interface=eno1
+
+success
+
+36.11.b. Zone Management II
+
+    To assign an interface to a particular zone permanently:
+
+$ sudo firewall-cmd --permanent --zone=internal --change-interface=eno1
+success
+
+which creates the file /etc/firewalld/zones/internal.xml.
+
+To ascertain the zone associated with a particular interface:
+
+$ sudo firewall-cmd --get-zone-of-interface=eno1
+public
+
+Finally, to get all details about a particular zone:
+
+$ sudo firewall-cmd --zone=public --list-all
+public (default, active)
+  interfaces: eno16777736
+  sources:
+  services: dhcpv6-client ssh
+  ports:
+  masquerade: no
+  forward-ports:
+  icmp-blocks:
+  rich rules:
+
+36.12. Source Management
+
+    Any zone can be bound not just to a network interface, but also to particular network addresses. A packet is associated with a zone if:
+
+    It comes from a source address already bound to the zone; or if not,
+    It comes from an interface bound to the zone.
+
+Any packet not fitting the above criteria is assigned to the default zone (i.e, usually public).
+
+To assign a source to a zone (permanently):
+
+$ sudo firewall-cmd --permanent --zone=trusted --add-source=192.168.1.0/24
+success
+
+This says anyone with an IP address of 192.168.1.x will be added to the trusted zone.
+
+Note that you can remove a previously assigned source from a zone by using the --remove-source option, or change the zone by using --change-source.
+
+You can list the sources bound to a zone with:
+
+$ sudo firewall-cmd --permanent --zone=trusted --list-sources
+192.168.1.0/24
+
+In both of the above commands, if you leave out the --permanent option, you get only the current runtime behavior.
+
+
+36.13.a. Service and Port Management I
+
+    So far, we have assigned particular interfaces and/or addresses to zones, but we haven't delineated what services and ports should be accessible within a zone.
+
+To see all the services available:
+
+$ sudo firewall-cmd --get-services
+RH-Satellite-6 amanda-client bacula bacula-client dhcp dhcpv6 dhcpv6-client dns ftp \
+high-availability http https imaps ipp ipp-client ipsec kerberos kpasswd ldap ldaps \
+libvirt libvirt-tls mdns mountd ms-wbt mysql nfs ntp openvpn pmcd pmproxy pmwebapi \
+pmwebapis pop3s postgresql proxy-dhcp radius rpc-bind samba samba-client smtp ssh \
+telnet tftp tftp-client transmission-client vnc-server wbem-https
+
+or, to see those currently accessible in a particular zone:
+
+$ sudo firewall-cmd --list-services --zone=public
+dhcpv6-client ssh
+
+To add a service to a zone:
+
+$ sudo firewall-cmd --permanent --zone=home --add-service=dhcp
+success
+$ sudo firewall-cmd --reload
+
+The second command, with --reload, is needed to make the change effective. It is also possible to add new services by editing the files in /etc/firewalld/services.
+
+36.13.b. Service and Port Management II
+
+    Port management is very similar to service management:
+
+$ sudo firewall-cmd --zone=home --add-port=21/tcp
+success
+$ sudo firewall-cmd --zone=home --list-ports
+21/tcp
+
+where by looking at /etc/services we can ascertain that port 21 corresponds to ftp:
+
+$ grep " 21/tcp" /etc/services
+ftp                21/tcp
+
+
+                                                                                Chpt 37
+
+37.1. System Startup and Shutdown - Introduction
+
+37.2. Learning Objectives
+
+    By the end of this chapter, you should be able to:
+
+    - Explain the boot process.
+    - Identify several types of boot loaders.
+    - Describe what the BIOS does.
+    - Identify the relevant configuration files.
+    - Describe how the system shuts down and reboots.
+
+
+37.3. Understanding the Boot Sequence
+
+    The basic steps in the boot sequence are:
+
+        1. The BIOS/UEFI locates and executes the boot program, or boot loader.
+        2. The boot loader loads the kernel.
+        3. The kernel starts the init process (pid=1).
+        4. init manages system initialization, using systemd, Upstart or the older SysVinit startup scripts.
+
+When power is applied to the computer, the computer can only perform the operations the BIOS (Basic Input Output System) orders it to do.
+
+First, the BIOS runs the POST (Power On Self Test), which checks the memory and hardware and then searches a specific location or device for a boot program. Typically, the boot program is found in the device's MBR (Master Boot Record). Control of the computer is then transferred to this boot program (usually GRUB).
+
+The boot program then loads the kernel into the memory and executes it. On x86 platforms (and many others), the kernel first has to decompress itself in place. It then performs hardware checks, gains access to important peripheral hardware, and eventually runs the init process. This first process continues the system startup,  managing either systemd or Upstart., or running appropriate init scripts if SysVinit is being used.
+
+Newer computers are moving to UEFI, a replacement for BIOS, which performs many of the same functions.
