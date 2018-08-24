@@ -6666,4 +6666,812 @@ The disadvantage is they can seem more difficult to learn at first. In the follo
 
 36.7. Why We Are Not Woring with iptables
 
-    
+    Most firewall installations today are actually using the iptables package on the user side. This currently interfaces the same kernel firewall implementation code as firewalld, which we will discuss in more detail. 
+
+We have decided not to teach iptables because it requires much more time to get to useful functionality.
+
+However, iptables is discussed in detail in the next course in the Linux Foundation system administrator sequence: LFS311 - Advanced Linux System Administration and Networking/LFS211 - Linux Networking and Administration.
+
+36.8. firewalld
+
+    firewalld is the Dynamic Firewall Manager. It utilizes network/firewall zones which have defined levels of trust for network interfaces or connections. It supports both IPv4 and IPv6 protocols.
+
+In addition, it separates runtime and permanent (persistent) changes to configuration, and also includes interfaces for services or applications to add firewall rules.
+
+Configuration files are kept in /etc/firewalld and /usr/lib/firewalld; the files in /etc/firewalld override those in the other directory and are the ones a system administrator should work on.
+
+The command line tool is actually firewall-cmd which we will discuss. We recommend that before getting any further, you run:
+
+$ firewall-cmd --help
+
+Usage: firewall-cmd [OPTIONS...]
+....
+Status Options
+   --state                 Return and print firewalld state
+   --reload                Reload firewall and keep state information
+
+   --complete-reload       Reload firewall and loose state information
+   --runtime-to-permanent  Create permanent from runtime configuration
+....
+
+which runs about 200 lines, so it is too long to include here.
+
+However, you will see that almost all options are rather obvious as they are well named. As a service, firewalld replaces the older iptables. It is an error to run both services, firewalld and iptables, at the same time.
+
+
+36.9.a. firewalld Service Status I
+
+    firewalld is a service which needs to be running to use and configure the firewall, and is enabled/disabled, or started or stopped in the usual way:
+
+$ sudo systemctl [enable/disable] firewalld
+$ sudo systemctl [start/stop] firewalld
+
+You can show the current state in either of the following ways:
+
+$ sudo systemctl status firewalld
+firewalld.service - firewalld - dynamic firewall daemon
+    Loaded: loaded (/usr/lib/systemd/system/firewalld.service; enabled)
+    Active: active (running) since Tue 2015-04-28 12:00:59 CDT; 5min ago
+ Main PID: 777 (firewalld)
+    CGroup: /system.slice/firewalld.service
+             777 /usr/bin/python -Es /usr/sbin/firewalld --nofork --nopid
+Apr 28 12:00:59 CentOS7 systemd[1]: Started firewalld - dynamic firewall daemon.
+
+$ sudo firewall-cmd --state
+running
+
+36.9.b firewalld Service Status II
+
+    Note that if you have more than one network interface when using IPv4, you have to turn on ip forwarding. You can do this at runtime by doing either of:
+
+$ sudo sysctl net.ipv4.ip_forward=1
+$ echo 1 > /proc/sys/net/ipv4/ip_forward (needs to be run as root to get echo to work properly)
+
+However, this is not persistent. To do that you have to add the following line to /etc/sysctl.conf:
+
+net.ipv4.ip_forward=1
+
+and then reboot or type:
+
+$ sudo sysctl -p
+
+to read in the new setting without rebooting.
+
+36.10.a. Zones I
+
+    firewalld works with zones, each of which has a defined level of trust and a certain known behavior for incoming and outgoing packets. Each interface belongs to a particular zone (normally, it is NetworkManager which informs firewalld which zone is applicable), but this can be changed with firewall-cmd or the firewall-config GUI.
+
+The zones are:
+
+    - drop
+        All incoming packets are dropped with no reply. Only outgoing connections are permitted.
+    - block
+        All incoming network connections are rejected. The only permitted connections are those from within the system.
+    - public
+        Do not trust any computers on the network; only certain consciously selected incoming connections are permitted.
+    - external
+        Used when masquerading is being used, such as in routers. Trust levels are the same as in public.
+    - dmz (Demilitarized Zone)
+        Used when access to some (but not all) services are to be allowed to the public. Only particular incoming connections are allowed.
+
+39.10.b. Zones II
+
+    The zones are (continued):
+
+    - work
+        Trust (but not completely) connected nodes to be not harmful. Only certain incoming connections are allowed.
+    - home
+        You mostly trust the other network nodes, but still select which incoming connections are allowed.
+    - internal
+        Similar to the work zone.
+    - trusted
+        All network connections are allowed.
+
+On system installation, most, if not all Linux distributions, will select the public zone as default for all interfaces.
+
+The differences between some of the zones we mentioned are not obvious, and we do not need to go into that much detail here, but note that one should not use a more open zone than necessary.
+
+36.11.a. Zone Management I
+
+    Get the default zone:
+
+$ sudo firewall-cmd --get-default-zone
+public
+
+Obtain a list of zones currently being used:
+
+$ sudo firewall-cmd --get-active-zones
+public
+  interfaces: eno16777736
+
+List all available zones:
+
+$ sudo firewall-cmd --get-zones
+block dmz drop external home internal public trusted work
+
+To change the default zone to trusted and then change it back!
+
+$ sudo firewall-cmd --set-default-zone=trusted
+success
+$ sudo firewall-cmd --set-default-zone=public
+success
+
+To assign an interface temporarily to a particular zone:
+
+$ sudo firewall-cmd --zone=internal --change-interface=eno1
+
+success
+
+36.11.b. Zone Management II
+
+    To assign an interface to a particular zone permanently:
+
+$ sudo firewall-cmd --permanent --zone=internal --change-interface=eno1
+success
+
+which creates the file /etc/firewalld/zones/internal.xml.
+
+To ascertain the zone associated with a particular interface:
+
+$ sudo firewall-cmd --get-zone-of-interface=eno1
+public
+
+Finally, to get all details about a particular zone:
+
+$ sudo firewall-cmd --zone=public --list-all
+public (default, active)
+  interfaces: eno16777736
+  sources:
+  services: dhcpv6-client ssh
+  ports:
+  masquerade: no
+  forward-ports:
+  icmp-blocks:
+  rich rules:
+
+36.12. Source Management
+
+    Any zone can be bound not just to a network interface, but also to particular network addresses. A packet is associated with a zone if:
+
+    It comes from a source address already bound to the zone; or if not,
+    It comes from an interface bound to the zone.
+
+Any packet not fitting the above criteria is assigned to the default zone (i.e, usually public).
+
+To assign a source to a zone (permanently):
+
+$ sudo firewall-cmd --permanent --zone=trusted --add-source=192.168.1.0/24
+success
+
+This says anyone with an IP address of 192.168.1.x will be added to the trusted zone.
+
+Note that you can remove a previously assigned source from a zone by using the --remove-source option, or change the zone by using --change-source.
+
+You can list the sources bound to a zone with:
+
+$ sudo firewall-cmd --permanent --zone=trusted --list-sources
+192.168.1.0/24
+
+In both of the above commands, if you leave out the --permanent option, you get only the current runtime behavior.
+
+
+36.13.a. Service and Port Management I
+
+    So far, we have assigned particular interfaces and/or addresses to zones, but we haven't delineated what services and ports should be accessible within a zone.
+
+To see all the services available:
+
+$ sudo firewall-cmd --get-services
+RH-Satellite-6 amanda-client bacula bacula-client dhcp dhcpv6 dhcpv6-client dns ftp \
+high-availability http https imaps ipp ipp-client ipsec kerberos kpasswd ldap ldaps \
+libvirt libvirt-tls mdns mountd ms-wbt mysql nfs ntp openvpn pmcd pmproxy pmwebapi \
+pmwebapis pop3s postgresql proxy-dhcp radius rpc-bind samba samba-client smtp ssh \
+telnet tftp tftp-client transmission-client vnc-server wbem-https
+
+or, to see those currently accessible in a particular zone:
+
+$ sudo firewall-cmd --list-services --zone=public
+dhcpv6-client ssh
+
+To add a service to a zone:
+
+$ sudo firewall-cmd --permanent --zone=home --add-service=dhcp
+success
+$ sudo firewall-cmd --reload
+
+The second command, with --reload, is needed to make the change effective. It is also possible to add new services by editing the files in /etc/firewalld/services.
+
+36.13.b. Service and Port Management II
+
+    Port management is very similar to service management:
+
+$ sudo firewall-cmd --zone=home --add-port=21/tcp
+success
+$ sudo firewall-cmd --zone=home --list-ports
+21/tcp
+
+where by looking at /etc/services we can ascertain that port 21 corresponds to ftp:
+
+$ grep " 21/tcp" /etc/services
+ftp                21/tcp
+
+
+                                                                                Chpt 37
+
+37.1. System Startup and Shutdown - Introduction
+
+37.2. Learning Objectives
+
+    By the end of this chapter, you should be able to:
+
+    - Explain the boot process.
+    - Identify several types of boot loaders.
+    - Describe what the BIOS does.
+    - Identify the relevant configuration files.
+    - Describe how the system shuts down and reboots.
+
+
+37.3. Understanding the Boot Sequence
+
+    The basic steps in the boot sequence are:
+
+        1. The BIOS/UEFI locates and executes the boot program, or boot loader.
+        2. The boot loader loads the kernel.
+        3. The kernel starts the init process (pid=1).
+        4. init manages system initialization, using systemd, Upstart or the older SysVinit startup scripts.
+
+When power is applied to the computer, the computer can only perform the operations the BIOS (Basic Input Output System) orders it to do.
+
+First, the BIOS runs the POST (Power On Self Test), which checks the memory and hardware and then searches a specific location or device for a boot program. Typically, the boot program is found in the device's MBR (Master Boot Record). Control of the computer is then transferred to this boot program (usually GRUB).
+
+The boot program then loads the kernel into the memory and executes it. On x86 platforms (and many others), the kernel first has to decompress itself in place. It then performs hardware checks, gains access to important peripheral hardware, and eventually runs the init process. This first process continues the system startup,  managing either systemd or Upstart., or running appropriate init scripts if SysVinit is being used.
+
+Newer computers are moving to UEFI, a replacement for BIOS, which performs many of the same functions.
+
+                                                      Boot Sequence
+                                                                                Kernel
+                                                                                   /
+                                                                                  /
+                        System ========> Bootable Hard Disk =========> Boot Loader 
+                                                                                 \
+                                                                                  \
+                                                                                Initial RAM Dik
+
+37.4. BIOS
+
+On the x86 architecture, the BIOS contains all the code required to gain initial access to the keyboard, display screen, disk drives, serial communications, and a number of miscellaneous functions. Once the full system is running, most of these devices will have enhanced capabilities when complete and specialized device drivers can be loaded and take over.
+
+The BIOS is typically placed in a ROM chip that comes with the computer (it is often called a ROM BIOS). This ensures that the BIOS will always be available and will not be damaged by disk failures. This also makes it possible for a computer to boot itself.
+
+During the boot process, the BIOS loads the boot loader from the MBR. 
+
+
+37.5. Boot Loaders
+
+There are a number of different boot loaders used in Linux, including:
+
+    - GRUB
+    - LILO
+    - efilinux
+    - Das U-Boot
+
+Virtually, all (non-embedded) modern Linux distributions use GRUB (GRand Unified Boot Loader). GRUB's features include the ability to boot multiple operating systems, both a graphical and a text-based interface allowing ease of use over a serial cable, a powerful command line interface for interactive configuration, network-based diskless booting, and other advanced features. 
+
+The Linux Loader (LILO) is old and obsolete.
+
+efilinux is an alternative boot loader specifically designed for the UEFI mechanism.
+
+Das U-Boot is the most popular loader for embedded Linux systems; there are some other boot loaders, including bareboot. However, we are not really considering the embedded space in this course.
+
+37.6. Configuration Files in /etc
+
+Earlier, we discussed about where Linux distributions cooperate, and hopefully follow agreed-upon standards to place certain kinds of files in standard places on the system.
+
+In particular, system-wide configuration files are generally placed in /etc and its subdirectories, while user-specific ones are often placed in their individual home directories. 
+
+For historical reasons, Linux distributions evolved their own rules about exactly where to place some information in /etc. For example, all Red Hat-derived systems make extensive use of /etc/sysconfig, while Debian-based systems have used /etc/default. Interestingly, RHEL 7 and SUSE use both.
+
+37.7.a. /etc/sysconfig I
+
+Contents of the /etc/sysconfig on RHEL systems
+
+37.7.b. /etc/sysconfig II
+
+37.8. /etc/default
+
+The screenshot shows the /etc/default directory on an Ubuntu 17.04 system.
+
+The use of this directory is similar to that of Red Hat's /etc/sysconfig:
+
+    The files are used to provide extra options when starting a service.
+    They typically contain code to set environment variables.
+
+For example, the file /etc/default/useradd sets the defaults that are used when new user accounts are being created. As noted, RHEL 7 also has this directory as its use is becoming more universal.
+
+37.9.a. Shutting Down and Rebooting I
+
+shutdown is used to bring the system down in a secure fashion, notifying all users that the system is going down and then stopping it in a graceful and non-destructive way. After it is shut down, the system is either halted or rebooted. You can see some shutdown examples here:
+
+$ sudo shutdown -h +1 "Power Failure imminent"
+
+$ sudo shutdown -h now
+
+$ sudo shutdown -r now
+
+$ sudo shutdown now
+
+The options can easily be listed by the built-in help message.
+
+37.9.b. Shutting Down and Rebooting II
+
+With no options (e.g. shutdown now), the default behavior is to power off the system completely. Some distributions, such as Ubuntu, violate this and go to single user mode instead.
+
+One common mistake is failing to include a time argument (such as now or some actual time). This is required.
+
+There are also the legacy commands reboot, halt, and poweroff, which many veteran users use frequently.
+
+37.10.
+
+Organize the basic steps of the boot sequence in the correct order.
+
+1 - The boot loader is executed.
+
+2 - The Linux kernel and the initrd or initramfs image are loaded into memory and the kernel executes.
+
+3 - The init process starts.
+
+4 - Additional kernel modules (including device drivers) are loaded, and system services are started.
+
+38.1. GRUB - Introduction
+
+A system that can not start up on its own is rather useless. Linux systems have a lot of flexibility in how they boot. 
+It is possible to choose between different kernel versions or options, or even different operating 
+systems in multiple-boot scenarios. Most non-embedded systems use the Grand Unified Boot Loader to 
+accomplish the first steps of a successful system initialization. GRUB also has interactive capabilities as well as a secure password facility.
+
+38.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    - Explain what the role of GRUB is.
+    - Understand the differences between the GRUB 1 and GRUB 2 versions.
+    - Explain the interactive selections you can make at boot.
+    - Know how to install GRUB.
+    - Explain how the configuration files that GRUB needs are used and modified.
+
+38.3.a. What is GRUB? I
+
+Virtually, all x86-based Linux systems (outside the embedded sphere) today use GRUB (GRand Unified Bootloader) to handle the early phases of system startup. Other platforms may have other equivalents, such as ELILO used on EFI systems such as IA64 (Itanium), and Das U-BOOT used on many embedded configurations.
+
+Some important features of GRUB are:
+
+    - Alternative operating systems can be chosen at boot time.
+    - Alternative kernels and/or initial ramdisks can be chosen at boot time for a given operating system.
+    - Boot parameters can be easily changed at boot time without having to edit configuration files, etc. in advance.
+
+38.3.b. What is GRUB? II
+
+GRUB Version 2 has replaced Version 1 on all major Linux distributions, except for RHEL 6-based ones. While the details are different between versions, the basic philosophy is the same. Thus, we will concentrate almost exclusively on Version 2.
+
+At boot, a basic configuration file is read, either /boot/grub/grub.cfg or /boot/grub2/grub.cfg, depending on distribution.
+
+This file is auto-generated by update-grub (or grub2-mkconfig on RHEL 7) based on configuration files in the /etc/grub.d directory and on /etc/default/grub and should never be edited by hand. Usually, these utilities are run from other distribution-supplied scripts used for updating or compiling Linux kernels.
+
+For either version, the relevant essential configuration file contains some global parameters and then a stanza for each operating system or kernel configured.
+
+                update-grub OR grub2-mkconfig (RHEL 7) ----- generates -----> /boot/grub/grub.cfg OR /etc/grub2/grub.cfg
+                                                                / \
+                                                                 |
+                                                                 | from
+                                                    /etc/default/grub AND /etc/grub.d
+
+38.4. Interactive Selections with GRUB at Boot
+
+Upon system boot, after the initial POST and BIOS stages, GRUB will be entered and it will display a menu. This may or may not have graphics in it (at least for the background splash screen).
+
+The menu contains a list of bootable images from one or more Linux distributions or operating systems. There may also be submenus with even more choices.
+
+Using up and down arrows and the Enter key, you can select the right boot option, or can wait for a configurable time period before the default choice is entered.
+
+However, you can do much more. After selecting an entry, you can type e for edit and then enter into an interactive shell. In this shell, you can alter the stanza in the configuration file that describes that particular boot option. Usually, you do this to alter the kernel command line; for example, adding the word single at the end of the command line will cause the system to boot in single use mode in order to take corrective actions. Once the desired change is made, you can hit the right key to make the system boot.
+
+At the bottom of the screen you will see displayed information on the exact key strokes, so there is no need to memorize.
+
+Note that any changes you make to the configuration are not persistent and will be lost on the next boot. So, for permanent changes, you need to change the actual files on the machine, using the right utilities.
+
+It is also possible to enter a pure shell, rather than edit a particular stanza. You can run a number of different commands and even try to re-install or repair GRUB. If there are serious problems, like not being able to find a configuration file, GRUB reverts back to this command line mode and you may be able to rescue the system without resorting to rescue media. 
+
+38.5.a. Installing GRUB I
+
+The word installing can have several different meanings with respect to GRUB:
+
+    1. Installing the grub program and associated utilities in their proper locations. In GRUB 1 there is actually a program just called grub, but in GRUB 2 there are a bunch of utilities with names like grub2-* or grub-*; how they are packaged is rather distribution-dependent.
+    . Installing the files GRUB needs to operate at boot time, under either /boot/grub or /boot/grub2. This is separate than the files the Linux kernel needs (vmlinuz-*,  initramfs-*) which will need to be in the /boot directory as well.
+    3. Installing GRUB as the boot loader in the system; usually, this is done at the front of the entire hard disk, but can also be done in a partition and accessed via chainloading from one GRUB to another.
+
+38.5.b. Installing GRUB II
+
+If you do not install GRUB during system installation, or you need to re-install at some later point, the exact procedure for doing so depends on the GRUB version. For either version, the relevant essential configuration file contains some global parameters, and then, a stanza for each operating system or kernel configured.
+
+For Version 2, the installation procedure can be as easy as:
+
+$ sudo grub2-install /dev/sda 
+
+Please read the man page carefully before running such a command; there are many options, and messing up GRUB can make your system un-bootable. In particular, you have to tell the system where to find the /boot directory, what partition it resides in.
+
+38.6. GRUB Device Nomenclature
+
+In both GRUB versions, the first hard drive is denoted as hd0, the second is hd1, etc. However, in Version 1, partitions start counting from 0, and in Version 2 from 1:
+
+    sda1 is (hd0,1) in GRUB 2, but (hd0,0) in GRUB 1
+    sdc4 is (hd2,4) in GRUB 2, but (hd2,3) in GRUB 1.
+
+There is no need to emphasize that getting confused about this can be rather destructive. Both versions of GRUB sometimes use the sda# notation, and sometimes use (hd0,#), so it can get further confusing.
+
+Within the configuration file, each stanza has to specify what the root partition is; this is not the same as what we mean when we talk about the root directory of the system. In this context, it means the partition contains the kernel itself (in the /boot directory). For example, it is very common to have /boot in its own partition, lets say /dev/sda1.
+
+It is also fine to do kernel (hd0,0)/vmlinuz.... instead, and leave out the root line.
+
+A quick look at /boot/grub2/grub.cfg will make it clear
+
+38.7.a. Customizing the GRUB Configuration File I
+
+We are going to concentrate on GRUB 2  because it is rapidly obsoleting the older versions, and is essentially the same on the various Linux distributions.
+
+Remember that you should not edit grub.cfg directly. There are two locations in the /etc directory that should require attention and are used to reconstruct grub.cfg whenever the system is altered with new kernels, or the relevant updating program (such as update-grub or grubby) is manually run.
+
+The first one is /etc/default/grub. The screenshot shows you how this looks like on one RHEL 7 system. Red Hat has really slimmed down this file compared to other distributions. 
+
+38.7.b. Customizing the GRUB Configuration File II
+
+The other directory that matters is /etc/grub.d. The screenshot shows you how it looks like on Ubuntu 17.04.
+
+Each of the two files (/etc/default/grub and /etc/grub.d) run in ascending order when the configuration file is updated. We won't discuss them here, as they are self-documenting and we recommend you look at them.
+
+38.8. Using GRUB Demo
+
+39.1. init: SystemV, Upstart, systemd - Introduction
+
+39.2. Learning Objectives
+
+By the end of this chapter, you should be able to:
+
+    - Understand the importance of the init process.
+    - Understand how systemd (and Upstart) arose and how they work.
+    - Use systemctl to configure and control systemd.
+    - Explain how the traditional SysVinit method works and how it incorporates runlevels and what happens in each one.
+    - Know how to use chkconfig and service (and alternative utilities) to start and stop services or make them persistent across reboots when using SysVinit.
+
+39.3. The init Process
+
+/sbin/init (usually just called init) is the first user-level process (or task) run on the system and continues to run until the system is shutdown. Traditionally, it has been considered the parent of all user processes, although technically that is not true, as some processes are started directly by the kernel.
+
+init coordinates the later stages of the boot process, configures all aspects of the environment, and starts the processes needed for logging into the system. init also works closely with the kernel in cleaning up after processes when they terminate.
+
+Traditionally, nearly all distributions based the init process on UNIX's venerable SysVinit. However, this scheme was developed decades ago under rather different circumstances:
+
+    The target was multi-user mainframe systems (and not personal computers, laptops, and other devices)
+    The target was a single processor system
+    Startup (and shutdown) time was not an important matter; it was far less important than getting things right.
+
+Startup was viewed as a serial process, divided into a series of sequential stages. Each stage required completion before the next could proceed. Thus, startup did not easily take advantage of the parallel processing that could be done on multiple processors or cores.
+
+Secondly, shutdown/reboot was seen as a relatively rare event, and exactly how long it took was not considered important.
+
+39.4. Startup Alternatives
+
+To deal with these intrinsic limitations in SysVinit, new methods of controlling the system startup have been developed. While there are others, two main schemes were adopted by Enterprise distributors:
+
+    Upstart was developed by Ubuntu and first included in the 6.10 release in 2006, and made the default in the 9.10 release in 2009. It was also adopted in Fedora 9 (in 2008) and in RHEL 6 and its clones, such as CentOS, Scientific Linux and Oracle Linux, and in openSUSE it was offered as an option since version 11.3. It has also been used in various embedded and mobile devices.
+    systemd is more recent and Fedora was the first major distribution to adopt it in 2011. It is standard since RHEL 7 and Ubuntu 16.04.
+
+RHEL 7 is based on systemd and every other major Linux distribution has adopted it and has made it the default or announced plans to do so. The main systemd developers are closely tied to the Linux kernel community. Even Ubuntu  phased out Upstart in its favor.
+
+Migration to the newer schemes can be complicated and bugs and missing features can be very disabling, so there have been essential required compatibility layers. Thus, SysVinit utilities and methods will persist for a long time, even if under the hood things are quite different.
+
+The history of all this and the controversies are quite complicated, and colorful personalities have ensured not all the discussion is of a technical nature. In our context, we will not look through this lens.
+
+In the following we are going to concentrate on systemd and SysVinit with a briefer section on Upstart. (Even though RHEL 6 and some other distributions had used Upstart, it has been thoroughly hidden behind a compatibility layer using the normal SysVinit utilities.)
+
+39.5. systemd
+
+The systemd system and session manager for Linux is rapidly taking root in all major distributions. Features include the following: 
+
+    - Compatible with SysVinit scripts
+    - Boots faster than previous systems
+    - Provides aggressive parallelization capabilities
+    - Uses socket and D-Bus activation for starting services
+    - Replaces shell scripts with programs
+    - Offers on-demand starting of daemons
+    - Keeps track of processes using cgroups
+    - Supports creating snapshots and restoring of the system state
+    - Maintains mount and automount points
+    - Implements an elaborate transactional dependency-based service control logic
+    - Can work as a drop-in replacement for SysVinit.
+
+Instead of bash scripts, systemd uses .service files. In addition, systemd sorts all daemons into their own Linux cgroups (control groups).
+
+systemd is backward compatible with SysVinit and the concept of runlevels is supported via runlevel targets. The telinit program is emulated to work with runlevels.
+
+39.6. systemd Configuration Files
+
+Although systemd prefers to use a set of new standardized configuration files, it can also use distribution-dependent legacy configuration files as a fall-back.
+
+An example of a new configuration file would be /etc/hostname, which would replace /etc/sysconfig/network in Red Hat, /etc/HOSTNAME in SUSE, and /etc/hostname (adopted as the standard) in Debian.
+
+Other files might include:
+
+    - /etc/vconsole.conf: default keyboard mapping and console font.
+    - /etc/sysctl.d/*.conf: drop-in directory for kernel sysctl parameters.
+    - /etc/os-release: distribution ID file. 
+
+39.7.a. systemctl I
+
+systemctl is the main utility for managing services. Its basic syntax is:
+
+$ systemctl [options] command [name]
+
+Below you can see some examples of how you can use systemctl:
+
+    - To show the status of everything that systemd controls:
+    $ systemctl
+    - To show all available services:
+    $ systemctl list-units -t service --all
+    - To show only active services:
+    $ systemctl list-units -t service
+    - To start (activate) one or more units:
+    $ sudo systemctl start foo
+    $ sudo systemctl start foo.service
+    $ sudo systemctl start /path/to/foo.service
+
+    where a unit can be a service or a socket.
+    - To stop (deactivate) a service:
+    $ sudo systemctl stop foo.service
+    - To enable/disable a service:
+    $ sudo systemctl enable sshd.service
+    $ sudo systemctl disable sshd.service
+
+    This is the equivalent of chkconfig --add/--del and doesn't actually start the service.
+
+Note: Some systemctl commands in the above examples can be run as non-root user, others require running as root or with sudo.
+
+39.7.b. systemctl II
+
+39.8. systemctl Demo
+
+video demo
+
+39.9.a. SysVinit Runlevels I
+
+As a SysVinit system starts, it passes through a sequence of runlevels which define different system states; 
+they are numbered from 0 to 6.
+
+Runlevel 0 is reserved for the system halt state, runlevel 1 for single-user mode, 
+and runlevel 6 for system reboot.The other runlevels are used to define what services are running for a normal 
+system and different distributions define them somewhat differently. For example, on Red Hat-based systems, 
+runlevel 2 is defined as a running system without networking or X, runlevel 3 includes networking, and 
+runlevel 5 includes networking and X. The table below summarizes the SystemVinit rundown levels.
+
+                              
+                                          System Runlevels
+
+ 
+        Runlevel	Meaning
+       ========================================================
+        S, s    	Same as 1
+        0	        Shutdown system and turn power off
+        1	        Single User Mode
+        2	        Multiple user, no NFS, only text login
+        3	        Multiple user, with NFS and network, only text login
+        4	        Not used
+        5	        Multiple user, with NFS and network, graphical login with X
+        6	        Reboot
+
+
+39.9.b. SysVinit Runlevel II
+
+The current runlevel can be simply displayed with the runlevel command as in:
+
+$ runlevel
+N 5
+
+where the first character is the previous level; N means unknown.
+
+telinit can be used to change the runlevel of the system. For example, to go from runlevel 3 to runlevel 5, type:
+
+$ sudo /sbin/telinit 5
+
+39.10. SysVinit and /etc/inittab
+
+scripts to run to bring the system up each runlevel, and was done with a series of lines, one for each runlevel:
+
+id:runlevel(s):action:process
+
+where:
+
+    id: a unique 1-4 character identification for the entry
+    runlevel(s): zero or more single characters or digit identifiers indicating which runlevel the action will be taken for
+    action: describes the action to be taken
+    process: specifies the process to be executed.
+
+However, in more recent systems such as RHEL 6 which hide upstart behind a compatibility layer, the only un-commented line and the only thing being set in this file is the default runlevel with the line:
+
+id:5:initdefault
+
+This is the level to stop at when booting the system. However, if another value is specified on the kernel command line, init ignores the default. (This is done by simply appending the right integer to the kernel command line.) The default level is usually 5 for a full multi-user, networked graphical system, or 3 for a server without a graphical interface.
+
+39.11.a. SysVinit Startup Scripts I
+
+The traditional method is to first run the rc.sysinit script, which performs numerous functions, such as starting LVM, mounting filesystems, etc. This script resides in the /etc directory, but more likely you will find it in /etc/rc.d with a symbolic link to /etc.
+
+Next, the rc script (in the same directory) is run with the desired runlevel as an argument. This causes the system to go to the rc.d/rc[0-6].d directory and run all the scripts in there as in:
+
+$ ls -lF /etc/rc.d/rc5.d
+total 0
+lrwxrwxrwx. 1 root root 14 Sep 3 10:05 K05pmcd -> ../init.d/pmcd*
+lrwxrwxrwx. 1 root root 14 Sep 3 10:05 K05pmie -> ../init.d/pmie*
+lrwxrwxrwx. 1 root root 18 Sep 3 10:05 K05pmlogger -> ../init.d/pmlogger*
+lrwxrwxrwx. 1 root root 15 Sep 3 10:05 K05pmmgr -> ../init.d/pmmgr*
+lrwxrwxrwx. 1 root root 17 Sep 3 10:05 K05pmproxy -> ../init.d/pmproxy*
+lrwxrwxrwx. 1 root root 16 Sep 3 10:05 K05pmwebd -> ../init.d/pmwebd*
+lrwxrwxrwx  1 root root 37 Sep 6 08:50 K08vmware-USBArbitrator -> /etc/rc.d/init.d/vmware-USBArbitrator*
+lrwxrwxrwx. 1 root root 20 Sep 3 03:57 K50netconsole -> ../init.d/netconsole*
+lrwxrwxrwx. 1 root root 17 Sep 3 09:39 S10network -> ../init.d/network*
+lrwxrwxrwx  1 root root 16 Sep 6 08:50 S19vmware -> ../init.d/vmware*
+lrwxrwxrwx. 1 root root 17 Sep 3 04:04 S20iprinit -> ../init.d/iprinit*
+lrwxrwxrwx. 1 root root 19 Sep 3 04:04 S20iprupdate -> ../init.d/iprupdate*
+lrwxrwxrwx. 1 root root 17 Sep 3 10:05 S21iprdump -> ../init.d/iprdump*
+
+lrwxrwxrwx  1 root root 17 Sep 6 08:51 S25vmamqpd -> ../init.d/vmamqpd*
+lrwxrwxrwx  1 root root 37 Sep 6 08:50 S50vmware-USBArbitrator -> /etc/rc.d/init.d/vmware-USBArbitrator*
+lrwxrwxrwx. 1 root root 15 Sep 3 03:59 S97rhnsd -> ../init.d/rhnsd*
+
+39.11.b. SysVinit Startup Scripts II
+
+The rc.local script may be used to start system-specific applications.
+
+Note the following:
+
+    All the actual scripts are in /etc/init.d. Each runlevel directory just links back to them.
+    Start scripts start with S in the name.
+    Kill scripts start with K in the name.
+
+The existence or non-existence of a script's symbolic link in a runlevel directory determines whether or not the script is executed at that runlevel.
+
+The number following the K or S in each script's name determines the order in which the scripts are invoked. The script name is also the name of the service.
+
+Controlling which initialization scripts are run on entry to each runlevel involves managing the symbolic links. While it is possible to manage these links manually, there are utilities such as chkconfig which are designed to do this consistently and more easily.
+
+39.12.a. chkconfig I
+
+chconfig is used to query and configure what runlevels the various system services are to run in. You can see some chkconfig examples below:
+
+   -  Check a particular service to see if it is set up to run in the current runlevel:
+
+    $ chkconfig some_service
+
+    This will return true if the service is configured to be running, false otherwise. You should note that even if it is configured to be running, it might currently be stopped.
+    - See what services are configured to run in each of the runlevels:
+
+    $ chkconfig --list [service names]
+    - Turn on a certain service next time the system boots:
+
+    $ sudo chkconfig some_service on
+    - Do not turn a certain service on next time the system boots:
+
+    $ chkconfig some_service off
+    - You should note that the on and off do not affect the current state by starting or stopping a service. You would have to do that with:
+
+    $ sudo service some_service [stop | start]
+39.12.b. chkconfig II
+
+It is not difficult to add your own services and write your own startup scripts. One only has to place a script in  /etc/init.d which has to have certain features in it (just some lines at the top!) and then use chkconfig --add to enable or chkconfig --del to disable use of the on and off instructions etc.
+
+How does chkconfig actually determine which number should appear after the S or K in a symbolic link, and how does it know which runlevels to set on or off and what state to set the symbolic links in? The information is in the scripts themselves, which contain a line near the top like:
+
+# chkconfig: 2345 10 90
+
+The first argument after the chkconfig:  is there to define which runlevels to have the service on by default. In the above example that means levels 2, 3, 4 and 5.
+
+The second and third numbers are the numerical prefixes in the start and stop scripts, so in the above they start with S10 and K90.
+
+39.13.a. service I
+
+You can see the current status of a particular service by doing: 
+
+$ sudo service network status
+
+Configured devices:
+
+lo eth0 eth1 eth2 wlan0
+
+Currently active devices:
+
+lo eth0
+
+$ sudo service vsftpd status
+
+vsftpd (pid 5284) is running...
+
+service takes a number of options, which vary according to the particular service; for example:
+
+$ sudo service network
+
+Usage: /etc/init.d/network {start|stop|restart|reload|status}
+
+$ sudo service iptables
+
+Usage: /etc/init.d/iptables {start|stop|restart|condrestart|status|panic|save}
+
+39.13.b. service II
+
+All service really does is change directory to /etc/init.d and run the appropriate script in that directory with the supplied options.
+
+You can see the status of all the services on the system with: 
+
+$ sudo service --status-all
+
+acpid (pid 4170) is running...
+
+anacron (pid  4540) is running... 
+
+atd (pid  4553) is running...
+
+....
+
+smartd (pid 4614) is running... 
+
+smbd is stopped
+
+......
+
+Starting and stopping services with service is only effective during the current operation of the system; all changes are lost upon reboot. To cause a particular service to be turned on or not during system initialization, on Red Hat-based systems one uses chkconfig as described earlier. 
+
+39.14. chkconfig and service on Debian-based Systems
+
+On Debian-based systems, including Ubuntu, the utilities will work only if you have installed the sysvinit-utils and chkconfig packages, as in:
+
+$ sudo apt-get install sysvinit-utils chkconfig
+
+However, recent versions of Ubuntu no longer package chkconfig; you will have to use the update-rc.d utility about to be described.
+
+As an alternative, you can use the more native commands on these systems. For example, the equivalent of the service utility is:
+
+$ sudo invoke-rc.d cups [ status | start | stop ]
+
+$ sudo status cups
+
+to check or change the cups situation. The status command is more recent and it is preferred over invoke-rc.d. Likewise, the equivalent of chkconfig would be:
+
+$ sudo update-rc.d cups [ defaults | purge ]
+
+$ sudo sysv-rc-conf cups [ on | off ]
+
+You'll have to consult the man pages for full documentation.
+
+39.15.a. Upstart I
+
+Upstart is event-driven, rather than being a set of serial procedures. Event notifications are sent to the init process to tell it to execute certain commands at the right time after pre-requisites have been fulfilled. Because Upstart is being superseded by systemd, we won't spend as much time on it or do exercises with it. Upstart configuration files include:
+
+/etc/init/rcS.conf
+/etc/rc.sysinit
+/etc/inittab
+/etc/init/rc.conf
+/etc/rc[0-5].d
+/etc/init/start-ttys.conf
+
+39.15.b. Upstart II
+
+When the kernel starts the init process, this causes the rcS.conf script to be executed. This, in turn, causes rc-sysinit.conf to be run.
+
+rc-sysinit.conf will do a number of tasks, including starting LVM, mounting filesystems, and then executing all of the runlevel scripts for the default runlevel specified in /etc/inittab.
+
+This is accomplished by executing rc.conf and passing it the runlevel. These runlevel scripts bring up the services on the system.
+
+Finally, additional scripts such as prefdm.conf (for runlevel 5 only) are executed.
+
+As mentioned previously, /etc/inittab is deprecated, and is now used only for setting up the default runlevel via the initdefault line. Other configuration is done via Upstart jobs in the /etc/init directory. Generally, Upstart events will be found in the /etc/event.d directory.
+
+For example, the number of active tty consoles is now set by the ACTIVE_CONSOLES variable in /etc/sysconfig/init, which is read by the /etc/init/start-ttys.conf job. The default value is ACTIVE_CONSOLES=/dev/tty[1-6], which starts a getty process on tty1 through tty6
+
+39.16. Upstart Utilities

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html class="client-js" dir="ltr" lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<title>SysVinit to Systemd Cheatsheet - Fedora Project Wiki</title>
+<script>document.documentElement.className = document.documentElement.className.replace( /(^|\s)client-nojs(\s|$)/, "$1client-js$2" );</script>
+<script>(window.RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"SysVinit_to_Systemd_Cheatsheet","wgTitle":"SysVinit to Systemd Cheatsheet","wgCurRevisionId":483699,"wgRevisionId":483699,"wgArticleId":36791,"wgIsArticle":true,"wgIsRedirect":false,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":[],"wgBreakFrames":false,"wgPageContentLanguage":"en","wgPageContentModel":"wikitext","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgMonthNamesShort":["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"wgRelevantPageName":"SysVinit_to_Systemd_Cheatsheet","wgRelevantArticleId":36791,"wgRequestId":"W3Jt67yLo@WlIxGI0tWtcgAAAA4","wgIsProbablyEditable":false,"wgRestrictionEdit":[],"wgRestrictionMove":[],"wgWikiEditorEnabledModules":{"toolbar":true,"dialogs":true,"preview":true,"publish":true}});mw.loader.state({"site.styles":"ready","noscript":"ready","user.styles":"ready","user":"ready","user.options":"loading","user.tokens":"loading","mediawiki.skinning.interface":"ready","mediawiki.skinning.content.externallinks":"ready","skins.fedora":"ready","mediawiki.legacy.shared":"ready","mediawiki.legacy.commonPrint":"ready","mediawiki.sectionAnchor":"ready"});mw.loader.implement("user.options@0j3lz3q",function($,jQuery,require,module){mw.user.options.set({"variant":"en"});});mw.loader.implement("user.tokens@1euxix0",function ( $, jQuery, require, module ) {
+mw.user.tokens.set({"editToken":"+\\","patrolToken":"+\\","watchToken":"+\\","csrfToken":"+\\"});/*@nomin*/;
+
+});mw.loader.load(["mediawiki.action.view.postEdit","site","mediawiki.page.startup","mediawiki.user","mediawiki.hidpi","mediawiki.page.ready","mediawiki.searchSuggest","skins.fedora.js"]);});</script>
+<link rel="stylesheet" href="SysVinit%20to%20Systemd%20Cheatsheet%20-%20Fedora%20Project%20Wiki_files/load.css">
+<script async="" src="SysVinit%20to%20Systemd%20Cheatsheet%20-%20Fedora%20Project%20Wiki_files/load.php"></script>
+<link rel="stylesheet" href="SysVinit%20to%20Systemd%20Cheatsheet%20-%20Fedora%20Project%20Wiki_files/fedora-bootstrap.css"><link rel="stylesheet" href="SysVinit%20to%20Systemd%20Cheatsheet%20-%20Fedora%20Project%20Wiki_files/open-sans.css"><link rel="stylesheet" href="SysVinit%20to%20Systemd%20Cheatsheet%20-%20Fedora%20Project%20Wiki_files/font-awesome.css"><link rel="stylesheet" href="SysVinit%20to%20Systemd%20Cheatsheet%20-%20Fedora%20Project%20Wiki_files/hack.css">
+<style>
+.suggestions{overflow:hidden;position:absolute;top:0;left:0;width:0;border:0;z-index:1099;padding:0;margin:-1px 0 0 0}.suggestions-special{position:relative;background-color:#fff;cursor:pointer;border:solid 1px #aaa;margin:0;margin-top:-2px;display:none;padding:0.25em 0.25em;line-height:1.25em}.suggestions-results{background-color:#fff;cursor:pointer;border:solid 1px #aaa;padding:0;margin:0}.suggestions-result{color:#000;margin:0;line-height:1.5em;padding:0.01em 0.25em;text-align:left; overflow:hidden;-o-text-overflow:ellipsis; text-overflow:ellipsis;white-space:nowrap}.suggestions-result-current{background-color:#4c59a6;color:#fff}.suggestions-special .special-label{color:#808080;text-align:left}.suggestions-special .special-query{color:#000;font-style:italic;text-align:left}.suggestions-special .special-hover{background-color:#c0c0c0}.suggestions-result-current .special-label,.suggestions-result-current .special-query{color:#fff}.highlight{font-weight:bold}
+.postedit-container{margin:0 auto;position:fixed;top:0;height:0;left:50%;z-index:1000;font-size:13px}.postedit-container:hover{cursor:pointer}.postedit{position:relative;top:0.6em;left:-50%;padding:0.6em 3.6em 0.6em 1.1em;line-height:1.5625em;color:#626465;background-color:#f4f4f4;border:1px solid #dcd9d9;text-shadow:0 0.0625em 0 rgba( 255,255,255,0.5 );border-radius:5px;box-shadow:0 2px 5px 0 #ccc;-webkit-transition:all 0.25s ease-in-out;-moz-transition:all 0.25s ease-in-out;-ms-transition:all 0.25s ease-in-out;-o-transition:all 0.25s ease-in-out;transition:all 0.25s ease-in-out}.skin-monobook .postedit{top:6em !important; }.postedit-faded{opacity:0}.postedit-icon{padding-left:41px;  line-height:25px;background-repeat:no-repeat;background-position:8px 50%}.postedit-icon-checkmark{background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAB9ElEQVR4AZWRA3AYURQArxrVHtW2bdu2bdu2zdi2bdu2bWxs7zeehZaw4f70kbs+zI3e/nWK+RWx3aOFlrL56Sy5SxrruG69hlv6OyK+mz+8KDSXdXembj0ispT7tjs4ZTIbpYBvxGSGKzZTeFrb7W/meN002swFs0U8ttpHTkF2BvCqWQrW35929bTsKm5Zb+SEwWwcY8wAngB9m7Z+d+rIPZ/npdy12M5p47n8dXsCYAf0qPy06eGMdktuDu9Qf+JmKl3SWM91qzVcN9tAbEYkwMaq0tyb1m/To5kP170el/BK8/qa6sJr70ydf+T/Uu5ab+Oo/lS0AkUBpIFWlZ9WPhxpse/PHO7YbOOczjL0vZV2lNxPPtG73dYXM+xvm2znrOl83tidoqCwMBgYXsPFB0on5S6pr+eK5TKuW67lgvaKvF8mL1dtfTL32FHxRdyx3cQpg7m4x9sCXKkTIzA4LDH44zWdzaUf71hv5rTG4uyzcusybxSX7aThbMQ8XgCYAp3rzTTQOiIh9PNlzY3FSuZxrzjme1Y7uGS6kjsWO4jPjM4FVjRZsvD4kO9XtTZzQn82NyzWc0B7AmZh6gA/hOYSGhfw9YbOVnarj+S7800AL2BIsxUAbWNToj7bhBuQmZcOsFdoKUC74rGheCwXmqAIQTc9jQcrADIAAAAASUVORK5CYII=);background-image:url(/w/resources/src/mediawiki.action/images/green-checkmark.png?d94f1)!ie;background-position:left}.postedit-close{position:absolute;padding:0 0.8em;right:0;top:0;font-size:1.25em;font-weight:bold;line-height:2.3em;color:#000;text-shadow:0 0.0625em 0 #fff;text-decoration:none;opacity:0.2;filter:alpha( opacity=20 )}.postedit-close:hover{color:#000;text-decoration:none;opacity:0.4;filter:alpha( opacity=40 )}</style><style>
+.suggestions a.mw-searchSuggest-link,.suggestions a.mw-searchSuggest-link:hover,.suggestions a.mw-searchSuggest-link:active,.suggestions a.mw-searchSuggest-link:focus{color:#000;text-decoration:none}.suggestions-result-current a.mw-searchSuggest-link,.suggestions-result-current a.mw-searchSuggest-link:hover,.suggestions-result-current a.mw-searchSuggest-link:active,.suggestions-result-current a.mw-searchSuggest-link:focus{color:#fff}.suggestions a.mw-searchSuggest-link .special-query{ overflow:hidden;-o-text-overflow:ellipsis; text-overflow:ellipsis;white-space:nowrap}</style><meta name="ResourceLoaderDynamicStyles" content="">
+<link rel="stylesheet" href="SysVinit%20to%20Systemd%20Cheatsheet%20-%20Fedora%20Project%20Wiki_files/load_002.css">
+<meta name="generator" content="MediaWiki 1.29.2">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="shortcut icon" href="https://fedoraproject.org/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="https://fedoraproject.org/w/opensearch_desc.php" title="Fedora Project Wiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://fedoraproject.org/w/api.php?action=rsd">
+<link rel="copyright" href="https://fedoraproject.org/wiki/Legal:Main">
+<link rel="alternate" type="application/atom+xml" title="Fedora Project Wiki Atom feed" href="https://fedoraproject.org/w/index.php?title=Special:RecentChanges&amp;feed=atom">
+<script src="SysVinit%20to%20Systemd%20Cheatsheet%20-%20Fedora%20Project%20Wiki_files/load_002.php"></script></head>
+<body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-SysVinit_to_Systemd_Cheatsheet rootpage-SysVinit_to_Systemd_Cheatsheet skin-fedora action-view">		<div class="navbar navbar-full navbar-light masthead"><div class="container"><div class="row"><div class="col-md-4"><a href="https://fedoraproject.org/wiki/Fedora_Project_Wiki"><img src="SysVinit%20to%20Systemd%20Cheatsheet%20-%20Fedora%20Project%20Wiki_files/fedorawiki_logo.png" alt="Fedora Project Wiki" height="40px"></a></div><div class="col-md-4"><form action="/w/index.php" role="search" class="mw-portlet" id="p-search"><input value="Special:Search" name="title" type="hidden"><h3><label for="searchInput">Search</label></h3><div class="input-group"><input name="search" placeholder="Search Fedora Project Wiki" title="Search Fedora Project Wiki [Alt+Shift+f]" accesskey="f" id="searchInput" class="form-control" autocomplete="off" type="search"><span class="input-group-btn"><button id="searchGoButton" class="btn btn-secondary" type="submit"><i class="fa fa-search"></i></button></span></div></form></div><div class="col-md-4"><ul class="nav navbar-nav pull-xs-right"><li class="nav-item dropdown"><a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button">Links</a><ul class="dropdown-menu dropdown-menu-right"><li id="n-Get-Fedora"><a href="https://getfedora.org/" class="dropdown-item">Get Fedora</a></li><li id="n-Fedora-Docs"><a href="https://docs.fedoraproject.org/" class="dropdown-item">Fedora Docs</a></li><li id="n-Fedora-Magazine"><a href="https://fedoramagazine.org/" class="dropdown-item">Fedora Magazine</a></li><li id="n-What-Can-I-Do.3F"><a href="https://whatcanidoforfedora.org/" class="dropdown-item">What Can I Do?</a></li></ul></li><li class="nav-item dropdown"><a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button">Subprojects</a><ul class="dropdown-menu dropdown-menu-right"><li id="n-Ambassadors"><a href="https://fedoraproject.org/wiki/Ambassadors" class="dropdown-item">Ambassadors</a></li><li id="n-Community-Operations"><a href="https://fedoraproject.org/wiki/CommOps" class="dropdown-item">Community Operations</a></li><li id="n-Design"><a href="https://fedoraproject.org/wiki/Design" class="dropdown-item">Design</a></li><li id="n-Documentation"><a href="https://fedoraproject.org/wiki/DocsProject" class="dropdown-item">Documentation</a></li><li id="n-EPEL"><a href="https://fedoraproject.org/wiki/EPEL" class="dropdown-item">EPEL</a></li><li id="n-Infrastructure"><a href="https://fedoraproject.org/wiki/Infrastructure" class="dropdown-item">Infrastructure</a></li><li id="n-Internationalization"><a href="https://fedoraproject.org/wiki/I18N" class="dropdown-item">Internationalization</a></li><li id="n-Localization"><a href="https://fedoraproject.org/wiki/L10N" class="dropdown-item">Localization</a></li><li id="n-Marketing"><a href="https://fedoraproject.org/wiki/Marketing" class="dropdown-item">Marketing</a></li><li id="n-Magazine"><a href="https://fedoraproject.org/wiki/Magazine" class="dropdown-item">Magazine</a></li><li id="n-Package-Maintainers"><a href="https://fedoraproject.org/wiki/PackageMaintainers" class="dropdown-item">Package Maintainers</a></li><li id="n-Quality-Assurance"><a href="https://fedoraproject.org/wiki/QA" class="dropdown-item">Quality Assurance</a></li><li id="n-Websites"><a href="https://fedoraproject.org/wiki/Websites" class="dropdown-item">Websites</a></li><li id="n-All-projects"><a href="https://fedoraproject.org/wiki/Projects" class="dropdown-item">All projects</a></li></ul></li><a href="https://fedoraproject.org/w/index.php?title=Special:UserLogin&amp;returnto=SysVinit+to+Systemd+Cheatsheet" class="btn btn-primary m-l-2">Log In</a></ul></div></div></div></div>
+
+		<div class="bodycontent">
+			<div class="sub-header p-t-1">
+				<div class="container">
+					<div class="row">
+						<div class="col-sm-6">
+						<h1>SysVinit to Systemd Cheatsheet</h1>					</div>
+					<div class="col-sm-6">
+						<div class="btn-group pull-xs-right">
+						<div class="mw-indicators mw-body-content">
+</div>
+					 </div>
+				</div>
+			</div>
+
+				<ul class="nav nav-tabs nav-small m-l-0">
+				<li class="nav-item" id="ca-nstab-main"><a href="https://fedoraproject.org/wiki/SysVinit_to_Systemd_Cheatsheet" title="View the content page [Alt+Shift+c]" accesskey="c" class="nav-link active">Page</a></li><li class="nav-item" id="ca-talk"><a href="https://fedoraproject.org/wiki/Talk:SysVinit_to_Systemd_Cheatsheet" rel="discussion" title="Discussion about the content page [Alt+Shift+t]" accesskey="t" class="nav-link">Discussion</a></li><li class="nav-item pull-xs-right" id="ca-view"><a href="https://fedoraproject.org/wiki/SysVinit_to_Systemd_Cheatsheet" redundant="1" class="nav-link active">View</a></li><li class="nav-item pull-xs-right" id="ca-viewsource"><a href="https://fedoraproject.org/w/index.php?title=SysVinit_to_Systemd_Cheatsheet&amp;action=edit" title="This page is protected.
+You can view its source [Alt+Shift+e]" accesskey="e" class="nav-link">View source</a></li><li class="nav-item pull-xs-right" id="ca-history"><a href="https://fedoraproject.org/w/index.php?title=SysVinit_to_Systemd_Cheatsheet&amp;action=history" title="Past revisions of this page [Alt+Shift+h]" accesskey="h" class="nav-link">History</a></li>
+			</ul>
+				</div>
+			</div>
+
+			<div class="mw-body container" role="main">
+				<div id="siteNotice"><div id="localNotice" dir="ltr" lang="en"></div></div><div id="siteSub">From Fedora Project Wiki</div>
+				<div class="mw-body-content">
+					<div id="contentSub"><p></p></div><div id="mw-content-text" dir="ltr" class="mw-content-ltr" lang="en"><div id="otherlangs" class="plainlinks" style="padding-left: 26px;"><div style="float: left; margin-left: -21px;"><a href="https://fedoraproject.org/wiki/Fedora_Project_Wiki:Translating" title="Fedora Project Wiki:Translating"><img alt="Language.png" src="SysVinit%20to%20Systemd%20Cheatsheet%20-%20Fedora%20Project%20Wiki_files/Language.png" width="16" height="16"></a></div><div><b><a href="https://fedoraproject.org/wiki/Fedora_Project_Wiki:Translating" title="Fedora Project Wiki:Translating">In other languages:</a></b> <span class="plainlinks languagelink firstlang" style="white-space:nowrap"><b><span class="firstlang" dir="ltr" lang="en">English</span> <small>(en)</small></b></span> <span class="plainlinks languagelink" style="white-space:nowrap"><a class="external text" href="https://fedoraproject.org/wiki/SysVinit_to_Systemd_Cheatsheet/es"><span class="firstlang" dir="ltr" lang="es">español</span> <small>(es)</small></a></span> <span class="plainlinks languagelink" style="white-space:nowrap"><a class="external text" href="https://fedoraproject.org/wiki/SysVinit_to_Systemd_Cheatsheet/ru"><span class="firstlang" dir="ltr" lang="ru">русский</span> <small>(ru)</small></a></span> <span class="plainlinks languagelink" style="white-space:nowrap"><a class="external text" href="https://fedoraproject.org/wiki/SysVinit_to_Systemd_Cheatsheet/zh"><span class="firstlang" dir="ltr" lang="zh">中文</span> <small>(zh)</small></a></span>                                                         <span class="editlink">[<a class="external text" href="https://fedoraproject.org/w/index.php?title=Template:Lang/SysVinit_to_Systemd_Cheatsheet&amp;action=edit">edit</a>]</span>
+</div></div>
+<p>This is a document to help system administrators who need to 
+understand what commands in systemd replace their old workflow in 
+sysvinit.   If you want general information on systemd, refer to <a href="https://fedoraproject.org/wiki/Systemd" title="Systemd">systemd</a>.
+</p>
+<div class="messagebox" style="background-color: #def3fe; border: 1px solid #c5d7e0; color: black; padding: 5px; margin: 1ex 0; min-height: 35px; padding-left: 45px;">
+<div style="float: left; margin-left: -40px;"><a href="https://fedoraproject.org/wiki/File:Idea.png" class="image"><img alt="Idea.png" src="SysVinit%20to%20Systemd%20Cheatsheet%20-%20Fedora%20Project%20Wiki_files/35px-Idea.png" srcset="/w/uploads/a/a4/Idea.png 1.5x" width="35" height="35"></a></div>
+<div><b> Note on 'service' and 'chkconfig' commands </b><br>The 
+'service' and 'chkconfig' commands will mostly continue to work as 
+expected in the systemd world, this guide is how to use the native 
+systemctl replacements.</div>
+</div>
+<h2><span class="mw-headline" id="Services"><a href="#Services">🔗</a> Services</span></h2>
+<p>Note that all recent versions of systemctl assume the '.service' if 
+left off. So, 'systemctl start frobozz.service' is the same as 
+'systemctl start frobozz'
+</p>
+<table cellspacing="0" border="1">
+<tbody><tr>
+<th>Sysvinit Command</th>
+<th>Systemd Command</th>
+<th>Notes
+</th></tr>
+<tr>
+<td> service frobozz start </td>
+<td> systemctl start frobozz </td>
+<td> Used to start a service (not reboot persistent)
+</td></tr>
+<tr>
+<td> service frobozz stop </td>
+<td> systemctl stop frobozz </td>
+<td> Used to stop a service (not reboot persistent)
+</td></tr>
+<tr>
+<td> service frobozz restart </td>
+<td> systemctl restart frobozz  </td>
+<td> Used to stop and then start a service
+</td></tr>
+<tr>
+<td> service frobozz reload </td>
+<td> systemctl reload frobozz  </td>
+<td> When supported, reloads the config file without interrupting pending operations.
+</td></tr>
+<tr>
+<td> service frobozz condrestart </td>
+<td> systemctl condrestart frobozz  </td>
+<td> Restarts if the service is already running.
+</td></tr>
+<tr>
+<td> service frobozz status </td>
+<td> systemctl status frobozz </td>
+<td> Tells whether a service is currently running.
+</td></tr>
+<tr>
+<td> ls /etc/rc.d/init.d/ </td>
+<td>  systemctl (or) systemctl list-unit-files --type=service (or) <br>ls /lib/systemd/system/*.service /etc/systemd/system/*.service</td>
+<td> Used to list the services that can be started or stopped <br> Used to list all the services and other units
+</td></tr>
+<tr>
+<td> chkconfig frobozz on </td>
+<td> systemctl enable frobozz </td>
+<td> Turn the service on, for start at next boot, or other trigger.
+</td></tr>
+<tr>
+<td> chkconfig frobozz off </td>
+<td> systemctl disable frobozz </td>
+<td> Turn the service off for the next reboot, or any other trigger.
+</td></tr>
+<tr>
+<td> chkconfig frobozz </td>
+<td> systemctl is-enabled frobozz </td>
+<td> Used to check whether a service is configured to start or not in the current environment.
+</td></tr>
+<tr>
+<td> chkconfig --list </td>
+<td> systemctl list-unit-files --type=service (or) ls /etc/systemd/system/*.wants/ </td>
+<td> Print a table of services that lists which runlevels each is configured on or off
+</td></tr>
+<tr>
+<td> chkconfig --list | grep 5:on </td>
+<td> systemctl list-dependencies graphical.target </td>
+<td> Print a table of services that will be started when booting into graphical mode
+</td></tr>
+<tr>
+<td> chkconfig frobozz --list </td>
+<td> ls /etc/systemd/system/*.wants/frobozz.service </td>
+<td> Used to list what levels this service is configured on or off
+</td></tr>
+<tr>
+<td> chkconfig frobozz --add </td>
+<td> systemctl daemon-reload </td>
+<td> Used when you create a new service file or modify any configuration
+</td></tr>
+</tbody></table>
+<p>Note that all /sbin/service and /sbin/chkconfig lines listed above 
+continue to work on systemd, and will be translated to native 
+equivalents as necessary. The only exception is chkconfig --list. 
+</p>
+<div class="messagebox" style="background-color: #f9f6b7; border: 1px solid #c4c295; color: black; padding: 5px; margin: 1ex 0; min-height: 35px; padding-left: 45px;">
+<div style="float: left; margin-left: -40px;"><a href="https://fedoraproject.org/wiki/File:Warning.png" class="image"><img alt="Warning.png" src="SysVinit%20to%20Systemd%20Cheatsheet%20-%20Fedora%20Project%20Wiki_files/35px-Warning.png" srcset="/w/uploads/c/cb/Warning.png 1.5x" width="35" height="35"></a></div>
+<div><b>Additional commands</b><br>In SysVinit, services can define arbitrary commands. Examples would be <b>service iptables panic</b>, or <b>service httpd graceful</b>. Native systemd services do not have this ability.
+<p>Any service that defines an additional command in this way would need
+ to define some other, service-specific, way to accomplish this task 
+when writing a native systemd service definition.
+</p>
+Check the package-specific release notes for any services that may have done this.</div>
+</div>
+<h2><span class="mw-headline" id="Runlevels.2Ftargets"><a href="#Runlevels.2Ftargets">🔗</a> Runlevels/targets</span></h2>
+<p>Systemd has a concept of <i>targets</i> which serve a similar purpose as runlevels but act a little different.  Each <i>target</i> is named instead of numbered and is intended to serve a specific purpose.  Some <i>targets</i> are implemented by inheriting all of the services of another <i>target</i> and adding additional services to it.  There are systemd <i>target</i>s that mimic the common sysvinit runlevels so you can still switch <i>target</i>s using the familiar <code>telinit RUNLEVEL</code>
+ command.  The runlevels that are assigned a specific purpose on vanilla
+ Fedora installs; 0, 1, 3, 5, and 6; have a 1:1 mapping with a specific 
+systemd <i>target</i>.  Unfortunately, there's no good way to do the 
+same for the user-defined runlevels like 2 and 4.  If you make use of 
+those it is suggested that you make a new named systemd <i>target</i> as <code>/etc/systemd/system/$YOURTARGET</code> that takes one of the existing runlevels as a base (you can look at <code>/lib/systemd/system/graphical.target</code> as an example), make a directory <code>/etc/systemd/system/$YOURTARGET.wants</code>,
+ and then symlink the additional services that you want to enable into 
+that directory.  (The service unit files that you symlink live in <code>/lib/systemd/system</code>).
+</p>
+<table cellspacing="0" border="1">
+<tbody><tr>
+<th>Sysvinit Runlevel</th>
+<th>Systemd Target</th>
+<th>Notes
+</th></tr>
+<tr>
+<td> 0 </td>
+<td> runlevel0.target, poweroff.target </td>
+<td> Halt the system.
+</td></tr>
+<tr>
+<td> 1, s, single </td>
+<td> runlevel1.target, rescue.target </td>
+<td> Single user mode.
+</td></tr>
+<tr>
+<td> 2, 4 </td>
+<td> runlevel2.target, runlevel4.target, multi-user.target </td>
+<td> User-defined/Site-specific runlevels. By default, identical to 3.
+</td></tr>
+<tr>
+<td> 3 </td>
+<td> runlevel3.target, multi-user.target </td>
+<td> Multi-user, non-graphical.  Users can usually login via multiple consoles or via the network.
+</td></tr>
+<tr>
+<td> 5 </td>
+<td> runlevel5.target, graphical.target </td>
+<td> Multi-user, graphical.  Usually has all the services of runlevel 3 plus a graphical login.
+</td></tr>
+<tr>
+<td> 6 </td>
+<td> runlevel6.target, reboot.target </td>
+<td> Reboot
+</td></tr>
+<tr>
+<td> emergency </td>
+<td> emergency.target </td>
+<td> Emergency shell
+</td></tr>
+</tbody></table>
+<p>Changing runlevels:
+</p>
+<table cellspacing="0" border="1">
+<tbody><tr>
+<th>Sysvinit Command</th>
+<th>Systemd Command</th>
+<th>Notes
+</th></tr>
+<tr>
+<td> telinit 3 </td>
+<td> systemctl isolate multi-user.target (OR systemctl isolate runlevel3.target OR telinit 3) </td>
+<td> Change to multi-user run level.
+</td></tr>
+<tr>
+<td> sed s/^id:.*:initdefault:/id:3:initdefault:/ </td>
+<td> ln -sf /lib/systemd/system/multi-user.target /etc/systemd/system/default.target </td>
+<td> Set to use multi-user runlevel on next reboot.
+</td></tr></tbody></table>
+<p>Kernel Options:
+</p><p>The above systemd targets can be used when booting.  At the GRUB menu, edit the selection to add "systemd.unit=<i>target</i>" (without the double-quotation marks) as a kernel option where <i>target</i> is one of the above.  (For example, "rescue.target".)
+</p><p>Tip:  the ".target" extention is optional.  The 
+"systemd.unit=rescue" kernel option works the same as 
+"systemd.unit=rescue.target".
+</p>
+<!-- 
+NewPP limit report
+Cached time: 20180813104236
+Cache expiry: 86400
+Dynamic content: false
+CPU time usage: 0.058 seconds
+Real time usage: 0.112 seconds
+Preprocessor visited node count: 491/1000000
+Preprocessor generated node count: 4381/1000000
+Post‐expand include size: 11138/2097152 bytes
+Template argument size: 2774/2097152 bytes
+Highest expansion depth: 12/40
+Expensive parser function count: 5/100
+-->
+<!--
+Transclusion expansion time report (%,ms,calls,template)
+100.00%   62.659      1 -total
+ 71.27%   44.656      1 Template:Autolang
+ 53.83%   33.732      1 Template:Lang/SysVinit_to_Systemd_Cheatsheet
+ 36.81%   23.067      1 Template:Lang
+ 20.14%   12.620      4 Template:Lang/link
+ 15.78%    9.887      1 Template:Admon/tip
+ 12.58%    7.884      1 Template:Admon/warning
+  9.78%    6.131      2 Template:Message
+-->
+
+<!-- Saved in parser cache with key fpo-mediawiki-en_:pcache:idhash:36791-0!*!0!!en!5!* and timestamp 20180813104236 and revision id 483699
+ -->
+</div><div class="visualClear"></div><div class="printfooter">Retrieved from "<a dir="ltr" href="https://fedoraproject.org/w/index.php?title=SysVinit_to_Systemd_Cheatsheet&amp;oldid=483699">https://fedoraproject.org/w/index.php?title=SysVinit_to_Systemd_Cheatsheet&amp;oldid=483699</a>"</div><div id="catlinks" class="catlinks catlinks-allhidden" data-mw="interface"></div>				</div>
+			</div>
+
+			<div id="mw-footer" class="footer text-muted text-xs-center m-t-3 p-y-3">
+				<p class="copy">
+				Copyright © 2018 Red Hat, Inc. and others.  All Rights Reserved.  For comments or queries, please <a href="https://fedoraproject.org/wiki/Communicating_and_getting_help">contact us</a>.
+				</p>
+				<p class="disclaimer">
+				The Fedora Project is maintained and driven by the community and 
+sponsored by Red Hat.  This is a community maintained site.  Red Hat is 
+not responsible for content.
+				</p>
+				<ul id="footer-info" role="contentinfo"><li id="footer-info-lastmod"> This page was last edited on 11 January 2017, at 10:33.</li><li id="footer-info-copyright">Content is available under <a href="https://fedoraproject.org/wiki/Legal:Main" title="Legal:Main">Attribution-Share Alike 3.0 Unported</a> unless otherwise noted.</li></ul><ul id="footer-places" role="contentinfo"><li id="footer-places-privacy"><a href="https://fedoraproject.org/wiki/Fedora_Project_Wiki:Privacy_policy" class="mw-redirect" title="Fedora Project Wiki:Privacy policy">Privacy policy</a></li><li id="footer-places-about"><a href="https://fedoraproject.org/wiki/Fedora_Project_Wiki:About" class="mw-redirect" title="Fedora Project Wiki:About">About Fedora Project Wiki</a></li><li id="footer-places-disclaimer"><a href="https://fedoraproject.org/wiki/Fedora_Project_Wiki:General_disclaimer" class="mw-redirect" title="Fedora Project Wiki:General disclaimer">Disclaimers</a></li><li><a href="http://fedoraproject.org/en/sponsors">Sponsors</a></li><li><a href="http://fedoraproject.org/wiki/Legal:Main">Legal</a></li><li><a href="http://fedoraproject.org/wiki/Legal:Trademark_guidelines">Trademark Guidelines</a></li></ul><div class="visualClear"></div>
+			</div>
+		</div>
+
+		<script>(window.RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgPageParseReport":{"limitreport":{"cputime":"0.058","walltime":"0.112","ppvisitednodes":{"value":491,"limit":1000000},"ppgeneratednodes":{"value":4381,"limit":1000000},"postexpandincludesize":{"value":11138,"limit":2097152},"templateargumentsize":{"value":2774,"limit":2097152},"expansiondepth":{"value":12,"limit":40},"expensivefunctioncount":{"value":5,"limit":100},"timingprofile":["100.00%   62.659      1 -total"," 71.27%   44.656      1 Template:Autolang"," 53.83%   33.732      1 Template:Lang/SysVinit_to_Systemd_Cheatsheet"," 36.81%   23.067      1 Template:Lang"," 20.14%   12.620      4 Template:Lang/link"," 15.78%    9.887      1 Template:Admon/tip"," 12.58%    7.884      1 Template:Admon/warning","  9.78%    6.131      2 Template:Message"]},"cachereport":{"timestamp":"20180813104236","ttl":86400,"transientcontent":false}}});});</script><script>(window.RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgBackendResponseTime":182});});</script>		
+		
+
+		<div style="display: none; font-size: 14px;" class="suggestions"><div class="suggestions-results"></div><div class="suggestions-special"></div></div></body></html>
